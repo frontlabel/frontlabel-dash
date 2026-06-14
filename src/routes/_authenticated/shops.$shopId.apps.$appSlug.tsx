@@ -115,6 +115,7 @@ function AppSettingsPage() {
       textColor: settings.textColor,
       backgroundColor: settings.backgroundColor,
       overlayColor: settings.overlayColor,
+      overlayOpacity: settings.overlayOpacity,
       fontFamily: settings.fontFamily,
       backgroundImageUrl: settings.backgroundImageUrl,
       borderRadius: settings.borderRadius,
