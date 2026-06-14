@@ -84,9 +84,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SheetContent>
       </Sheet>
       <ShellHeaderProvider>
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 overflow-auto">
           <HeaderBar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-          <main className="flex-1 overflow-auto" style={{ fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', WebkitTextSizeAdjust: '100%', fontSize: '16px', lineHeight: '24px' }}>{children}</main>
+          <main className="flex-1" style={{ fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', WebkitTextSizeAdjust: '100%', fontSize: '16px', lineHeight: '24px' }}>{children}</main>
         </div>
       </ShellHeaderProvider>
     </div>
@@ -96,7 +96,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 function HeaderBar({ mobileOpen, setMobileOpen }: { mobileOpen: boolean; setMobileOpen: (v: boolean) => void }) {
   const { content } = useShellHeader();
   return (
-    <header className="h-14 bg-card border-b border-border flex items-center px-4 md:px-6 gap-3">
+    <header className="sticky top-0 z-50 h-14 bg-card border-b border-border flex items-center px-6 gap-3">
       <button
         onClick={() => setMobileOpen(true)}
         className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted"
