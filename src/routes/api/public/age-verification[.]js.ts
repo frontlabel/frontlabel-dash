@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { buildAgeVerificationScript } from "@/lib/widget-scripts.server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -7,39 +8,6 @@ const CORS = {
   "Cache-Control": "public, max-age=60",
   "Content-Type": "application/javascript; charset=utf-8",
 };
-
-const DEFAULTS = {
-  minAge: 18,
-  title: "Welkom",
-  description: "Bevestig je geboortedatum om door te gaan.",
-  buttonText: "Bevestigen",
-  declineText: "Ik ben jonger",
-  declineRedirect: "https://www.google.com",
-  rememberDays: 30,
-  primaryColor: "#5187e0",
-  textColor: "#1f2937",
-  backgroundColor: "#ffffff",
-  overlayColor: "#0f172a",
-  overlayOpacity: 0.75,
-  fontFamily: "Inter",
-  backgroundImageUrl: "",
-  borderRadius: 12,
-  blockUnderage: true,
-  blockDays: 365,
-};
-
-function hexToRgba(hex: string, alpha: number): string {
-  const a = Math.max(0, Math.min(1, Number.isFinite(alpha) ? alpha : 1));
-  if (!hex) return `rgba(0,0,0,${a})`;
-  if (hex.startsWith("rgb")) return hex;
-  let h = hex.replace("#", "").trim();
-  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
-  if (h.length !== 6) return `rgba(0,0,0,${a})`;
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return `rgba(${r},${g},${b},${a})`;
-}
 
 function emptyScript(reason: string) {
   return new Response(`/* shoplabel age-verification: ${reason} */`, {
@@ -71,70 +39,7 @@ export const Route = createFileRoute("/api/public/age-verification.js")({
           return emptyScript("app not installed or disabled");
         }
 
-        const s = { ...DEFAULTS, ...((data.settings as Record<string, unknown>) ?? {}) };
-        const overlayRgba = hexToRgba(String(s.overlayColor), Number(s.overlayOpacity));
-        const payload = JSON.stringify({ ...s, _overlayRgba: overlayRgba });
-
-        const js = `(function(){
-  if (window.__shoplabelAV) return; window.__shoplabelAV = true;
-  var s = ${payload};
-  var COOKIE = "shoplabel_av_ok";
-  var BLOCK = "shoplabel_av_blocked";
-  function getCookie(n){var m=document.cookie.match(new RegExp("(^| )"+n+"=([^;]+)"));return m?m[2]:null;}
-  function setCookie(n,v,d){var e=new Date();e.setTime(e.getTime()+d*864e5);document.cookie=n+"="+v+";expires="+e.toUTCString()+";path=/;SameSite=Lax";}
-  if (getCookie(COOKIE)==="1") return;
-  if (s.blockUnderage && getCookie(BLOCK)==="1"){window.location.replace(s.declineRedirect||"about:blank");return;}
-
-  var ovBg = s.backgroundImageUrl
-    ? ("linear-gradient("+s._overlayRgba+","+s._overlayRgba+"), url("+JSON.stringify(s.backgroundImageUrl)+") center/cover no-repeat")
-    : s._overlayRgba;
-  var css = ".slbl-av-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;font-family:"+JSON.stringify(s.fontFamily)+",system-ui,sans-serif;background:"+ovBg+"}"
-    +".slbl-av-md{width:100%;max-width:380px;background:"+s.backgroundColor+";color:"+s.textColor+";border-radius:"+s.borderRadius+"px;padding:24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}"
-    +".slbl-av-badge{width:48px;height:48px;border-radius:9999px;background:"+s.primaryColor+";color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 12px}"
-    +".slbl-av-h{font-size:18px;font-weight:600;margin:0 0 6px}"
-    +".slbl-av-p{font-size:13px;opacity:.8;margin:0 0 16px}"
-    +".slbl-av-inp{font:inherit;color:inherit;background:rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.15);border-radius:6px;padding:8px;text-align:center;width:100%;max-width:220px;box-sizing:border-box;margin-bottom:14px}"
-    +".slbl-av-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.primaryColor+";color:#fff;padding:10px 14px;border-radius:"+Math.max(4,s.borderRadius-4)+"px;font:inherit;font-weight:600}"
-    +".slbl-av-no{margin-top:10px;background:none;border:0;color:inherit;opacity:.6;cursor:pointer;font:inherit;font-size:12px}"
-    +".slbl-av-err{color:#b91c1c;font-size:12px;margin:-6px 0 10px;min-height:14px}"
-    +"html.slbl-av-locked,body.slbl-av-locked{overflow:hidden!important}";
-  var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
-
-  var ov=document.createElement("div");ov.className="slbl-av-ov";
-  ov.innerHTML='<div class="slbl-av-md" role="dialog" aria-modal="true">'
-    +'<div class="slbl-av-badge">'+s.minAge+'+</div>'
-    +'<h2 class="slbl-av-h"></h2><p class="slbl-av-p"></p>'
-    +'<input type="date" autocomplete="bday" class="slbl-av-inp">'
-    +'<div class="slbl-av-err"></div>'
-    +'<button class="slbl-av-btn"></button>'
-    +'<button class="slbl-av-no"></button></div>';
-  ov.querySelector(".slbl-av-h").textContent=s.title;
-  ov.querySelector(".slbl-av-p").textContent=s.description;
-  ov.querySelector(".slbl-av-btn").textContent=s.buttonText;
-  ov.querySelector(".slbl-av-no").textContent=s.declineText;
-
-  function lock(){document.documentElement.classList.add("slbl-av-locked");document.body&&document.body.classList.add("slbl-av-locked");}
-  function unlock(){document.documentElement.classList.remove("slbl-av-locked");document.body&&document.body.classList.remove("slbl-av-locked");}
-  function attach(){(document.body||document.documentElement).appendChild(ov);lock();}
-  if(document.body)attach();else document.addEventListener("DOMContentLoaded",attach);
-
-  var err=ov.querySelector(".slbl-av-err");
-  var dateInp=ov.querySelector(".slbl-av-inp");
-
-  ov.querySelector(".slbl-av-btn").addEventListener("click",function(){
-    var val=dateInp.value;
-    if(!val){err.textContent="Vul een geldige geboortedatum in.";return;}
-    var parts=val.split("-");
-    var y=+parts[0],m=+parts[1],d=+parts[2];
-    if(!d||!m||!y||y<1900){err.textContent="Vul een geldige geboortedatum in.";return;}
-    var bd=new Date(y,m-1,d);if(bd.getDate()!==d||bd.getMonth()!==m-1){err.textContent="Vul een geldige geboortedatum in.";return;}
-    var today=new Date();var age=today.getFullYear()-y;var mm=today.getMonth()-(m-1);if(mm<0||(mm===0&&today.getDate()<d))age--;
-    if(age>=s.minAge){setCookie(COOKIE,"1",s.rememberDays||30);unlock();ov.remove();}
-    else{if(s.blockUnderage){setCookie(BLOCK,"1",s.blockDays||365);}window.location.replace(s.declineRedirect||"about:blank");}
-  });
-  ov.querySelector(".slbl-av-no").addEventListener("click",function(){if(s.blockUnderage){setCookie(BLOCK,"1",s.blockDays||365);}window.location.replace(s.declineRedirect||"about:blank");});
-})();`;
-
+        const js = buildAgeVerificationScript((data.settings as Record<string, unknown>) ?? {});
         return new Response(js, { status: 200, headers: CORS });
       },
     },

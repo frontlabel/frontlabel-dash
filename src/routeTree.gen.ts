@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPresetsRouteImport } from './routes/_authenticated/presets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
+import { Route as ApiPublicShoplabelDotjsRouteImport } from './routes/api/public/shoplabel[.]js'
 import { Route as ApiPublicAgeVerificationDotjsRouteImport } from './routes/api/public/age-verification[.]js'
 import { Route as AuthenticatedShopsNewRouteImport } from './routes/_authenticated/shops.new'
 import { Route as AuthenticatedShopsShopIdRouteImport } from './routes/_authenticated/shops.$shopId'
@@ -52,6 +53,11 @@ const AuthenticatedAppsRoute = AuthenticatedAppsRouteImport.update({
   id: '/apps',
   path: '/apps',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicShoplabelDotjsRoute = ApiPublicShoplabelDotjsRouteImport.update({
+  id: '/api/public/shoplabel.js',
+  path: '/api/public/shoplabel.js',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAgeVerificationDotjsRoute =
   ApiPublicAgeVerificationDotjsRouteImport.update({
@@ -110,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
   '/shops/new': typeof AuthenticatedShopsNewRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
+  '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/presets': typeof AuthenticatedPresetsRoute
   '/shops/new': typeof AuthenticatedShopsNewRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
+  '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/shops/$shopId': typeof AuthenticatedShopsShopIdIndexRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/_authenticated/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
   '/_authenticated/shops/new': typeof AuthenticatedShopsNewRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
+  '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
   '/_authenticated/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/_authenticated/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/shops/$shopId'
     | '/shops/new'
     | '/api/public/age-verification.js'
+    | '/api/public/shoplabel.js'
     | '/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/shops/$shopId/'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/presets'
     | '/shops/new'
     | '/api/public/age-verification.js'
+    | '/api/public/shoplabel.js'
     | '/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/shops/$shopId'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shops/$shopId'
     | '/_authenticated/shops/new'
     | '/api/public/age-verification.js'
+    | '/api/public/shoplabel.js'
     | '/_authenticated/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/_authenticated/shops/$shopId/'
@@ -200,6 +212,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicAgeVerificationDotjsRoute: typeof ApiPublicAgeVerificationDotjsRoute
+  ApiPublicShoplabelDotjsRoute: typeof ApiPublicShoplabelDotjsRoute
   ApiPublicBackInStockSignupRoute: typeof ApiPublicBackInStockSignupRoute
 }
 
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/apps'
       preLoaderRoute: typeof AuthenticatedAppsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/shoplabel.js': {
+      id: '/api/public/shoplabel.js'
+      path: '/api/public/shoplabel.js'
+      fullPath: '/api/public/shoplabel.js'
+      preLoaderRoute: typeof ApiPublicShoplabelDotjsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/age-verification.js': {
       id: '/api/public/age-verification.js'
@@ -365,6 +385,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicAgeVerificationDotjsRoute: ApiPublicAgeVerificationDotjsRoute,
+  ApiPublicShoplabelDotjsRoute: ApiPublicShoplabelDotjsRoute,
   ApiPublicBackInStockSignupRoute: ApiPublicBackInStockSignupRoute,
 }
 export const routeTree = rootRouteImport
