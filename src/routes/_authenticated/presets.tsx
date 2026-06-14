@@ -72,7 +72,7 @@ function PresetsPage() {
                   }}>
                   <div className="font-semibold mb-2">Voorbeeld</div>
                   <button className="px-3 py-1.5 rounded text-white text-xs"
-                    style={{ background: p.settings.primaryColor ?? "#2c7be5" }}>
+                    style={{ background: p.settings.primaryColor ?? "#5187e0" }}>
                     Bevestigen
                   </button>
                 </div>
