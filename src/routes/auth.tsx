@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Plug } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Inloggen — Frontlabel" }] }),
+  head: () => ({ meta: [{ title: "Inloggen — Shoplabel" }] }),
   component: AuthPage,
 });
 
@@ -56,8 +56,8 @@ function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="h-9 w-9 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-bold">F</div>
-          <span className="text-xl font-semibold tracking-tight">frontlabel</span>
+          <div className="h-9 w-9 rounded-md bg-primary flex items-center justify-center text-primary-foreground font-bold">S</div>
+          <span className="text-xl font-semibold tracking-tight">shoplabel</span>
         </div>
         <Card>
           <CardHeader>
