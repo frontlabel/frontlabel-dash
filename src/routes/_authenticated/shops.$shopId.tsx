@@ -30,10 +30,7 @@ function ShopLayout() {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="px-6 pt-8">
-        <Link to="/dashboard" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="h-4 w-4" /> Shops
-        </Link>
-        <h1 className="text-2xl font-bold tracking-tight mt-2">{shopName || "Shop"}</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{shopName || "Shop"}</h1>
       </div>
       <div className="px-6 mt-4 border-b border-border">
         <div className="flex gap-1">
