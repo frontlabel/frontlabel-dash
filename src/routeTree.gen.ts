@@ -20,6 +20,7 @@ import { Route as ApiPublicAgeVerificationDotjsRouteImport } from './routes/api/
 import { Route as AuthenticatedShopsNewRouteImport } from './routes/_authenticated/shops.new'
 import { Route as AuthenticatedShopsShopIdRouteImport } from './routes/_authenticated/shops.$shopId'
 import { Route as AuthenticatedShopsShopIdIndexRouteImport } from './routes/_authenticated/shops.$shopId.index'
+import { Route as ApiPublicBackInStockStockRouteImport } from './routes/api/public/back-in-stock.stock'
 import { Route as ApiPublicBackInStockSignupRouteImport } from './routes/api/public/back-in-stock.signup'
 import { Route as AuthenticatedShopsShopIdAppsRouteImport } from './routes/_authenticated/shops.$shopId.apps'
 import { Route as AuthenticatedShopsShopIdAppsBackInStockRouteImport } from './routes/_authenticated/shops.$shopId.apps.back-in-stock'
@@ -82,6 +83,12 @@ const AuthenticatedShopsShopIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedShopsShopIdRoute,
   } as any)
+const ApiPublicBackInStockStockRoute =
+  ApiPublicBackInStockStockRouteImport.update({
+    id: '/api/public/back-in-stock/stock',
+    path: '/api/public/back-in-stock/stock',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBackInStockSignupRoute =
   ApiPublicBackInStockSignupRouteImport.update({
     id: '/api/public/back-in-stock/signup',
@@ -119,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
+  '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
   '/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
@@ -134,6 +142,7 @@ export interface FileRoutesByTo {
   '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
+  '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
   '/shops/$shopId': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
@@ -152,6 +161,7 @@ export interface FileRoutesById {
   '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
   '/_authenticated/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
+  '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
   '/_authenticated/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/_authenticated/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/_authenticated/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/api/public/shoplabel.js'
     | '/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
+    | '/api/public/back-in-stock/stock'
     | '/shops/$shopId/'
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/api/public/shoplabel.js'
     | '/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
+    | '/api/public/back-in-stock/stock'
     | '/shops/$shopId'
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
@@ -202,6 +214,7 @@ export interface FileRouteTypes {
     | '/api/public/shoplabel.js'
     | '/_authenticated/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
+    | '/api/public/back-in-stock/stock'
     | '/_authenticated/shops/$shopId/'
     | '/_authenticated/shops/$shopId/apps/$appSlug'
     | '/_authenticated/shops/$shopId/apps/back-in-stock'
@@ -214,6 +227,7 @@ export interface RootRouteChildren {
   ApiPublicAgeVerificationDotjsRoute: typeof ApiPublicAgeVerificationDotjsRoute
   ApiPublicShoplabelDotjsRoute: typeof ApiPublicShoplabelDotjsRoute
   ApiPublicBackInStockSignupRoute: typeof ApiPublicBackInStockSignupRoute
+  ApiPublicBackInStockStockRoute: typeof ApiPublicBackInStockStockRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -294,6 +308,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/shops/$shopId/'
       preLoaderRoute: typeof AuthenticatedShopsShopIdIndexRouteImport
       parentRoute: typeof AuthenticatedShopsShopIdRoute
+    }
+    '/api/public/back-in-stock/stock': {
+      id: '/api/public/back-in-stock/stock'
+      path: '/api/public/back-in-stock/stock'
+      fullPath: '/api/public/back-in-stock/stock'
+      preLoaderRoute: typeof ApiPublicBackInStockStockRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/back-in-stock/signup': {
       id: '/api/public/back-in-stock/signup'
@@ -387,6 +408,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAgeVerificationDotjsRoute: ApiPublicAgeVerificationDotjsRoute,
   ApiPublicShoplabelDotjsRoute: ApiPublicShoplabelDotjsRoute,
   ApiPublicBackInStockSignupRoute: ApiPublicBackInStockSignupRoute,
+  ApiPublicBackInStockStockRoute: ApiPublicBackInStockStockRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

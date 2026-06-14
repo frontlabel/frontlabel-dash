@@ -108,37 +108,38 @@ const BIS_DEFAULTS = {
 
 export function buildBackInStockScript(rawSettings: Record<string, unknown>, shopId: string, origin: string): string {
   const s = { ...BIS_DEFAULTS, ...rawSettings } as typeof BIS_DEFAULTS;
-  const payload = JSON.stringify({ ...s, shopId, endpoint: `${origin}/api/public/back-in-stock/signup` });
+  const payload = JSON.stringify({
+    ...s,
+    shopId,
+    endpoint: `${origin}/api/public/back-in-stock/signup`,
+    stockEndpoint: `${origin}/api/public/back-in-stock/stock`,
+  });
   return `(function(){
   if (window.__shoplabelBIS) return; window.__shoplabelBIS = true;
   var s = ${payload};
   function ready(fn){if(document.readyState!=="loading")fn();else document.addEventListener("DOMContentLoaded",fn);}
+  function getProductId(){
+    var f=document.getElementById("product_configure_form");
+    if(f){
+      var inp=f.querySelector('input[name="product"]');
+      if(inp && /^[0-9]+$/.test(inp.value))return inp.value;
+    }
+    // fallback: data-attribuut
+    var el=document.querySelector("[data-product-id]");
+    if(el && /^[0-9]+$/.test(el.getAttribute("data-product-id")||""))return el.getAttribute("data-product-id");
+    return null;
+  }
+  function getLang(){
+    var l=(document.documentElement.lang||"nl").toLowerCase();
+    return l.slice(0,2);
+  }
   function findAnchor(){
     // 1) Expliciete hook
     var hook=document.querySelector("[data-shoplabel-bis]");
-    if(hook)return {el:hook,soldOut:true};
+    if(hook)return {el:hook,after:false};
     // 2) Lightspeed standaard productformulier
     var form=document.getElementById("product_configure_form");
-    if(form){
-      var soldOut=false;
-      var submit=form.querySelector('button[type="submit"], input[type="submit"]');
-      if(submit && (submit.disabled || /uitverkocht|sold\\s*out|niet\\s*leverbaar|out\\s*of\\s*stock/i.test(submit.textContent||submit.value||""))){
-        soldOut=true;
-      }
-      // sommige themes verbergen de submit-knop en tonen een "uitverkocht" label
-      if(!soldOut && /uitverkocht|sold\\s*out|niet\\s*leverbaar|out\\s*of\\s*stock/i.test(form.textContent||"")){
-        soldOut=true;
-      }
-      if(soldOut)return {el:form,soldOut:true};
-    }
-    // 3) Algemene fallback: knop met uitverkocht-tekst of disabled koopknop
-    var btns=document.querySelectorAll("button, .button, .btn, input[type='submit']");
-    for(var i=0;i<btns.length;i++){
-      var t=(btns[i].textContent||btns[i].value||"").trim().toLowerCase();
-      if(/^(uitverkocht|sold\\s*out|niet\\s*leverbaar|out\\s*of\\s*stock)$/i.test(t)||btns[i].disabled){
-        return {el:btns[i].parentNode,soldOut:true};
-      }
-    }
+    if(form)return {el:form,after:true};
     return null;
   }
   function productInfo(){
@@ -151,8 +152,7 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
       product_image_url: img?img.getAttribute("content"):undefined
     };
   }
-  ready(function(){
-    var anchor=findAnchor();if(!anchor||!anchor.soldOut)return;
+  function inject(anchor){
     var css=".slbl-bis-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.buttonColor+";color:#fff;padding:10px 14px;border-radius:6px;font:inherit;font-weight:600;margin-top:10px}"
       +".slbl-bis-form{margin-top:10px;display:flex;gap:8px;flex-direction:column;font-family:system-ui,sans-serif}"
       +".slbl-bis-inp{font:inherit;padding:8px;border:1px solid #d1d5db;border-radius:6px}"
@@ -161,8 +161,7 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
     var wrap=document.createElement("div");wrap.className="slbl-bis-wrap";
     var btn=document.createElement("button");btn.type="button";btn.className="slbl-bis-btn";btn.textContent=s.buttonText;
     wrap.appendChild(btn);
-    // Voor een <form> plakken we de knop ná de form zodat hij niet meegaat bij submit
-    if(anchor.el.tagName==="FORM"){anchor.el.parentNode.insertBefore(wrap,anchor.el.nextSibling);}
+    if(anchor.after){anchor.el.parentNode.insertBefore(wrap,anchor.el.nextSibling);}
     else{anchor.el.appendChild(wrap);}
     btn.addEventListener("click",function(){
       btn.style.display="none";
@@ -189,6 +188,32 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
         }).catch(function(){msg.style.color="#b91c1c";msg.textContent="Aanmelden mislukt. Probeer het later opnieuw.";});
       });
     });
+  }
+  function domFallbackSoldOut(){
+    var form=document.getElementById("product_configure_form");
+    if(form){
+      var submit=form.querySelector('button[type="submit"], input[type="submit"]');
+      if(submit && (submit.disabled || /uitverkocht|sold\\s*out|niet\\s*leverbaar|out\\s*of\\s*stock/i.test(submit.textContent||submit.value||"")))return true;
+      if(/uitverkocht|sold\\s*out|niet\\s*leverbaar|out\\s*of\\s*stock/i.test(form.textContent||""))return true;
+    }
+    return false;
+  }
+  ready(function(){
+    var anchor=findAnchor();if(!anchor)return;
+    // Expliciete hook: altijd tonen (gebruiker bepaalt zelf)
+    if(anchor.el.hasAttribute && anchor.el.hasAttribute("data-shoplabel-bis")){inject(anchor);return;}
+    // Lightspeed API check (snel & betrouwbaar)
+    var pid=getProductId();
+    if(pid){
+      var u=s.stockEndpoint+"?shop_id="+encodeURIComponent(s.shopId)+"&product_id="+encodeURIComponent(pid)+"&lang="+encodeURIComponent(getLang());
+      fetch(u).then(function(r){return r.json();}).then(function(d){
+        if(d && d.inStock===false){inject(anchor);}
+        else if(d && d.inStock===null && domFallbackSoldOut()){inject(anchor);}
+      }).catch(function(){if(domFallbackSoldOut())inject(anchor);});
+      return;
+    }
+    // Geen product-id: vertrouw op DOM
+    if(domFallbackSoldOut())inject(anchor);
   });
 })();`;
 }
