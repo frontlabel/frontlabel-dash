@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Home, Package, Palette, LogOut, Plug, Menu } from "lucide-react";
+import { Home, Package, Palette, LogOut, Plug, Menu, Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -16,10 +16,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [shops, setShops] = useState<Array<{ id: string; name: string }>>([]);
 
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    supabase
+      .from("shops")
+      .select("id,name")
+      .order("name")
+      .then(({ data }) => setShops((data as Array<{ id: string; name: string }> | null) ?? []));
+  }, []);
+
+  const activeShopId = pathname.match(/^\/shops\/([^/]+)/)?.[1] ?? null;
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -57,6 +68,33 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           );
         })}
+        {shops.length > 0 && (
+          <div className="pt-4">
+            <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+              Shops
+            </div>
+            {shops.map((s) => {
+              const active = activeShopId === s.id;
+              return (
+                <Link
+                  key={s.id}
+                  to="/shops/$shopId"
+                  params={{ shopId: s.id }}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded transition-colors text-sm",
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  )}
+                >
+                  <Store className="h-4 w-4" />
+                  <span className="truncate">{s.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </nav>
       <button
         onClick={signOut}
