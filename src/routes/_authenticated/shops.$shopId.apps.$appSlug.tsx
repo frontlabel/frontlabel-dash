@@ -260,7 +260,7 @@ function AppSettingsPage() {
                 branding tussen je shops.
               </p>
               <div className="flex gap-2">
-                <Input placeholder="Bijv. Frontlabel huisstijl" value={presetName}
+                <Input placeholder="Bijv. Shoplabel huisstijl" value={presetName}
                   onChange={(e) => setPresetName(e.target.value)} />
                 <Button variant="outline" onClick={savePreset}>
                   <Palette className="h-4 w-4" /> Bewaar
