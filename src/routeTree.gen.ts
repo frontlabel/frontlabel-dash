@@ -25,6 +25,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as ApiPublicBackInStockStockRouteImport } from './routes/api/public/back-in-stock.stock'
 import { Route as ApiPublicBackInStockSignupRouteImport } from './routes/api/public/back-in-stock.signup'
 import { Route as AuthenticatedShopsShopIdAppsRouteImport } from './routes/_authenticated/shops.$shopId.apps'
+import { Route as AuthenticatedShopsShopIdAppsPriceAlertRouteImport } from './routes/_authenticated/shops.$shopId.apps.price-alert'
 import { Route as AuthenticatedShopsShopIdAppsBackInStockRouteImport } from './routes/_authenticated/shops.$shopId.apps.back-in-stock'
 import { Route as AuthenticatedShopsShopIdAppsAppSlugRouteImport } from './routes/_authenticated/shops.$shopId.apps.$appSlug'
 
@@ -115,6 +116,12 @@ const AuthenticatedShopsShopIdAppsRoute =
     path: '/apps',
     getParentRoute: () => AuthenticatedShopsShopIdRoute,
   } as any)
+const AuthenticatedShopsShopIdAppsPriceAlertRoute =
+  AuthenticatedShopsShopIdAppsPriceAlertRouteImport.update({
+    id: '/price-alert',
+    path: '/price-alert',
+    getParentRoute: () => AuthenticatedShopsShopIdAppsRoute,
+  } as any)
 const AuthenticatedShopsShopIdAppsBackInStockRoute =
   AuthenticatedShopsShopIdAppsBackInStockRouteImport.update({
     id: '/back-in-stock',
@@ -146,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
+  '/shops/$shopId/apps/price-alert': typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -164,6 +172,7 @@ export interface FileRoutesByTo {
   '/shops/$shopId': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
+  '/shops/$shopId/apps/price-alert': typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -185,6 +194,7 @@ export interface FileRoutesById {
   '/_authenticated/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/_authenticated/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/_authenticated/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
+  '/_authenticated/shops/$shopId/apps/price-alert': typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/shops/$shopId/'
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
+    | '/shops/$shopId/apps/price-alert'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/shops/$shopId'
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
+    | '/shops/$shopId/apps/price-alert'
   id:
     | '__root__'
     | '/'
@@ -244,6 +256,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shops/$shopId/'
     | '/_authenticated/shops/$shopId/apps/$appSlug'
     | '/_authenticated/shops/$shopId/apps/back-in-stock'
+    | '/_authenticated/shops/$shopId/apps/price-alert'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -371,6 +384,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShopsShopIdAppsRouteImport
       parentRoute: typeof AuthenticatedShopsShopIdRoute
     }
+    '/_authenticated/shops/$shopId/apps/price-alert': {
+      id: '/_authenticated/shops/$shopId/apps/price-alert'
+      path: '/price-alert'
+      fullPath: '/shops/$shopId/apps/price-alert'
+      preLoaderRoute: typeof AuthenticatedShopsShopIdAppsPriceAlertRouteImport
+      parentRoute: typeof AuthenticatedShopsShopIdAppsRoute
+    }
     '/_authenticated/shops/$shopId/apps/back-in-stock': {
       id: '/_authenticated/shops/$shopId/apps/back-in-stock'
       path: '/back-in-stock'
@@ -402,6 +422,7 @@ const AuthenticatedAppsRouteWithChildren =
 interface AuthenticatedShopsShopIdAppsRouteChildren {
   AuthenticatedShopsShopIdAppsAppSlugRoute: typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   AuthenticatedShopsShopIdAppsBackInStockRoute: typeof AuthenticatedShopsShopIdAppsBackInStockRoute
+  AuthenticatedShopsShopIdAppsPriceAlertRoute: typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
 }
 
 const AuthenticatedShopsShopIdAppsRouteChildren: AuthenticatedShopsShopIdAppsRouteChildren =
@@ -410,6 +431,8 @@ const AuthenticatedShopsShopIdAppsRouteChildren: AuthenticatedShopsShopIdAppsRou
       AuthenticatedShopsShopIdAppsAppSlugRoute,
     AuthenticatedShopsShopIdAppsBackInStockRoute:
       AuthenticatedShopsShopIdAppsBackInStockRoute,
+    AuthenticatedShopsShopIdAppsPriceAlertRoute:
+      AuthenticatedShopsShopIdAppsPriceAlertRoute,
   }
 
 const AuthenticatedShopsShopIdAppsRouteWithChildren =
