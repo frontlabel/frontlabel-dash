@@ -27,9 +27,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const sidebarBody = (
     <>
-      <div className="h-14 flex items-center gap-2 px-4 border-b border-sidebar-border">
-        <div className="h-7 w-7 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold">S</div>
-        <span className="font-semibold tracking-tight">shoplabel</span>
+      <div className="h-14 flex items-center px-4 border-b border-sidebar-border">
+        <img
+          src="http://frontlabel.nl/wp-content/uploads/2025/10/frontlabel-logo-white@3x.png"
+          alt="Frontlabel"
+          className="h-7 w-auto object-contain"
+        />
       </div>
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
         {nav.map((item) => {
