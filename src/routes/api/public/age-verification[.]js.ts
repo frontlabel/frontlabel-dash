@@ -93,8 +93,7 @@ export const Route = createFileRoute("/api/public/age-verification.js")({
     +".slbl-av-badge{width:48px;height:48px;border-radius:9999px;background:"+s.primaryColor+";color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 12px}"
     +".slbl-av-h{font-size:18px;font-weight:600;margin:0 0 6px}"
     +".slbl-av-p{font-size:13px;opacity:.8;margin:0 0 16px}"
-    +".slbl-av-row{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px;margin-bottom:14px}"
-    +".slbl-av-row input{font:inherit;color:inherit;background:rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.15);border-radius:6px;padding:8px;text-align:center;width:100%;box-sizing:border-box}"
+    +".slbl-av-inp{font:inherit;color:inherit;background:rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.15);border-radius:6px;padding:8px;text-align:center;width:100%;max-width:220px;box-sizing:border-box;margin-bottom:14px}"
     +".slbl-av-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.primaryColor+";color:#fff;padding:10px 14px;border-radius:"+Math.max(4,s.borderRadius-4)+"px;font:inherit;font-weight:600}"
     +".slbl-av-no{margin-top:10px;background:none;border:0;color:inherit;opacity:.6;cursor:pointer;font:inherit;font-size:12px}"
     +".slbl-av-err{color:#b91c1c;font-size:12px;margin:-6px 0 10px;min-height:14px}"
@@ -105,7 +104,7 @@ export const Route = createFileRoute("/api/public/age-verification.js")({
   ov.innerHTML='<div class="slbl-av-md" role="dialog" aria-modal="true">'
     +'<div class="slbl-av-badge">'+s.minAge+'+</div>'
     +'<h2 class="slbl-av-h"></h2><p class="slbl-av-p"></p>'
-    +'<div class="slbl-av-row"><input inputmode="numeric" maxlength="2" placeholder="DD" data-k="d"><input inputmode="numeric" maxlength="2" placeholder="MM" data-k="m"><input inputmode="numeric" maxlength="4" placeholder="JJJJ" data-k="y"></div>'
+    +'<input type="date" autocomplete="bday" class="slbl-av-inp">'
     +'<div class="slbl-av-err"></div>'
     +'<button class="slbl-av-btn"></button>'
     +'<button class="slbl-av-no"></button></div>';
@@ -120,11 +119,13 @@ export const Route = createFileRoute("/api/public/age-verification.js")({
   if(document.body)attach();else document.addEventListener("DOMContentLoaded",attach);
 
   var err=ov.querySelector(".slbl-av-err");
-  var inputs=ov.querySelectorAll(".slbl-av-row input");
-  inputs.forEach(function(i,idx){i.addEventListener("input",function(){i.value=i.value.replace(/[^0-9]/g,"");if(i.value.length>=i.maxLength&&inputs[idx+1])inputs[idx+1].focus();});});
+  var dateInp=ov.querySelector(".slbl-av-inp");
 
   ov.querySelector(".slbl-av-btn").addEventListener("click",function(){
-    var d=+ov.querySelector('[data-k="d"]').value,m=+ov.querySelector('[data-k="m"]').value,y=+ov.querySelector('[data-k="y"]').value;
+    var val=dateInp.value;
+    if(!val){err.textContent="Vul een geldige geboortedatum in.";return;}
+    var parts=val.split("-");
+    var y=+parts[0],m=+parts[1],d=+parts[2];
     if(!d||!m||!y||y<1900){err.textContent="Vul een geldige geboortedatum in.";return;}
     var bd=new Date(y,m-1,d);if(bd.getDate()!==d||bd.getMonth()!==m-1){err.textContent="Vul een geldige geboortedatum in.";return;}
     var today=new Date();var age=today.getFullYear()-y;var mm=today.getMonth()-(m-1);if(mm<0||(mm===0&&today.getDate()<d))age--;
