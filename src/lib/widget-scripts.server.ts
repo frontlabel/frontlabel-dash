@@ -124,10 +124,10 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
       var inp=f.querySelector('input[name="product"]');
       if(inp && /^[0-9]+$/.test(inp.value))return inp.value;
       var sel=f.querySelector('select[name="variant"], select[name^="variant["]');
-      var n=sel && sel.getAttribute("name") ? sel.getAttribute("name").match(/variant\\[([0-9]+)\\]/) : null;
+      var n=sel && sel.getAttribute("name") ? sel.getAttribute("name").match(new RegExp("variant\\\\[([0-9]+)\\\\]")) : null;
       if(n)return n[1];
       var wish=f.querySelector('a[href*="/wishlistAdd/"]');
-      var wm=wish && wish.getAttribute("href") ? wish.getAttribute("href").match(/\\/wishlistAdd\\/([0-9]+)\\//) : null;
+      var wm=wish && wish.getAttribute("href") ? wish.getAttribute("href").match(new RegExp("/wishlistAdd/([0-9]+)/")) : null;
       if(wm)return wm[1];
     }
     var el=document.querySelector("[data-product-id],[data-pid]");
@@ -146,7 +146,7 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
     var f=document.getElementById("product_configure_form");
     if(!f)return null;
     var action=f.getAttribute("action")||"";
-    var m=action.match(/\\/cart\\/add\\/([0-9]+)\\/?/);
+    var m=action.match(new RegExp("/cart/add/([0-9]+)/?"));
     if(m)return m[1];
     var sel=f.querySelector('select[name="variant"], select[name^="variant["]');
     if(sel && /^[0-9]+$/.test(sel.value||""))return sel.value;
