@@ -61,7 +61,7 @@ function BackInStockPage() {
             Apps
           </Link>
           <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="text-foreground truncate">Back in Stock Alerts</span>
+          <span className="text-foreground truncate">Terug-op-voorraad meldingen</span>
         </nav>
         <div className="flex items-center gap-2 text-sm shrink-0">
           <Switch id="app-active" checked={active} onCheckedChange={setActive} />
@@ -74,45 +74,45 @@ function BackInStockPage() {
     return () => setContent(null);
   }, [shopId, active, setContent]);
 
-  // Widget design state
-  const [buttonText, setButtonText] = useState("Notify me when available");
+  // Widget-ontwerp state
+  const [buttonText, setButtonText] = useState("Meld me wanneer beschikbaar");
   const [buttonColor, setButtonColor] = useState("#111827");
   const [newsletterOptIn, setNewsletterOptIn] = useState(true);
 
-  // Email config state
+  // E-mail configuratie state
   const [emailSubject, setEmailSubject] = useState(
-    "Good news — {product} is back in stock!",
+    "Goed nieuws — {product} is weer op voorraad!",
   );
   const [brandColor, setBrandColor] = useState("#111827");
   const [customMessage, setCustomMessage] = useState(
-    "Hi {name}, the item you were waiting for is available again. Grab it before it's gone!",
+    "Hi {name}, het product waarop je wachtte is weer beschikbaar. Wees er snel bij voordat het opnieuw uitverkocht is!",
   );
   const [scarcityUrgency, setScarcityUrgency] = useState(true);
 
-  // Waitlist state
+  // Wachtlijst state
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const topProducts = useMemo(
     () => [
-      { name: "Selvedge Denim Jacket", stock: 0, waitlist: 84, value: "€2,520" },
-      { name: "Merino Crew Knit — Cream", stock: 0, waitlist: 61, value: "€1,830" },
-      { name: "Suede Chelsea Boots", stock: 2, waitlist: 47, value: "€1,645" },
-      { name: "Linen Overshirt — Olive", stock: 0, waitlist: 39, value: "€1,170" },
-      { name: "Wool Beanie — Charcoal", stock: 0, waitlist: 28, value: "€420" },
+      { name: "Selvedge spijkerjas", stock: 0, waitlist: 84, value: "€2.520" },
+      { name: "Merino trui — Crème", stock: 0, waitlist: 61, value: "€1.830" },
+      { name: "Suède Chelsea boots", stock: 2, waitlist: 47, value: "€1.645" },
+      { name: "Linnen overshirt — Olijf", stock: 0, waitlist: 39, value: "€1.170" },
+      { name: "Wollen muts — Antraciet", stock: 0, waitlist: 28, value: "€420" },
     ],
     [],
   );
 
   const waitlist = useMemo(
     () => [
-      { email: "anna.devries@example.com", product: "Selvedge Denim Jacket", date: "2026-06-12", status: "Pending" as const },
-      { email: "lukas.b@example.com", product: "Merino Crew Knit — Cream", date: "2026-06-11", status: "Notified" as const },
-      { email: "sophie.k@example.com", product: "Suede Chelsea Boots", date: "2026-06-10", status: "Purchased" as const },
-      { email: "marc.j@example.com", product: "Linen Overshirt — Olive", date: "2026-06-09", status: "Pending" as const },
-      { email: "emma.t@example.com", product: "Selvedge Denim Jacket", date: "2026-06-08", status: "Notified" as const },
-      { email: "noah.p@example.com", product: "Wool Beanie — Charcoal", date: "2026-06-07", status: "Pending" as const },
-      { email: "lisa.m@example.com", product: "Merino Crew Knit — Cream", date: "2026-06-06", status: "Purchased" as const },
+      { email: "anna.devries@example.com", product: "Selvedge spijkerjas", date: "12-06-2026", status: "Pending" as const },
+      { email: "lukas.b@example.com", product: "Merino trui — Crème", date: "11-06-2026", status: "Notified" as const },
+      { email: "sophie.k@example.com", product: "Suède Chelsea boots", date: "10-06-2026", status: "Purchased" as const },
+      { email: "marc.j@example.com", product: "Linnen overshirt — Olijf", date: "09-06-2026", status: "Pending" as const },
+      { email: "emma.t@example.com", product: "Selvedge spijkerjas", date: "08-06-2026", status: "Notified" as const },
+      { email: "noah.p@example.com", product: "Wollen muts — Antraciet", date: "07-06-2026", status: "Pending" as const },
+      { email: "lisa.m@example.com", product: "Merino trui — Crème", date: "06-06-2026", status: "Purchased" as const },
     ],
     [],
   );
@@ -127,18 +127,18 @@ function BackInStockPage() {
   });
 
   const tabs = [
-    { id: "overview" as const, label: "Overview & Analytics" },
-    { id: "widget" as const, label: "Widget Design" },
-    { id: "email" as const, label: "Email Configuration" },
-    { id: "waitlist" as const, label: "Waitlist Management" },
+    { id: "overview" as const, label: "Overzicht & analyses" },
+    { id: "widget" as const, label: "Widget-ontwerp" },
+    { id: "email" as const, label: "E-mail configuratie" },
+    { id: "waitlist" as const, label: "Wachtlijst" },
   ];
 
   return (
     <div className="max-w-6xl mx-auto pb-16">
       <div className="px-6 pt-8">
-        <h1 className="text-2xl font-bold tracking-tight">Back in Stock Alerts</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Terug-op-voorraad meldingen</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Turn out-of-stock products into recovered revenue.
+          Zet uitverkochte producten om in teruggewonnen omzet.
         </p>
       </div>
       <div className="px-6 mt-4 border-b border-border">
@@ -168,36 +168,36 @@ function BackInStockPage() {
           <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <MetricCard
-              label="Recovered Revenue"
+              label="Teruggewonnen omzet"
               value="€3,450"
               valueClassName="text-emerald-600"
-              badge="+12% this month"
+              badge="+12% deze maand"
               badgeTone="success"
               icon={<TrendingUp className="h-4 w-4" />}
             />
             <MetricCard
-              label="Emails Sent"
+              label="E-mails verzonden"
               value="412"
               icon={<Mail className="h-4 w-4" />}
             />
             <MetricCard
-              label="Conversion Rate"
+              label="Conversieratio"
               value="18.5%"
               icon={<Bell className="h-4 w-4" />}
             />
           </div>
 
           <div>
-            <SectionLabel>Top Requested Products</SectionLabel>
+            <SectionLabel>Meest aangevraagde producten</SectionLabel>
             <SectionCard>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[72px] pl-4">Product</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="text-right">Current Stock</TableHead>
-                    <TableHead className="text-right">Waitlist Size</TableHead>
-                    <TableHead className="text-right pr-4">Potential Value</TableHead>
+                    <TableHead className="w-[72px] pl-4">Foto</TableHead>
+                    <TableHead>Naam</TableHead>
+                    <TableHead className="text-right">Voorraad</TableHead>
+                    <TableHead className="text-right">Wachtlijst</TableHead>
+                    <TableHead className="text-right pr-4">Potentiële waarde</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -211,7 +211,7 @@ function BackInStockPage() {
                       <TableCell className="font-medium">{p.name}</TableCell>
                       <TableCell className="text-right">
                         {p.stock === 0 ? (
-                          <Badge variant="destructive" className="text-xs">Out of stock</Badge>
+                          <Badge variant="destructive" className="text-xs">Uitverkocht</Badge>
                         ) : (
                           <span className="text-sm">{p.stock}</span>
                         )}
@@ -230,10 +230,10 @@ function BackInStockPage() {
         {tab === "widget" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
-              <SectionLabel>Settings</SectionLabel>
+              <SectionLabel>Instellingen</SectionLabel>
               <SectionCard className="p-5 space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="btnText">Button Text</Label>
+                  <Label htmlFor="btnText">Knoptekst</Label>
                   <Input
                     id="btnText"
                     value={buttonText}
@@ -241,7 +241,7 @@ function BackInStockPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Button Color</Label>
+                  <Label>Knopkleur</Label>
                   <div className="flex gap-2 items-center">
                     <input
                       type="color"
@@ -263,14 +263,14 @@ function BackInStockPage() {
                     onCheckedChange={(v) => setNewsletterOptIn(Boolean(v))}
                   />
                   <Label htmlFor="newsletter" className="cursor-pointer leading-tight">
-                    Add Newsletter Opt-in checkbox to capture leads
+                    Voeg een nieuwsbrief-opt-in toe om leads te verzamelen
                   </Label>
                 </div>
               </SectionCard>
             </div>
 
             <div>
-              <SectionLabel>Live Preview</SectionLabel>
+              <SectionLabel>Live voorbeeld</SectionLabel>
               <SectionCard className="p-5">
                 <div className="rounded-md border border-border bg-background p-5">
                   <div className="grid grid-cols-[120px_1fr] gap-4">
@@ -279,13 +279,13 @@ function BackInStockPage() {
                     </div>
                     <div className="space-y-2">
                       <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                        Outerwear
+                        Jassen
                       </div>
                       <div className="font-semibold text-base leading-tight">
-                        Selvedge Denim Jacket
+                        Selvedge spijkerjas
                       </div>
                       <div className="text-sm font-medium">€189,00</div>
-                      <Badge variant="destructive" className="text-xs">Out of stock</Badge>
+                      <Badge variant="destructive" className="text-xs">Uitverkocht</Badge>
                     </div>
                   </div>
                   <div className="mt-5 space-y-3">
@@ -294,12 +294,12 @@ function BackInStockPage() {
                       className="w-full rounded-md py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
                       style={{ backgroundColor: buttonColor }}
                     >
-                      {buttonText || "Notify me when available"}
+                      {buttonText || "Meld me wanneer beschikbaar"}
                     </button>
                     {newsletterOptIn && (
                       <label className="flex items-start gap-2 text-xs text-muted-foreground">
                         <input type="checkbox" defaultChecked className="mt-0.5" />
-                        <span>Yes, also send me occasional updates and offers.</span>
+                        <span>Ja, stuur me ook af en toe updates en aanbiedingen.</span>
                       </label>
                     )}
                   </div>
@@ -312,10 +312,10 @@ function BackInStockPage() {
         {tab === "email" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
-              <SectionLabel>Settings</SectionLabel>
+              <SectionLabel>Instellingen</SectionLabel>
               <SectionCard className="p-5 space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="subject">Email Subject</Label>
+                  <Label htmlFor="subject">Onderwerp</Label>
                   <Input
                     id="subject"
                     value={emailSubject}
@@ -323,7 +323,7 @@ function BackInStockPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Company Logo</Label>
+                  <Label>Bedrijfslogo</Label>
                   <div className="flex items-center gap-3">
                     <div className="h-12 w-12 rounded-md border border-dashed border-border flex items-center justify-center bg-muted/40">
                       <ImageIcon className="h-5 w-5 text-muted-foreground" />
@@ -334,7 +334,7 @@ function BackInStockPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Brand Color</Label>
+                  <Label>Merkkleur</Label>
                   <div className="flex gap-2 items-center">
                     <input
                       type="color"
@@ -350,7 +350,7 @@ function BackInStockPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="msg">Custom Message</Label>
+                  <Label htmlFor="msg">Persoonlijk bericht</Label>
                   <Textarea
                     id="msg"
                     rows={4}
@@ -361,10 +361,10 @@ function BackInStockPage() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
                     <Label htmlFor="urgency" className="cursor-pointer">
-                      Add Scarcity Urgency
+                      Voeg urgentie toe
                     </Label>
                     <p className="text-xs text-muted-foreground">
-                      Voegt regels toe als "Only a few left!" om conversie te verhogen.
+                      Voegt regels toe zoals "Nog maar enkele beschikbaar!" om conversie te verhogen.
                     </p>
                   </div>
                   <Switch
@@ -377,7 +377,7 @@ function BackInStockPage() {
             </div>
 
             <div>
-              <SectionLabel>Preview</SectionLabel>
+              <SectionLabel>Voorbeeld</SectionLabel>
               <SectionCard className="p-5">
                 <div className="rounded-lg border border-border overflow-hidden bg-background shadow-sm">
                   <div
@@ -386,18 +386,18 @@ function BackInStockPage() {
                   />
                   <div className="p-6 space-y-4">
                     <div className="text-xs text-muted-foreground">
-                      Subject: <span className="text-foreground">{emailSubject}</span>
+                      Onderwerp: <span className="text-foreground">{emailSubject}</span>
                     </div>
                     <div className="rounded-md bg-muted h-44 flex items-center justify-center">
                       <ImageIcon className="h-8 w-8 text-muted-foreground" />
                     </div>
                     <div className="space-y-1">
-                      <div className="font-semibold text-lg">Selvedge Denim Jacket</div>
+                      <div className="font-semibold text-lg">Selvedge spijkerjas</div>
                       <div className="text-sm font-medium">€189,00</div>
                     </div>
                     {scarcityUrgency && (
                       <div className="text-xs font-medium text-amber-600">
-                        ⚡ Only a few left — don't wait too long!
+                        ⚡ Nog maar enkele beschikbaar — wacht niet te lang!
                       </div>
                     )}
                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -408,7 +408,7 @@ function BackInStockPage() {
                       className="w-full rounded-md py-2.5 text-sm font-semibold text-white"
                       style={{ backgroundColor: brandColor }}
                     >
-                      Shop now
+                      Shop nu
                     </button>
                   </div>
                 </div>
@@ -425,7 +425,7 @@ function BackInStockPage() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by email or product…"
+                placeholder="Zoek op e-mail of product…"
                 className="pl-9"
               />
             </div>
@@ -434,10 +434,10 @@ function BackInStockPage() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Notified">Notified</SelectItem>
-                <SelectItem value="Purchased">Purchased</SelectItem>
+                <SelectItem value="all">Alle statussen</SelectItem>
+                <SelectItem value="Pending">In afwachting</SelectItem>
+                <SelectItem value="Notified">Geïnformeerd</SelectItem>
+                <SelectItem value="Purchased">Gekocht</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -446,9 +446,9 @@ function BackInStockPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="pl-4">Email Address</TableHead>
-                  <TableHead>Product Name</TableHead>
-                  <TableHead>Request Date</TableHead>
+                  <TableHead className="pl-4">E-mailadres</TableHead>
+                  <TableHead>Productnaam</TableHead>
+                  <TableHead>Aanvraagdatum</TableHead>
                   <TableHead className="text-right pr-4">Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -529,9 +529,11 @@ function StatusBadge({ status }: { status: "Pending" | "Notified" | "Purchased" 
       : status === "Notified"
         ? "bg-blue-100 text-blue-700"
         : "bg-amber-100 text-amber-700";
+  const label =
+    status === "Purchased" ? "Gekocht" : status === "Notified" ? "Geïnformeerd" : "In afwachting";
   return (
     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${styles}`}>
-      {status}
+      {label}
     </span>
   );
 }
