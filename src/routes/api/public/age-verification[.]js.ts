@@ -32,7 +32,7 @@ function emptyScript(reason: string) {
   });
 }
 
-export const Route = createFileRoute("/api/public/age-verification[.]js")({
+export const Route = createFileRoute("/api/public/age-verification.js")({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),

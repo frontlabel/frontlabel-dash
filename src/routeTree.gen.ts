@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPresetsRouteImport } from './routes/_authenticated/presets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
+import { Route as ApiPublicAgeVerificationDotjsRouteImport } from './routes/api/public/age-verification[.]js'
 import { Route as AuthenticatedShopsNewRouteImport } from './routes/_authenticated/shops.new'
 import { Route as AuthenticatedShopsShopIdRouteImport } from './routes/_authenticated/shops.$shopId'
 import { Route as AuthenticatedShopsShopIdIndexRouteImport } from './routes/_authenticated/shops.$shopId.index'
@@ -50,6 +51,12 @@ const AuthenticatedAppsRoute = AuthenticatedAppsRouteImport.update({
   path: '/apps',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicAgeVerificationDotjsRoute =
+  ApiPublicAgeVerificationDotjsRouteImport.update({
+    id: '/api/public/age-verification.js',
+    path: '/api/public/age-verification.js',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedShopsNewRoute = AuthenticatedShopsNewRouteImport.update({
   id: '/shops/new',
   path: '/shops/new',
@@ -88,6 +95,7 @@ export interface FileRoutesByFullPath {
   '/presets': typeof AuthenticatedPresetsRoute
   '/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
   '/shops/new': typeof AuthenticatedShopsNewRoute
+  '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
@@ -99,6 +107,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/presets': typeof AuthenticatedPresetsRoute
   '/shops/new': typeof AuthenticatedShopsNewRoute
+  '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/shops/$shopId': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
@@ -113,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated/presets': typeof AuthenticatedPresetsRoute
   '/_authenticated/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
   '/_authenticated/shops/new': typeof AuthenticatedShopsNewRoute
+  '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
   '/_authenticated/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/_authenticated/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/_authenticated/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/presets'
     | '/shops/$shopId'
     | '/shops/new'
+    | '/api/public/age-verification.js'
     | '/shops/$shopId/apps'
     | '/shops/$shopId/'
     | '/shops/$shopId/apps/$appSlug'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/presets'
     | '/shops/new'
+    | '/api/public/age-verification.js'
     | '/shops/$shopId/apps'
     | '/shops/$shopId'
     | '/shops/$shopId/apps/$appSlug'
@@ -151,6 +163,7 @@ export interface FileRouteTypes {
     | '/_authenticated/presets'
     | '/_authenticated/shops/$shopId'
     | '/_authenticated/shops/new'
+    | '/api/public/age-verification.js'
     | '/_authenticated/shops/$shopId/apps'
     | '/_authenticated/shops/$shopId/'
     | '/_authenticated/shops/$shopId/apps/$appSlug'
@@ -160,6 +173,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicAgeVerificationDotjsRoute: typeof ApiPublicAgeVerificationDotjsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -205,6 +219,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/apps'
       preLoaderRoute: typeof AuthenticatedAppsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/age-verification.js': {
+      id: '/api/public/age-verification.js'
+      path: '/api/public/age-verification.js'
+      fullPath: '/api/public/age-verification.js'
+      preLoaderRoute: typeof ApiPublicAgeVerificationDotjsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/shops/new': {
       id: '/_authenticated/shops/new'
@@ -299,6 +320,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicAgeVerificationDotjsRoute: ApiPublicAgeVerificationDotjsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
