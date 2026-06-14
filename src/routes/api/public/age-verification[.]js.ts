@@ -16,7 +16,7 @@ const DEFAULTS = {
   declineText: "Ik ben jonger",
   declineRedirect: "https://www.google.com",
   rememberDays: 30,
-  primaryColor: "#2c7be5",
+  primaryColor: "#5187e0",
   textColor: "#1f2937",
   backgroundColor: "#ffffff",
   overlayColor: "#0f172a",
