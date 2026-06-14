@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/shops/$shopId/")({
   component: ShopConnectionPage,
 });
 
-const PERMISSIONS = ["Inhoud", "Producten", "Klanten", "Orders", "Instellingen", "Tracking"];
+
 
 interface Shop {
   id: string;
@@ -92,16 +92,12 @@ function ShopConnectionPage() {
 
       <div>
         <SectionLabel>Instellingen</SectionLabel>
-        <p className="text-sm text-muted-foreground px-1 mb-3 max-w-2xl">
-          De permissies die je selecteert zullen volledige toegang geven tot de gekozen onderdelen van je
-          eCom winkel. Wees behoedzaam wanneer je deze API key met derden deelt.
-        </p>
         <SectionCard>
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
             <Label htmlFor="active" className="font-semibold">Activeer API key</Label>
             <Switch id="active" checked={active} onCheckedChange={setActive} />
           </div>
-          <div className="p-5 space-y-4 border-b border-border">
+          <div className="p-5 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Titel</Label>
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -109,22 +105,6 @@ function ShopConnectionPage() {
             <div className="space-y-2">
               <Label htmlFor="url">Shop URL</Label>
               <Input id="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
-            </div>
-          </div>
-          <div className="p-5">
-            <h4 className="font-semibold mb-4">Permissies</h4>
-            <div className="space-y-3">
-              {PERMISSIONS.map((p) => (
-                <div key={p} className="grid grid-cols-[1fr_auto_auto] items-center gap-8">
-                  <span className="text-sm font-medium">{p}</span>
-                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Checkbox /> Lezen
-                  </label>
-                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Checkbox /> Schrijven
-                  </label>
-                </div>
-              ))}
             </div>
           </div>
         </SectionCard>
