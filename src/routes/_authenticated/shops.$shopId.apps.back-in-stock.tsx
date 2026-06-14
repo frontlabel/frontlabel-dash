@@ -549,9 +549,10 @@ function BackInStockPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Alle statussen</SelectItem>
-                <SelectItem value="Pending">In afwachting</SelectItem>
-                <SelectItem value="Notified">Geïnformeerd</SelectItem>
-                <SelectItem value="Purchased">Gekocht</SelectItem>
+                <SelectItem value="pending">In afwachting</SelectItem>
+                <SelectItem value="notified">Geïnformeerd</SelectItem>
+                <SelectItem value="purchased">Gekocht</SelectItem>
+                <SelectItem value="cancelled">Geannuleerd</SelectItem>
               </SelectContent>
             </Select>
           </div>
