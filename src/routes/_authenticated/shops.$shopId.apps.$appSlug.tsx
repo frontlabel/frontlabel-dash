@@ -205,9 +205,9 @@ function AppSettingsPage() {
         </div>
       )}
 
-      <div className="px-6 pt-6 mb-6">
-        <h2 className="text-xl font-bold">{app.name}</h2>
-        <p className="text-sm text-muted-foreground">{app.tagline}</p>
+      <div className="px-6 pt-8 mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">{app.name}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{app.tagline}</p>
       </div>
 
       <div className="px-6 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
