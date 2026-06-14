@@ -51,9 +51,12 @@ export interface AgeVerificationSettings {
   textColor: string;
   backgroundColor: string;
   overlayColor: string;
+  overlayOpacity: number;
   fontFamily: string;
   backgroundImageUrl: string;
   borderRadius: number;
+  blockUnderage: boolean;
+  blockDays: number;
 }
 
 export const DEFAULT_AGE_VERIFICATION: AgeVerificationSettings = {
@@ -67,10 +70,13 @@ export const DEFAULT_AGE_VERIFICATION: AgeVerificationSettings = {
   primaryColor: "#2c7be5",
   textColor: "#1f2937",
   backgroundColor: "#ffffff",
-  overlayColor: "rgba(15, 23, 42, 0.75)",
+  overlayColor: "#0f172a",
+  overlayOpacity: 0.75,
   fontFamily: "Inter",
   backgroundImageUrl: "",
   borderRadius: 12,
+  blockUnderage: true,
+  blockDays: 365,
 };
 
 export const FONT_OPTIONS = [
