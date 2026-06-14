@@ -145,4 +145,14 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+
+  a {
+    color: #2775c6;
+    text-decoration: none;
+    transition: color .15s ease-out;
+  }
+
+  a:hover {
+    color: #2bcdfc;
+  }
 }

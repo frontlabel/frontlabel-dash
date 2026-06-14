@@ -89,7 +89,13 @@ function AppsList({ shopId }: { shopId: string }) {
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">{app.name}</span>
+                    {inst ? (
+                      <Link to="/shops/$shopId/apps/$appSlug" params={{ shopId, appSlug: app.slug }} className="font-semibold">
+                        {app.name}
+                      </Link>
+                    ) : (
+                      <span className="font-semibold">{app.name}</span>
+                    )}
                     <Badge variant="secondary" className="text-xs">{app.category}</Badge>
                     {app.status === "coming-soon" && (
                       <Badge variant="outline" className="text-xs">Binnenkort</Badge>

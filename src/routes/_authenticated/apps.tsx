@@ -39,15 +39,23 @@ function AppsCatalogPage() {
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold">{app.name}</h3>
+                      {app.status === "coming-soon" ? (
+                        <h3 className="font-semibold">{app.name}</h3>
+                      ) : (
+                        <Link to="/dashboard" className="font-semibold">
+                          {app.name}
+                        </Link>
+                      )}
                       {app.status === "coming-soon" && (
                         <Badge variant="outline" className="text-xs">Binnenkort</Badge>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">{app.description}</p>
-                    <Link to="/dashboard" className="text-sm text-primary hover:underline">
-                      Kies een shop om te installeren →
-                    </Link>
+                    {app.status !== "coming-soon" && (
+                      <Link to="/dashboard" className="text-sm">
+                        Kies een shop om te installeren →
+                      </Link>
+                    )}
                   </div>
                 </div>
               </SectionCard>
