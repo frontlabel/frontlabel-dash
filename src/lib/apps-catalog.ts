@@ -1,3 +1,10 @@
+import ageCheckAsset from "@/assets/squares-agecheck.jpg.asset.json";
+import backInStockAsset from "@/assets/squares-backinstock.jpg.asset.json";
+import filterByStockAsset from "@/assets/squares-filterbystock.jpg.asset.json";
+import instagramFeedAsset from "@/assets/squares-instagramfeed.jpg.asset.json";
+import priceAlertAsset from "@/assets/squares-pricealert.jpg.asset.json";
+import priceDropAsset from "@/assets/squares-pricedrop.jpg.asset.json";
+
 export interface AppDefinition {
   slug: string;
   name: string;
