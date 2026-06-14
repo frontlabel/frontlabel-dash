@@ -66,13 +66,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex w-full bg-background">
-      <aside className="hidden md:flex w-60 shrink-0 bg-sidebar text-sidebar-foreground flex-col">
+      <aside className="hidden md:flex w-60 shrink-0 bg-sidebar text-sidebar-foreground flex-col" style={{ fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: '16px' }}>
         {sidebarBody}
       </aside>
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent
           side="left"
           className="w-72 p-0 bg-sidebar text-sidebar-foreground border-sidebar-border flex flex-col"
+          style={{ fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: '16px' }}
         >
           <SheetTitle className="sr-only">Navigatie</SheetTitle>
           {sidebarBody}
