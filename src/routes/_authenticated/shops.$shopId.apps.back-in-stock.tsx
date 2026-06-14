@@ -8,12 +8,6 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/tabs";
-import {
   Table,
   TableBody,
   TableCell,
@@ -30,10 +24,12 @@ import {
 } from "@/components/ui/select";
 import { SectionCard, SectionLabel } from "@/components/section-card";
 import { useShellHeader } from "@/components/shell-header-context";
+import { cn } from "@/lib/utils";
 import {
-  ArrowLeft,
   Bell,
+  ChevronRight,
   ImageIcon,
+  LayoutGrid,
   Mail,
   Search,
   TrendingUp,
@@ -50,19 +46,27 @@ function BackInStockPage() {
   const { shopId } = Route.useParams();
   const { setContent } = useShellHeader();
   const [active, setActive] = useState(true);
+  const [tab, setTab] = useState<"overview" | "widget" | "email" | "waitlist">("overview");
 
   useEffect(() => {
     setContent(
       <div className="flex items-center justify-between w-full gap-3">
-        <Button asChild variant="ghost" size="sm" className="-ml-2">
-          <Link to="/shops/$shopId/apps" params={{ shopId }}>
-            <ArrowLeft className="h-4 w-4" /> Back to Apps
+        <nav className="flex items-center gap-2 text-sm min-w-0">
+          <LayoutGrid className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Link
+            to="/shops/$shopId/apps"
+            params={{ shopId }}
+            className="text-foreground hover:underline truncate"
+          >
+            Apps
           </Link>
-        </Button>
-        <div className="flex items-center gap-2 text-sm">
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-foreground truncate">Back in Stock Alerts</span>
+        </nav>
+        <div className="flex items-center gap-2 text-sm shrink-0">
           <Switch id="app-active" checked={active} onCheckedChange={setActive} />
           <Label htmlFor="app-active" className="cursor-pointer">
-            {active ? "App Active" : "App Inactive"}
+            {active ? "Actief" : "Uit"}
           </Label>
         </div>
       </div>,
@@ -122,25 +126,46 @@ function BackInStockPage() {
     return matchesSearch && matchesStatus;
   });
 
+  const tabs = [
+    { id: "overview" as const, label: "Overview & Analytics" },
+    { id: "widget" as const, label: "Widget Design" },
+    { id: "email" as const, label: "Email Configuration" },
+    { id: "waitlist" as const, label: "Waitlist Management" },
+  ];
+
   return (
-    <div className="px-6 pt-6 pb-16 max-w-6xl mx-auto">
-      <header className="mb-6">
+    <div className="max-w-6xl mx-auto pb-16">
+      <div className="px-6 pt-8">
         <h1 className="text-2xl font-bold tracking-tight">Back in Stock Alerts</h1>
         <p className="text-sm text-muted-foreground mt-1">
           Turn out-of-stock products into recovered revenue.
         </p>
-      </header>
+      </div>
+      <div className="px-6 mt-4 border-b border-border">
+        <div className="flex gap-1 overflow-x-auto">
+          {tabs.map((t) => {
+            const isActive = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+                  isActive
+                    ? "border-primary text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 h-auto w-full sm:w-auto">
-          <TabsTrigger value="overview">Overview & Analytics</TabsTrigger>
-          <TabsTrigger value="widget">Widget Design</TabsTrigger>
-          <TabsTrigger value="email">Email Configuration</TabsTrigger>
-          <TabsTrigger value="waitlist">Waitlist Management</TabsTrigger>
-        </TabsList>
-
-        {/* OVERVIEW */}
-        <TabsContent value="overview" className="mt-6 space-y-6">
+      <div className="px-6 py-6">
+        {tab === "overview" && (
+          <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <MetricCard
               label="Recovered Revenue"
@@ -199,10 +224,10 @@ function BackInStockPage() {
               </Table>
             </SectionCard>
           </div>
-        </TabsContent>
+          </div>
+        )}
 
-        {/* WIDGET DESIGN */}
-        <TabsContent value="widget" className="mt-6">
+        {tab === "widget" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <SectionLabel>Settings</SectionLabel>
@@ -282,10 +307,9 @@ function BackInStockPage() {
               </SectionCard>
             </div>
           </div>
-        </TabsContent>
+        )}
 
-        {/* EMAIL CONFIG */}
-        <TabsContent value="email" className="mt-6">
+        {tab === "email" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <SectionLabel>Settings</SectionLabel>
@@ -391,10 +415,10 @@ function BackInStockPage() {
               </SectionCard>
             </div>
           </div>
-        </TabsContent>
+        )}
 
-        {/* WAITLIST */}
-        <TabsContent value="waitlist" className="mt-6 space-y-4">
+        {tab === "waitlist" && (
+          <div className="space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -450,8 +474,9 @@ function BackInStockPage() {
               </TableBody>
             </Table>
           </SectionCard>
-        </TabsContent>
-      </Tabs>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
