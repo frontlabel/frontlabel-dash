@@ -4,6 +4,7 @@ import { Home, Package, Palette, LogOut, Plug, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { ShellHeaderProvider, useShellHeader } from "@/components/shell-header-context";
 
 const nav = [
   { to: "/dashboard", label: "Shops", icon: Home },
