@@ -157,6 +157,71 @@ export type Database = {
         }
         Relationships: []
       }
+      price_alert_requests: {
+        Row: {
+          created_at: string
+          currency: string
+          current_price: number | null
+          email: string
+          id: string
+          newsletter_opt_in: boolean
+          notified_at: string | null
+          product_handle: string
+          product_image_url: string | null
+          product_title: string | null
+          purchased_at: string | null
+          shop_id: string
+          status: string
+          target_price: number
+          updated_at: string
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          current_price?: number | null
+          email: string
+          id?: string
+          newsletter_opt_in?: boolean
+          notified_at?: string | null
+          product_handle: string
+          product_image_url?: string | null
+          product_title?: string | null
+          purchased_at?: string | null
+          shop_id: string
+          status?: string
+          target_price: number
+          updated_at?: string
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          current_price?: number | null
+          email?: string
+          id?: string
+          newsletter_opt_in?: boolean
+          notified_at?: string | null
+          product_handle?: string
+          product_image_url?: string | null
+          product_title?: string | null
+          purchased_at?: string | null
+          shop_id?: string
+          status?: string
+          target_price?: number
+          updated_at?: string
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_alert_requests_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_apps: {
         Row: {
           app_slug: string
