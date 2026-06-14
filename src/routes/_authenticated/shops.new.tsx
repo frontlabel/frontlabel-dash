@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
@@ -50,10 +50,6 @@ function NewShopPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="px-6 pt-8">
-        <Link to="/dashboard" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="h-4 w-4" /> Shops
-        </Link>
-      </div>
       <PageHeader
         title="Shop koppelen"
         subtitle="Vul je Lightspeed API credentials in om deze shop aan je admin te koppelen."
