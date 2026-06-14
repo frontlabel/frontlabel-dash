@@ -121,14 +121,14 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
   function getProductId(){
     var f=document.getElementById("product_configure_form");
     if(f){
-      var action=f.getAttribute("action")||"";
-      var m=action.match(/\/cart\/add\/([0-9]+)\/?/);
-      if(m)return m[1];
       var inp=f.querySelector('input[name="product"]');
       if(inp && /^[0-9]+$/.test(inp.value))return inp.value;
       var sel=f.querySelector('select[name="variant"], select[name^="variant["]');
       var n=sel && sel.getAttribute("name") ? sel.getAttribute("name").match(/variant\[([0-9]+)\]/) : null;
       if(n)return n[1];
+      var wish=f.querySelector('a[href*="/wishlistAdd/"]');
+      var wm=wish && wish.getAttribute("href") ? wish.getAttribute("href").match(/\/wishlistAdd\/([0-9]+)\//) : null;
+      if(wm)return wm[1];
     }
     var el=document.querySelector("[data-product-id],[data-pid]");
     var val=el && (el.getAttribute("data-product-id")||el.getAttribute("data-pid"));
@@ -138,6 +138,8 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
       try{return fetch(json.getAttribute("data-json"),{credentials:"omit"}).then(function(r){return r.json();}).then(function(d){return d&&d.product&&d.product.id?String(d.product.id):null;}).catch(function(){return null;});}
       catch(e){}
     }
+    try{return fetch(location.origin+location.pathname+"?format=json",{credentials:"omit"}).then(function(r){return r.json();}).then(function(d){return d&&d.product&&d.product.id?String(d.product.id):null;}).catch(function(){return null;});}
+    catch(e){}
     return null;
   }
   function getVariantId(){
