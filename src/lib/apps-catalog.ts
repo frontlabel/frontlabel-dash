@@ -56,10 +56,11 @@ export const APPS_CATALOG: AppDefinition[] = [
   {
     slug: "price-alert",
     name: "Price alert",
-    tagline: "Klanten waarschuwen bij prijsdalingen",
-    description: "Binnenkort beschikbaar.",
+    tagline: "Mail klanten zodra hun streefprijs gehaald wordt",
+    description:
+      "Bezoekers laten een e-mailadres en hun gewenste prijs achter. Zodra de prijs op of onder dat bedrag zakt, sturen we hen automatisch een melding.",
     category: "Conversie",
-    status: "coming-soon",
+    status: "available",
     image: priceAlertAsset.url,
   },
   {

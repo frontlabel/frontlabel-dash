@@ -22,9 +22,11 @@ import { Route as AuthenticatedShopsShopIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppsAppSlugRouteImport } from './routes/_authenticated/apps.$appSlug'
 import { Route as AuthenticatedShopsShopIdIndexRouteImport } from './routes/_authenticated/shops.$shopId.index'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as ApiPublicPriceAlertSignupRouteImport } from './routes/api/public/price-alert.signup'
 import { Route as ApiPublicBackInStockStockRouteImport } from './routes/api/public/back-in-stock.stock'
 import { Route as ApiPublicBackInStockSignupRouteImport } from './routes/api/public/back-in-stock.signup'
 import { Route as AuthenticatedShopsShopIdAppsRouteImport } from './routes/_authenticated/shops.$shopId.apps'
+import { Route as AuthenticatedShopsShopIdAppsPriceAlertRouteImport } from './routes/_authenticated/shops.$shopId.apps.price-alert'
 import { Route as AuthenticatedShopsShopIdAppsBackInStockRouteImport } from './routes/_authenticated/shops.$shopId.apps.back-in-stock'
 import { Route as AuthenticatedShopsShopIdAppsAppSlugRouteImport } from './routes/_authenticated/shops.$shopId.apps.$appSlug'
 
@@ -97,6 +99,12 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPriceAlertSignupRoute =
+  ApiPublicPriceAlertSignupRouteImport.update({
+    id: '/api/public/price-alert/signup',
+    path: '/api/public/price-alert/signup',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBackInStockStockRoute =
   ApiPublicBackInStockStockRouteImport.update({
     id: '/api/public/back-in-stock/stock',
@@ -114,6 +122,12 @@ const AuthenticatedShopsShopIdAppsRoute =
     id: '/apps',
     path: '/apps',
     getParentRoute: () => AuthenticatedShopsShopIdRoute,
+  } as any)
+const AuthenticatedShopsShopIdAppsPriceAlertRoute =
+  AuthenticatedShopsShopIdAppsPriceAlertRouteImport.update({
+    id: '/price-alert',
+    path: '/price-alert',
+    getParentRoute: () => AuthenticatedShopsShopIdAppsRoute,
   } as any)
 const AuthenticatedShopsShopIdAppsBackInStockRoute =
   AuthenticatedShopsShopIdAppsBackInStockRouteImport.update({
@@ -142,10 +156,12 @@ export interface FileRoutesByFullPath {
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
+  '/api/public/price-alert/signup': typeof ApiPublicPriceAlertSignupRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
+  '/shops/$shopId/apps/price-alert': typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -160,10 +176,12 @@ export interface FileRoutesByTo {
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
+  '/api/public/price-alert/signup': typeof ApiPublicPriceAlertSignupRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/shops/$shopId': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
+  '/shops/$shopId/apps/price-alert': typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -181,10 +199,12 @@ export interface FileRoutesById {
   '/_authenticated/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
+  '/api/public/price-alert/signup': typeof ApiPublicPriceAlertSignupRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/_authenticated/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/_authenticated/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/_authenticated/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
+  '/_authenticated/shops/$shopId/apps/price-alert': typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -202,10 +222,12 @@ export interface FileRouteTypes {
     | '/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
+    | '/api/public/price-alert/signup'
     | '/lovable/email/queue/process'
     | '/shops/$shopId/'
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
+    | '/shops/$shopId/apps/price-alert'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -220,10 +242,12 @@ export interface FileRouteTypes {
     | '/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
+    | '/api/public/price-alert/signup'
     | '/lovable/email/queue/process'
     | '/shops/$shopId'
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
+    | '/shops/$shopId/apps/price-alert'
   id:
     | '__root__'
     | '/'
@@ -240,10 +264,12 @@ export interface FileRouteTypes {
     | '/_authenticated/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
+    | '/api/public/price-alert/signup'
     | '/lovable/email/queue/process'
     | '/_authenticated/shops/$shopId/'
     | '/_authenticated/shops/$shopId/apps/$appSlug'
     | '/_authenticated/shops/$shopId/apps/back-in-stock'
+    | '/_authenticated/shops/$shopId/apps/price-alert'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -254,6 +280,7 @@ export interface RootRouteChildren {
   ApiPublicShoplabelDotjsRoute: typeof ApiPublicShoplabelDotjsRoute
   ApiPublicBackInStockSignupRoute: typeof ApiPublicBackInStockSignupRoute
   ApiPublicBackInStockStockRoute: typeof ApiPublicBackInStockStockRoute
+  ApiPublicPriceAlertSignupRoute: typeof ApiPublicPriceAlertSignupRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
@@ -350,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/price-alert/signup': {
+      id: '/api/public/price-alert/signup'
+      path: '/api/public/price-alert/signup'
+      fullPath: '/api/public/price-alert/signup'
+      preLoaderRoute: typeof ApiPublicPriceAlertSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/back-in-stock/stock': {
       id: '/api/public/back-in-stock/stock'
       path: '/api/public/back-in-stock/stock'
@@ -370,6 +404,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/shops/$shopId/apps'
       preLoaderRoute: typeof AuthenticatedShopsShopIdAppsRouteImport
       parentRoute: typeof AuthenticatedShopsShopIdRoute
+    }
+    '/_authenticated/shops/$shopId/apps/price-alert': {
+      id: '/_authenticated/shops/$shopId/apps/price-alert'
+      path: '/price-alert'
+      fullPath: '/shops/$shopId/apps/price-alert'
+      preLoaderRoute: typeof AuthenticatedShopsShopIdAppsPriceAlertRouteImport
+      parentRoute: typeof AuthenticatedShopsShopIdAppsRoute
     }
     '/_authenticated/shops/$shopId/apps/back-in-stock': {
       id: '/_authenticated/shops/$shopId/apps/back-in-stock'
@@ -402,6 +443,7 @@ const AuthenticatedAppsRouteWithChildren =
 interface AuthenticatedShopsShopIdAppsRouteChildren {
   AuthenticatedShopsShopIdAppsAppSlugRoute: typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   AuthenticatedShopsShopIdAppsBackInStockRoute: typeof AuthenticatedShopsShopIdAppsBackInStockRoute
+  AuthenticatedShopsShopIdAppsPriceAlertRoute: typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
 }
 
 const AuthenticatedShopsShopIdAppsRouteChildren: AuthenticatedShopsShopIdAppsRouteChildren =
@@ -410,6 +452,8 @@ const AuthenticatedShopsShopIdAppsRouteChildren: AuthenticatedShopsShopIdAppsRou
       AuthenticatedShopsShopIdAppsAppSlugRoute,
     AuthenticatedShopsShopIdAppsBackInStockRoute:
       AuthenticatedShopsShopIdAppsBackInStockRoute,
+    AuthenticatedShopsShopIdAppsPriceAlertRoute:
+      AuthenticatedShopsShopIdAppsPriceAlertRoute,
   }
 
 const AuthenticatedShopsShopIdAppsRouteWithChildren =
@@ -461,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicShoplabelDotjsRoute: ApiPublicShoplabelDotjsRoute,
   ApiPublicBackInStockSignupRoute: ApiPublicBackInStockSignupRoute,
   ApiPublicBackInStockStockRoute: ApiPublicBackInStockStockRoute,
+  ApiPublicPriceAlertSignupRoute: ApiPublicPriceAlertSignupRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
