@@ -49,11 +49,11 @@ function NewShopPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="px-6 pt-8">
-      <PageHeader
-        title="Shop koppelen"
-        subtitle="Vul je Lightspeed API credentials in om deze shop aan je admin te koppelen."
-      />
-      <form onSubmit={handleSubmit} className="px-6 pb-12 space-y-6">
+        <PageHeader
+          title="Shop koppelen"
+          subtitle="Vul je Lightspeed API credentials in om deze shop aan je admin te koppelen."
+        />
+      </div>
         <div>
           <SectionLabel>Shop</SectionLabel>
           <SectionCard className="p-5 space-y-4">
