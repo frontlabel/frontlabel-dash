@@ -178,9 +178,15 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
   function inject(anchor){
     if(document.querySelector(".slbl-bis-wrap"))return;
     var css=".slbl-bis-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.buttonColor+";color:#fff;padding:10px 14px;border-radius:6px;font:inherit;font-weight:600;margin-top:10px}"
-      +".slbl-bis-form{margin-top:10px;display:flex;gap:8px;flex-direction:column;font-family:system-ui,sans-serif}"
+      +".slbl-bis-form{display:flex;gap:8px;flex-direction:column;font-family:system-ui,sans-serif}"
       +".slbl-bis-inp{font:inherit;padding:8px;border:1px solid #d1d5db;border-radius:6px}"
-      +".slbl-bis-msg{font-size:13px;margin-top:6px}";
+      +".slbl-bis-msg{font-size:13px;margin-top:6px}"
+      +".slbl-bis-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.7);font-family:system-ui,sans-serif}"
+      +".slbl-bis-md{width:100%;max-width:380px;background:#fff;color:#1f2937;border-radius:12px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative}"
+      +".slbl-bis-md h3{margin:0 0 6px;font-size:18px;font-weight:600}"
+      +".slbl-bis-md p{margin:0 0 14px;font-size:13px;opacity:.8}"
+      +".slbl-bis-x{position:absolute;top:8px;right:10px;background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:#6b7280}"
+      +"html.slbl-bis-locked,body.slbl-bis-locked{overflow:hidden!important}";
     var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
     var wrap=document.createElement("div");wrap.className="slbl-bis-wrap";
     var btn=document.createElement("button");btn.type="button";btn.className="slbl-bis-btn";btn.textContent=s.buttonText;
@@ -188,13 +194,24 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
     if(anchor.after){anchor.el.parentNode.insertBefore(wrap,anchor.el.nextSibling);}
     else{anchor.el.appendChild(wrap);}
     btn.addEventListener("click",function(){
-      btn.style.display="none";
-      var form=document.createElement("div");form.className="slbl-bis-form";
-      form.innerHTML='<input type="email" class="slbl-bis-inp" placeholder="Je e-mailadres" required>'
+      var ov=document.createElement("div");ov.className="slbl-bis-ov";
+      var md=document.createElement("div");md.className="slbl-bis-md";md.setAttribute("role","dialog");md.setAttribute("aria-modal","true");
+      md.innerHTML='<button type="button" class="slbl-bis-x" aria-label="Sluiten">&times;</button>'
+        +'<h3>Meld je aan</h3>'
+        +'<p>Laat je e-mailadres achter en we sturen je een bericht zodra dit product weer op voorraad is.</p>'
+        +'<div class="slbl-bis-form">'
+        +'<input type="email" class="slbl-bis-inp" placeholder="Je e-mailadres" required>'
         + (s.newsletterOptIn?'<label style="font-size:12px;display:flex;gap:6px;align-items:center"><input type="checkbox" class="slbl-bis-news" checked> Stuur me ook updates en aanbiedingen.</label>':'')
         +'<button type="button" class="slbl-bis-btn slbl-bis-submit">Aanmelden</button>'
-        +'<div class="slbl-bis-msg"></div>';
-      wrap.appendChild(form);
+        +'<div class="slbl-bis-msg"></div>'
+        +'</div>';
+      ov.appendChild(md);
+      (document.body||document.documentElement).appendChild(ov);
+      document.documentElement.classList.add("slbl-bis-locked");document.body&&document.body.classList.add("slbl-bis-locked");
+      function close(){document.documentElement.classList.remove("slbl-bis-locked");document.body&&document.body.classList.remove("slbl-bis-locked");ov.remove();}
+      md.querySelector(".slbl-bis-x").addEventListener("click",close);
+      ov.addEventListener("click",function(e){if(e.target===ov)close();});
+      var form=md.querySelector(".slbl-bis-form");
       var inp=form.querySelector(".slbl-bis-inp");
       var news=form.querySelector(".slbl-bis-news");
       var msg=form.querySelector(".slbl-bis-msg");
