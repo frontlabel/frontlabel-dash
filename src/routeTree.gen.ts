@@ -12,15 +12,19 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
 import { Route as AuthenticatedPresetsRouteImport } from './routes/_authenticated/presets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
+import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicShoplabelDotjsRouteImport } from './routes/api/public/shoplabel[.]js'
 import { Route as ApiPublicAgeVerificationDotjsRouteImport } from './routes/api/public/age-verification[.]js'
 import { Route as AuthenticatedShopsNewRouteImport } from './routes/_authenticated/shops.new'
 import { Route as AuthenticatedShopsShopIdRouteImport } from './routes/_authenticated/shops.$shopId'
 import { Route as AuthenticatedAppsAppSlugRouteImport } from './routes/_authenticated/apps.$appSlug'
 import { Route as AuthenticatedShopsShopIdIndexRouteImport } from './routes/_authenticated/shops.$shopId.index'
+import { Route as LovableEmailTransactionalSendRouteImport } from './routes/lovable/email/transactional/send'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicPriceAlertSignupRouteImport } from './routes/api/public/price-alert.signup'
 import { Route as ApiPublicBackInStockStockRouteImport } from './routes/api/public/back-in-stock.stock'
@@ -44,6 +48,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
+  id: '/email/unsubscribe',
+  path: '/email/unsubscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPresetsRoute = AuthenticatedPresetsRouteImport.update({
   id: '/presets',
   path: '/presets',
@@ -58,6 +67,11 @@ const AuthenticatedAppsRoute = AuthenticatedAppsRouteImport.update({
   id: '/apps',
   path: '/apps',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const LovableEmailSuppressionRoute = LovableEmailSuppressionRouteImport.update({
+  id: '/lovable/email/suppression',
+  path: '/lovable/email/suppression',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicShoplabelDotjsRoute = ApiPublicShoplabelDotjsRouteImport.update({
   id: '/api/public/shoplabel.js',
@@ -92,6 +106,18 @@ const AuthenticatedShopsShopIdIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedShopsShopIdRoute,
+  } as any)
+const LovableEmailTransactionalSendRoute =
+  LovableEmailTransactionalSendRouteImport.update({
+    id: '/lovable/email/transactional/send',
+    path: '/lovable/email/transactional/send',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
@@ -148,16 +174,20 @@ export interface FileRoutesByFullPath {
   '/apps': typeof AuthenticatedAppsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/presets': typeof AuthenticatedPresetsRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
   '/shops/new': typeof AuthenticatedShopsNewRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
   '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
   '/api/public/price-alert/signup': typeof ApiPublicPriceAlertSignupRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
@@ -169,15 +199,19 @@ export interface FileRoutesByTo {
   '/apps': typeof AuthenticatedAppsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/presets': typeof AuthenticatedPresetsRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/shops/new': typeof AuthenticatedShopsNewRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
   '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
   '/api/public/price-alert/signup': typeof ApiPublicPriceAlertSignupRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/shops/$shopId': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
@@ -191,16 +225,20 @@ export interface FileRoutesById {
   '/_authenticated/apps': typeof AuthenticatedAppsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/presets': typeof AuthenticatedPresetsRoute
+  '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/_authenticated/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/_authenticated/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
   '/_authenticated/shops/new': typeof AuthenticatedShopsNewRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
   '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
+  '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
   '/api/public/price-alert/signup': typeof ApiPublicPriceAlertSignupRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/lovable/email/transactional/send': typeof LovableEmailTransactionalSendRoute
   '/_authenticated/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/_authenticated/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/_authenticated/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
@@ -214,16 +252,20 @@ export interface FileRouteTypes {
     | '/apps'
     | '/dashboard'
     | '/presets'
+    | '/email/unsubscribe'
     | '/apps/$appSlug'
     | '/shops/$shopId'
     | '/shops/new'
     | '/api/public/age-verification.js'
     | '/api/public/shoplabel.js'
+    | '/lovable/email/suppression'
     | '/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
     | '/api/public/price-alert/signup'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/shops/$shopId/'
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
@@ -235,15 +277,19 @@ export interface FileRouteTypes {
     | '/apps'
     | '/dashboard'
     | '/presets'
+    | '/email/unsubscribe'
     | '/apps/$appSlug'
     | '/shops/new'
     | '/api/public/age-verification.js'
     | '/api/public/shoplabel.js'
+    | '/lovable/email/suppression'
     | '/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
     | '/api/public/price-alert/signup'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/shops/$shopId'
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
@@ -256,16 +302,20 @@ export interface FileRouteTypes {
     | '/_authenticated/apps'
     | '/_authenticated/dashboard'
     | '/_authenticated/presets'
+    | '/email/unsubscribe'
     | '/_authenticated/apps/$appSlug'
     | '/_authenticated/shops/$shopId'
     | '/_authenticated/shops/new'
     | '/api/public/age-verification.js'
     | '/api/public/shoplabel.js'
+    | '/lovable/email/suppression'
     | '/_authenticated/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
     | '/api/public/price-alert/signup'
     | '/lovable/email/queue/process'
+    | '/lovable/email/transactional/preview'
+    | '/lovable/email/transactional/send'
     | '/_authenticated/shops/$shopId/'
     | '/_authenticated/shops/$shopId/apps/$appSlug'
     | '/_authenticated/shops/$shopId/apps/back-in-stock'
@@ -276,12 +326,16 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
   ApiPublicAgeVerificationDotjsRoute: typeof ApiPublicAgeVerificationDotjsRoute
   ApiPublicShoplabelDotjsRoute: typeof ApiPublicShoplabelDotjsRoute
+  LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
   ApiPublicBackInStockSignupRoute: typeof ApiPublicBackInStockSignupRoute
   ApiPublicBackInStockStockRoute: typeof ApiPublicBackInStockStockRoute
   ApiPublicPriceAlertSignupRoute: typeof ApiPublicPriceAlertSignupRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  LovableEmailTransactionalSendRoute: typeof LovableEmailTransactionalSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -307,6 +361,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email/unsubscribe': {
+      id: '/email/unsubscribe'
+      path: '/email/unsubscribe'
+      fullPath: '/email/unsubscribe'
+      preLoaderRoute: typeof EmailUnsubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/presets': {
       id: '/_authenticated/presets'
       path: '/presets'
@@ -327,6 +388,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/apps'
       preLoaderRoute: typeof AuthenticatedAppsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/lovable/email/suppression': {
+      id: '/lovable/email/suppression'
+      path: '/lovable/email/suppression'
+      fullPath: '/lovable/email/suppression'
+      preLoaderRoute: typeof LovableEmailSuppressionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/shoplabel.js': {
       id: '/api/public/shoplabel.js'
@@ -369,6 +437,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/shops/$shopId/'
       preLoaderRoute: typeof AuthenticatedShopsShopIdIndexRouteImport
       parentRoute: typeof AuthenticatedShopsShopIdRoute
+    }
+    '/lovable/email/transactional/send': {
+      id: '/lovable/email/transactional/send'
+      path: '/lovable/email/transactional/send'
+      fullPath: '/lovable/email/transactional/send'
+      preLoaderRoute: typeof LovableEmailTransactionalSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -501,12 +583,16 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  EmailUnsubscribeRoute: EmailUnsubscribeRoute,
   ApiPublicAgeVerificationDotjsRoute: ApiPublicAgeVerificationDotjsRoute,
   ApiPublicShoplabelDotjsRoute: ApiPublicShoplabelDotjsRoute,
+  LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
   ApiPublicBackInStockSignupRoute: ApiPublicBackInStockSignupRoute,
   ApiPublicBackInStockStockRoute: ApiPublicBackInStockStockRoute,
   ApiPublicPriceAlertSignupRoute: ApiPublicPriceAlertSignupRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  LovableEmailTransactionalSendRoute: LovableEmailTransactionalSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
