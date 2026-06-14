@@ -386,7 +386,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
     <div className="space-y-2">
       <Label>{label}</Label>
       <div className="flex gap-2 items-center">
-        <input type="color" value={value.startsWith("#") ? value : "#2c7be5"}
+        <input type="color" value={value.startsWith("#") ? value : "#5187e0"}
           onChange={(e) => onChange(e.target.value)}
           className="h-9 w-12 rounded border border-input cursor-pointer bg-card" />
         <Input value={value} onChange={(e) => onChange(e.target.value)} className="font-mono text-sm" />
