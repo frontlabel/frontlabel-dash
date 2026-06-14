@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ChevronLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/shops/new")({
   component: NewShopPage,
@@ -50,14 +49,11 @@ function NewShopPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="px-6 pt-8">
-        <Link to="/dashboard" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="h-4 w-4" /> Shops
-        </Link>
+        <PageHeader
+          title="Shop koppelen"
+          subtitle="Vul je Lightspeed API credentials in om deze shop aan je admin te koppelen."
+        />
       </div>
-      <PageHeader
-        title="Shop koppelen"
-        subtitle="Vul je Lightspeed API credentials in om deze shop aan je admin te koppelen."
-      />
       <form onSubmit={handleSubmit} className="px-6 pb-12 space-y-6">
         <div>
           <SectionLabel>Shop</SectionLabel>
