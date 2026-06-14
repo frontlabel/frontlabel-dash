@@ -387,7 +387,7 @@ function AppSettingsPage() {
           </div>
         </div>
 
-        <div className="lg:sticky lg:top-6 self-start">
+        <div className="lg:sticky lg:top-24 self-start">
           <SectionLabel>Live preview</SectionLabel>
           <SectionCard className="p-4">
             <AgeVerificationPreview s={settings} />
