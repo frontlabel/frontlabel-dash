@@ -58,19 +58,7 @@ function AppSettingsPage() {
 
   useEffect(() => {
     setContent(
-      <div className="flex items-center justify-between w-full gap-3">
-        <nav className="flex items-center gap-2 text-sm min-w-0">
-          <LayoutGrid className="h-4 w-4 text-muted-foreground shrink-0" />
-          <Link
-            to="/shops/$shopId/apps"
-            params={{ shopId }}
-            className="text-foreground hover:underline truncate"
-          >
-            Apps
-          </Link>
-          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="text-foreground truncate">{app?.name}</span>
-        </nav>
+      <div className="flex items-center justify-end w-full gap-3">
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 text-sm">
             <Switch checked={enabled} onCheckedChange={setEnabled} id="enabled-header" />
