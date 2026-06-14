@@ -5,6 +5,7 @@ export interface AppDefinition {
   description: string;
   category: string;
   status: "available" | "coming-soon";
+  image?: string;
 }
 
 export const APPS_CATALOG: AppDefinition[] = [
