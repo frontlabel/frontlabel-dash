@@ -20,6 +20,7 @@ import { Route as ApiPublicAgeVerificationDotjsRouteImport } from './routes/api/
 import { Route as AuthenticatedShopsNewRouteImport } from './routes/_authenticated/shops.new'
 import { Route as AuthenticatedShopsShopIdRouteImport } from './routes/_authenticated/shops.$shopId'
 import { Route as AuthenticatedShopsShopIdIndexRouteImport } from './routes/_authenticated/shops.$shopId.index'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicBackInStockStockRouteImport } from './routes/api/public/back-in-stock.stock'
 import { Route as ApiPublicBackInStockSignupRouteImport } from './routes/api/public/back-in-stock.signup'
 import { Route as AuthenticatedShopsShopIdAppsRouteImport } from './routes/_authenticated/shops.$shopId.apps'
@@ -83,6 +84,12 @@ const AuthenticatedShopsShopIdIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedShopsShopIdRoute,
   } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBackInStockStockRoute =
   ApiPublicBackInStockStockRouteImport.update({
     id: '/api/public/back-in-stock/stock',
@@ -127,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
@@ -143,6 +151,7 @@ export interface FileRoutesByTo {
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/shops/$shopId': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
@@ -162,6 +171,7 @@ export interface FileRoutesById {
   '/_authenticated/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/_authenticated/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/_authenticated/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/_authenticated/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
+    | '/lovable/email/queue/process'
     | '/shops/$shopId/'
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
+    | '/lovable/email/queue/process'
     | '/shops/$shopId'
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
@@ -215,6 +227,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shops/$shopId/apps'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
+    | '/lovable/email/queue/process'
     | '/_authenticated/shops/$shopId/'
     | '/_authenticated/shops/$shopId/apps/$appSlug'
     | '/_authenticated/shops/$shopId/apps/back-in-stock'
@@ -228,6 +241,7 @@ export interface RootRouteChildren {
   ApiPublicShoplabelDotjsRoute: typeof ApiPublicShoplabelDotjsRoute
   ApiPublicBackInStockSignupRoute: typeof ApiPublicBackInStockSignupRoute
   ApiPublicBackInStockStockRoute: typeof ApiPublicBackInStockStockRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -308,6 +322,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/shops/$shopId/'
       preLoaderRoute: typeof AuthenticatedShopsShopIdIndexRouteImport
       parentRoute: typeof AuthenticatedShopsShopIdRoute
+    }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/back-in-stock/stock': {
       id: '/api/public/back-in-stock/stock'
@@ -409,6 +430,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicShoplabelDotjsRoute: ApiPublicShoplabelDotjsRoute,
   ApiPublicBackInStockSignupRoute: ApiPublicBackInStockSignupRoute,
   ApiPublicBackInStockStockRoute: ApiPublicBackInStockStockRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
