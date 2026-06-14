@@ -93,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span>Shoplabel App Admin</span>
           </div>
         </header>
-        <main className="flex-1 overflow-auto" style={{ fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', WebkitTextSizeAdjust: '100%', fontSize: '14px', lineHeight: '24px' }}>{children}</main>
+        <main className="flex-1 overflow-auto" style={{ fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', WebkitTextSizeAdjust: '100%', fontSize: '16px', lineHeight: '24px' }}>{children}</main>
       </div>
     </div>
   );
