@@ -24,7 +24,7 @@ import {
 } from "@/lib/apps-catalog";
 import type { Json } from "@/integrations/supabase/types";
 import { AgeVerificationPreview } from "@/components/age-verification-preview";
-import { Save, Palette, Copy, ExternalLink, ChevronRight, LayoutGrid, X } from "lucide-react";
+import { Save, Palette, Copy, ExternalLink, X } from "lucide-react";
 import { useShellHeader } from "@/components/shell-header-context";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/apps/$appSlug")({
