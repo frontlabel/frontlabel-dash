@@ -54,6 +54,7 @@ function NewShopPage() {
           subtitle="Vul je Lightspeed API credentials in om deze shop aan je admin te koppelen."
         />
       </div>
+      <form onSubmit={handleSubmit} className="px-6 pb-12 space-y-6">
         <div>
           <SectionLabel>Shop</SectionLabel>
           <SectionCard className="p-5 space-y-4">
