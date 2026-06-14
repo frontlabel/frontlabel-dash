@@ -1,8 +1,10 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import { Home, Package, Palette, LogOut, Plug } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Home, Package, Palette, LogOut, Plug, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 const nav = [
   { to: "/dashboard", label: "Shops", icon: Home },
@@ -13,54 +15,86 @@ const nav = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
 
+  const sidebarBody = (
+    <>
+      <div className="h-14 flex items-center gap-2 px-4 border-b border-sidebar-border">
+        <div className="h-7 w-7 rounded bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">S</div>
+        <span className="font-semibold tracking-tight">shoplabel</span>
+      </div>
+      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+        {nav.map((item) => {
+          const active = pathname === item.to || pathname.startsWith(item.to + "/") ||
+            (item.to === "/dashboard" && pathname.startsWith("/shops"));
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded text-sm transition-colors",
+                active
+                  ? "bg-primary text-primary-foreground"
+                  : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+      <button
+        onClick={signOut}
+        className="m-2 flex items-center gap-3 px-3 py-2.5 rounded text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+      >
+        <LogOut className="h-4 w-4" />
+        Uitloggen
+      </button>
+    </>
+  );
+
   return (
     <div className="min-h-screen flex w-full bg-background">
-      <aside className="w-60 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col">
-        <div className="h-14 flex items-center gap-2 px-4 border-b border-sidebar-border">
-          <div className="h-7 w-7 rounded bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">F</div>
-          <span className="font-semibold tracking-tight">frontlabel</span>
-        </div>
-        <nav className="flex-1 p-2 space-y-0.5">
-          {nav.map((item) => {
-            const active = pathname === item.to || pathname.startsWith(item.to + "/") ||
-              (item.to === "/dashboard" && pathname.startsWith("/shops"));
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded text-sm transition-colors",
-                  active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-        <button
-          onClick={signOut}
-          className="m-2 flex items-center gap-3 px-3 py-2 rounded text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground transition-colors"
-        >
-          <LogOut className="h-4 w-4" />
-          Uitloggen
-        </button>
+      <aside className="hidden md:flex w-60 shrink-0 bg-sidebar text-sidebar-foreground flex-col">
+        {sidebarBody}
       </aside>
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent
+          side="left"
+          className="w-72 p-0 bg-sidebar text-sidebar-foreground border-sidebar-border flex flex-col"
+        >
+          <VisuallyHidden>
+            <SheetTitle>Navigatie</SheetTitle>
+          </VisuallyHidden>
+          {sidebarBody}
+        </SheetContent>
+      </Sheet>
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 bg-card border-b border-border flex items-center px-6">
+        <header className="h-14 bg-card border-b border-border flex items-center px-4 md:px-6 gap-3">
+          <SheetTrigger asChild>
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </SheetTrigger>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Plug className="h-4 w-4 text-primary" />
-            <span>Frontlabel App Admin</span>
+            <span>Shoplabel App Admin</span>
           </div>
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
