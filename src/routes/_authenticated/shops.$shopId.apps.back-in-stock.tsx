@@ -7,6 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -28,10 +31,13 @@ import { cn } from "@/lib/utils";
 import {
   Bell,
   ChevronRight,
+  Copy,
+  ExternalLink,
   ImageIcon,
   LayoutGrid,
   Mail,
   Search,
+  Save,
   TrendingUp,
   Upload,
 } from "lucide-react";
@@ -42,11 +48,75 @@ export const Route = createFileRoute(
   component: BackInStockPage,
 });
 
+const APP_SLUG = "back-in-stock";
+
+interface BackInStockSettings {
+  buttonText: string;
+  buttonColor: string;
+  newsletterOptIn: boolean;
+  emailSubject: string;
+  brandColor: string;
+  customMessage: string;
+  scarcityUrgency: boolean;
+}
+
+const DEFAULTS: BackInStockSettings = {
+  buttonText: "Meld me wanneer beschikbaar",
+  buttonColor: "#111827",
+  newsletterOptIn: true,
+  emailSubject: "Goed nieuws — {product} is weer op voorraad!",
+  brandColor: "#111827",
+  customMessage:
+    "Hi {name}, het product waarop je wachtte is weer beschikbaar. Wees er snel bij voordat het opnieuw uitverkocht is!",
+  scarcityUrgency: true,
+};
+
+interface WaitlistRow {
+  id: string;
+  email: string;
+  product_handle: string;
+  product_title: string | null;
+  created_at: string;
+  status: "pending" | "notified" | "purchased" | "cancelled";
+}
+
 function BackInStockPage() {
   const { shopId } = Route.useParams();
   const { setContent } = useShellHeader();
-  const [active, setActive] = useState(true);
+  const [active, setActive] = useState(false);
+  const [rowId, setRowId] = useState<string | null>(null);
+  const [settings, setSettings] = useState<BackInStockSettings>(DEFAULTS);
+  const [saving, setSaving] = useState(false);
+  const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [tab, setTab] = useState<"overview" | "widget" | "email" | "waitlist">("overview");
+
+  function update<K extends keyof BackInStockSettings>(k: K, v: BackInStockSettings[K]) {
+    setSettings((s) => ({ ...s, [k]: v }));
+  }
+
+  async function save() {
+    setSaving(true);
+    if (rowId) {
+      const { error } = await supabase
+        .from("shop_apps")
+        .update({ enabled: active, settings: settings as unknown as Json })
+        .eq("id", rowId);
+      if (error) toast.error(error.message);
+      else toast.success("Opgeslagen");
+    } else {
+      const { data, error } = await supabase
+        .from("shop_apps")
+        .insert({ shop_id: shopId, app_slug: APP_SLUG, enabled: active, settings: settings as unknown as Json })
+        .select("id")
+        .single();
+      if (error) toast.error(error.message);
+      else {
+        setRowId(data!.id);
+        toast.success("Opgeslagen");
+      }
+    }
+    setSaving(false);
+  }
 
   useEffect(() => {
     setContent(
@@ -63,65 +133,86 @@ function BackInStockPage() {
           <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
           <span className="text-foreground truncate">Terug-op-voorraad meldingen</span>
         </nav>
-        <div className="flex items-center gap-2 text-sm shrink-0">
-          <Switch id="app-active" checked={active} onCheckedChange={setActive} />
-          <Label htmlFor="app-active" className="cursor-pointer">
-            {active ? "Actief" : "Uit"}
-          </Label>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 text-sm">
+            <Switch id="app-active" checked={active} onCheckedChange={setActive} />
+            <Label htmlFor="app-active" className="cursor-pointer">
+              {active ? "Actief" : "Uit"}
+            </Label>
+          </div>
+          <Button onClick={save} disabled={saving} size="sm">
+            <Save className="h-4 w-4" />
+            {saving ? "Opslaan…" : "Opslaan"}
+          </Button>
         </div>
       </div>,
     );
     return () => setContent(null);
-  }, [shopId, active, setContent]);
+  }, [shopId, active, saving, settings, rowId, setContent]);
 
-  // Widget-ontwerp state
-  const [buttonText, setButtonText] = useState("Meld me wanneer beschikbaar");
-  const [buttonColor, setButtonColor] = useState("#111827");
-  const [newsletterOptIn, setNewsletterOptIn] = useState(true);
+  // Laad bestaande instellingen + wachtlijst
+  useEffect(() => {
+    supabase
+      .from("shop_apps")
+      .select("id,enabled,settings")
+      .eq("shop_id", shopId)
+      .eq("app_slug", APP_SLUG)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        setRowId(data.id);
+        setActive(data.enabled);
+        setSettings({ ...DEFAULTS, ...((data.settings as Partial<BackInStockSettings>) ?? {}) });
+      });
+    supabase
+      .from("back_in_stock_requests")
+      .select("id,email,product_handle,product_title,created_at,status")
+      .eq("shop_id", shopId)
+      .order("created_at", { ascending: false })
+      .limit(200)
+      .then(({ data }) => setWaitlist((data as WaitlistRow[]) ?? []));
+  }, [shopId]);
 
-  // E-mail configuratie state
-  const [emailSubject, setEmailSubject] = useState(
-    "Goed nieuws — {product} is weer op voorraad!",
-  );
-  const [brandColor, setBrandColor] = useState("#111827");
-  const [customMessage, setCustomMessage] = useState(
-    "Hi {name}, het product waarop je wachtte is weer beschikbaar. Wees er snel bij voordat het opnieuw uitverkocht is!",
-  );
-  const [scarcityUrgency, setScarcityUrgency] = useState(true);
+  const { buttonText, buttonColor, newsletterOptIn, emailSubject, brandColor, customMessage, scarcityUrgency } = settings;
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const scriptUrl = `${origin}/api/public/back-in-stock.js?shop_id=${shopId}`;
+  const snippet = `<script src="${scriptUrl}" defer></script>`;
+
+  async function copy(value: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} gekopieerd`);
+    } catch {
+      toast.error("Kopiëren mislukt");
+    }
+  }
 
   // Wachtlijst state
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  const topProducts = useMemo(
-    () => [
-      { name: "Selvedge spijkerjas", stock: 0, waitlist: 84, value: "€2.520" },
-      { name: "Merino trui — Crème", stock: 0, waitlist: 61, value: "€1.830" },
-      { name: "Suède Chelsea boots", stock: 2, waitlist: 47, value: "€1.645" },
-      { name: "Linnen overshirt — Olijf", stock: 0, waitlist: 39, value: "€1.170" },
-      { name: "Wollen muts — Antraciet", stock: 0, waitlist: 28, value: "€420" },
-    ],
-    [],
-  );
-
-  const waitlist = useMemo(
-    () => [
-      { email: "anna.devries@example.com", product: "Selvedge spijkerjas", date: "12-06-2026", status: "Pending" as const },
-      { email: "lukas.b@example.com", product: "Merino trui — Crème", date: "11-06-2026", status: "Notified" as const },
-      { email: "sophie.k@example.com", product: "Suède Chelsea boots", date: "10-06-2026", status: "Purchased" as const },
-      { email: "marc.j@example.com", product: "Linnen overshirt — Olijf", date: "09-06-2026", status: "Pending" as const },
-      { email: "emma.t@example.com", product: "Selvedge spijkerjas", date: "08-06-2026", status: "Notified" as const },
-      { email: "noah.p@example.com", product: "Wollen muts — Antraciet", date: "07-06-2026", status: "Pending" as const },
-      { email: "lisa.m@example.com", product: "Merino trui — Crème", date: "06-06-2026", status: "Purchased" as const },
-    ],
-    [],
-  );
+  const topProducts = useMemo(() => {
+    const map = new Map<string, { name: string; waitlist: number }>();
+    for (const w of waitlist) {
+      if (w.status !== "pending") continue;
+      const key = w.product_handle;
+      const name = w.product_title || w.product_handle;
+      const cur = map.get(key) ?? { name, waitlist: 0 };
+      cur.waitlist += 1;
+      map.set(key, cur);
+    }
+    return Array.from(map.values())
+      .sort((a, b) => b.waitlist - a.waitlist)
+      .slice(0, 5);
+  }, [waitlist]);
 
   const filteredWaitlist = waitlist.filter((w) => {
+    const product = w.product_title || w.product_handle;
     const matchesSearch =
       !search ||
       w.email.toLowerCase().includes(search.toLowerCase()) ||
-      w.product.toLowerCase().includes(search.toLowerCase());
+      product.toLowerCase().includes(search.toLowerCase());
     const matchesStatus = statusFilter === "all" || w.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -166,6 +257,33 @@ function BackInStockPage() {
       <div className="px-6 py-6">
         {tab === "overview" && (
           <div className="space-y-6">
+          <div>
+            <SectionLabel>Installeer op je shop</SectionLabel>
+            <SectionCard className="p-5 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Plak dit script in de <code>&lt;head&gt;</code> of vlak voor <code>&lt;/body&gt;</code> van je
+                Lightspeed-theme. De "Meld me wanneer beschikbaar"-knop verschijnt automatisch op uitverkochte
+                productpagina's zodra de app is ingeschakeld en opgeslagen.
+              </p>
+              <div className="rounded-md border border-border bg-muted/40 p-3 font-mono text-xs break-all">
+                {snippet}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" onClick={() => copy(snippet, "Snippet")}>
+                  <Copy className="h-4 w-4" /> Kopieer snippet
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => copy(scriptUrl, "Script-URL")}>
+                  <Copy className="h-4 w-4" /> Kopieer URL
+                </Button>
+                <Button variant="ghost" size="sm" asChild>
+                  <a href={scriptUrl} target="_blank" rel="noreferrer">
+                    <ExternalLink className="h-4 w-4" /> Test script
+                  </a>
+                </Button>
+              </div>
+            </SectionCard>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <MetricCard
               label="Teruggewonnen omzet"
@@ -195,13 +313,17 @@ function BackInStockPage() {
                   <TableRow>
                     <TableHead className="w-[72px] pl-4">Foto</TableHead>
                     <TableHead>Naam</TableHead>
-                    <TableHead className="text-right">Voorraad</TableHead>
                     <TableHead className="text-right">Wachtlijst</TableHead>
-                    <TableHead className="text-right pr-4">Potentiële waarde</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {topProducts.map((p) => (
+                  {topProducts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center text-sm text-muted-foreground py-8">
+                        Nog geen aanmeldingen ontvangen.
+                      </TableCell>
+                    </TableRow>
+                  ) : topProducts.map((p) => (
                     <TableRow key={p.name}>
                       <TableCell className="pl-4">
                         <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
@@ -209,15 +331,7 @@ function BackInStockPage() {
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">{p.name}</TableCell>
-                      <TableCell className="text-right">
-                        {p.stock === 0 ? (
-                          <Badge variant="destructive" className="text-xs">Uitverkocht</Badge>
-                        ) : (
-                          <span className="text-sm">{p.stock}</span>
-                        )}
-                      </TableCell>
                       <TableCell className="text-right">{p.waitlist}</TableCell>
-                      <TableCell className="text-right pr-4 font-medium">{p.value}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -237,7 +351,7 @@ function BackInStockPage() {
                   <Input
                     id="btnText"
                     value={buttonText}
-                    onChange={(e) => setButtonText(e.target.value)}
+                    onChange={(e) => update("buttonText", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -246,12 +360,12 @@ function BackInStockPage() {
                     <input
                       type="color"
                       value={buttonColor}
-                      onChange={(e) => setButtonColor(e.target.value)}
+                      onChange={(e) => update("buttonColor", e.target.value)}
                       className="h-9 w-12 rounded border border-input cursor-pointer bg-card"
                     />
                     <Input
                       value={buttonColor}
-                      onChange={(e) => setButtonColor(e.target.value)}
+                      onChange={(e) => update("buttonColor", e.target.value)}
                       className="font-mono text-sm"
                     />
                   </div>
@@ -260,7 +374,7 @@ function BackInStockPage() {
                   <Checkbox
                     id="newsletter"
                     checked={newsletterOptIn}
-                    onCheckedChange={(v) => setNewsletterOptIn(Boolean(v))}
+                    onCheckedChange={(v) => update("newsletterOptIn", Boolean(v))}
                   />
                   <Label htmlFor="newsletter" className="cursor-pointer leading-tight">
                     Voeg een nieuwsbrief-opt-in toe om leads te verzamelen
@@ -319,7 +433,7 @@ function BackInStockPage() {
                   <Input
                     id="subject"
                     value={emailSubject}
-                    onChange={(e) => setEmailSubject(e.target.value)}
+                    onChange={(e) => update("emailSubject", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -339,12 +453,12 @@ function BackInStockPage() {
                     <input
                       type="color"
                       value={brandColor}
-                      onChange={(e) => setBrandColor(e.target.value)}
+                      onChange={(e) => update("brandColor", e.target.value)}
                       className="h-9 w-12 rounded border border-input cursor-pointer bg-card"
                     />
                     <Input
                       value={brandColor}
-                      onChange={(e) => setBrandColor(e.target.value)}
+                      onChange={(e) => update("brandColor", e.target.value)}
                       className="font-mono text-sm"
                     />
                   </div>
@@ -355,7 +469,7 @@ function BackInStockPage() {
                     id="msg"
                     rows={4}
                     value={customMessage}
-                    onChange={(e) => setCustomMessage(e.target.value)}
+                    onChange={(e) => update("customMessage", e.target.value)}
                   />
                 </div>
                 <div className="flex items-start justify-between gap-4">
@@ -370,7 +484,7 @@ function BackInStockPage() {
                   <Switch
                     id="urgency"
                     checked={scarcityUrgency}
-                    onCheckedChange={setScarcityUrgency}
+                    onCheckedChange={(v) => update("scarcityUrgency", v)}
                   />
                 </div>
               </SectionCard>
@@ -460,11 +574,13 @@ function BackInStockPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredWaitlist.map((w, i) => (
-                    <TableRow key={`${w.email}-${i}`}>
+                  filteredWaitlist.map((w) => (
+                    <TableRow key={w.id}>
                       <TableCell className="pl-4 font-medium">{w.email}</TableCell>
-                      <TableCell>{w.product}</TableCell>
-                      <TableCell className="text-muted-foreground">{w.date}</TableCell>
+                      <TableCell>{w.product_title || w.product_handle}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(w.created_at).toLocaleDateString("nl-NL")}
+                      </TableCell>
                       <TableCell className="text-right pr-4">
                         <StatusBadge status={w.status} />
                       </TableCell>
@@ -522,15 +638,23 @@ function MetricCard({
   );
 }
 
-function StatusBadge({ status }: { status: "Pending" | "Notified" | "Purchased" }) {
+function StatusBadge({ status }: { status: "pending" | "notified" | "purchased" | "cancelled" }) {
   const styles =
-    status === "Purchased"
+    status === "purchased"
       ? "bg-emerald-100 text-emerald-700"
-      : status === "Notified"
+      : status === "notified"
         ? "bg-blue-100 text-blue-700"
-        : "bg-amber-100 text-amber-700";
+        : status === "cancelled"
+          ? "bg-muted text-muted-foreground"
+          : "bg-amber-100 text-amber-700";
   const label =
-    status === "Purchased" ? "Gekocht" : status === "Notified" ? "Geïnformeerd" : "In afwachting";
+    status === "purchased"
+      ? "Gekocht"
+      : status === "notified"
+        ? "Geïnformeerd"
+        : status === "cancelled"
+          ? "Geannuleerd"
+          : "In afwachting";
   return (
     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${styles}`}>
       {label}
