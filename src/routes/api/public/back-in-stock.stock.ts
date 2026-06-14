@@ -13,16 +13,18 @@ function json(body: unknown, status = 200) {
 }
 
 // Lightspeed eCom C-Series: zie https://developers.lightspeedhq.com/ecom/introduction/
-// Endpoint: GET https://api.shoplightspeed.com/{lang}/products/{id}.json
+// Endpoint: GET https://api.webshopapp.com/{lang}/products/{id}.json
 // Auth: HTTP Basic met api_key:api_secret
 async function fetchLightspeedStock(opts: {
   apiKey: string;
   apiSecret: string;
   language: string;
   productId: string;
+  variantId?: string;
 }): Promise<{ inStock: boolean; title?: string; image?: string } | null> {
   const auth = "Basic " + Buffer.from(`${opts.apiKey}:${opts.apiSecret}`).toString("base64");
-  const url = `https://api.shoplightspeed.com/${encodeURIComponent(opts.language)}/products/${encodeURIComponent(opts.productId)}.json`;
+  const base = `https://api.webshopapp.com/${encodeURIComponent(opts.language)}`;
+  const url = `${base}/products/${encodeURIComponent(opts.productId)}.json`;
   const res = await fetch(url, {
     headers: { Authorization: auth, Accept: "application/json" },
   });
@@ -31,19 +33,41 @@ async function fetchLightspeedStock(opts: {
   const p = data.product;
   if (!p) return null;
 
-  // Lightspeed velden: stockLevel (number), stockTracking ("disabled" | "enabled" | "indicator"),
-  // isVisible, variants (array). Bij meerdere varianten kijken we naar totale voorraad.
-  const tracking = String(p.stockTracking ?? "disabled");
-  // Als voorraad niet getrackt wordt, beschouwen we als "op voorraad".
-  if (tracking === "disabled") {
-    return { inStock: true, title: String(p.fulltitle ?? p.title ?? ""), image: extractImage(p) };
+  const variants = await fetchLightspeedVariants({
+    auth,
+    base,
+    productId: opts.productId,
+  });
+  if (variants.length > 0) {
+    const selected = opts.variantId ? variants.find((v) => String(v.id) === opts.variantId) : undefined;
+    const relevant = selected ? [selected] : variants;
+    return {
+      inStock: relevant.some(variantInStock),
+      title: String(p.fulltitle ?? p.title ?? ""),
+      image: extractImage(p),
+    };
   }
-  const stockLevel = Number(p.stockLevel ?? 0);
+
+  const tracking = String(p.stockTracking ?? "disabled");
   return {
-    inStock: stockLevel > 0,
+    inStock: tracking === "disabled" ? true : Number(p.stockLevel ?? 0) > 0,
     title: String(p.fulltitle ?? p.title ?? ""),
     image: extractImage(p),
   };
+}
+
+async function fetchLightspeedVariants(opts: { auth: string; base: string; productId: string }) {
+  const url = `${opts.base}/variants.json?product=${encodeURIComponent(opts.productId)}`;
+  const res = await fetch(url, { headers: { Authorization: opts.auth, Accept: "application/json" } });
+  if (!res.ok) return [] as Record<string, unknown>[];
+  const data = (await res.json()) as { variants?: Record<string, unknown>[] };
+  return Array.isArray(data.variants) ? data.variants : [];
+}
+
+function variantInStock(v: Record<string, unknown>) {
+  const tracking = String(v.stockTracking ?? "disabled");
+  if (tracking === "disabled") return true;
+  return Number(v.stockLevel ?? 0) > 0;
 }
 
 function extractImage(p: Record<string, unknown>): string | undefined {
@@ -60,10 +84,12 @@ export const Route = createFileRoute("/api/public/back-in-stock/stock")({
         const url = new URL(request.url);
         const shopId = url.searchParams.get("shop_id") ?? "";
         const productId = url.searchParams.get("product_id") ?? "";
+        const variantId = url.searchParams.get("variant_id") ?? "";
         const language = (url.searchParams.get("lang") ?? "nl").toLowerCase().slice(0, 5);
 
         if (!/^[0-9a-f-]{36}$/i.test(shopId)) return json({ error: "invalid shop_id" }, 400);
         if (!/^[0-9]{1,12}$/.test(productId)) return json({ error: "invalid product_id" }, 400);
+        if (variantId && !/^[0-9]{1,12}$/.test(variantId)) return json({ error: "invalid variant_id" }, 400);
         if (!/^[a-z]{2}(-[a-z]{2})?$/.test(language)) return json({ error: "invalid lang" }, 400);
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -92,6 +118,7 @@ export const Route = createFileRoute("/api/public/back-in-stock/stock")({
             apiSecret: shop.api_secret,
             language,
             productId,
+            variantId: variantId || undefined,
           });
           if (!result) return json({ inStock: null, error: "lookup failed" }, 200);
           return json(result);
