@@ -2,7 +2,6 @@ import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router"
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { ChevronLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId")({
   component: ShopLayout,
