@@ -20,6 +20,7 @@ import { Route as AuthenticatedShopsNewRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedShopsShopIdRouteImport } from './routes/_authenticated/shops.$shopId'
 import { Route as AuthenticatedShopsShopIdIndexRouteImport } from './routes/_authenticated/shops.$shopId.index'
 import { Route as AuthenticatedShopsShopIdAppsRouteImport } from './routes/_authenticated/shops.$shopId.apps'
+import { Route as AuthenticatedShopsShopIdAppsBackInStockRouteImport } from './routes/_authenticated/shops.$shopId.apps.back-in-stock'
 import { Route as AuthenticatedShopsShopIdAppsAppSlugRouteImport } from './routes/_authenticated/shops.$shopId.apps.$appSlug'
 
 const AuthRoute = AuthRouteImport.update({
@@ -80,6 +81,12 @@ const AuthenticatedShopsShopIdAppsRoute =
     path: '/apps',
     getParentRoute: () => AuthenticatedShopsShopIdRoute,
   } as any)
+const AuthenticatedShopsShopIdAppsBackInStockRoute =
+  AuthenticatedShopsShopIdAppsBackInStockRouteImport.update({
+    id: '/back-in-stock',
+    path: '/back-in-stock',
+    getParentRoute: () => AuthenticatedShopsShopIdAppsRoute,
+  } as any)
 const AuthenticatedShopsShopIdAppsAppSlugRoute =
   AuthenticatedShopsShopIdAppsAppSlugRouteImport.update({
     id: '/$appSlug',
@@ -99,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
+  '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -111,6 +119,7 @@ export interface FileRoutesByTo {
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/shops/$shopId': typeof AuthenticatedShopsShopIdIndexRoute
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
+  '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -126,6 +135,7 @@ export interface FileRoutesById {
   '/_authenticated/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
   '/_authenticated/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
   '/_authenticated/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
+  '/_authenticated/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +151,7 @@ export interface FileRouteTypes {
     | '/shops/$shopId/apps'
     | '/shops/$shopId/'
     | '/shops/$shopId/apps/$appSlug'
+    | '/shops/$shopId/apps/back-in-stock'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/shops/$shopId/apps'
     | '/shops/$shopId'
     | '/shops/$shopId/apps/$appSlug'
+    | '/shops/$shopId/apps/back-in-stock'
   id:
     | '__root__'
     | '/'
@@ -167,6 +179,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shops/$shopId/apps'
     | '/_authenticated/shops/$shopId/'
     | '/_authenticated/shops/$shopId/apps/$appSlug'
+    | '/_authenticated/shops/$shopId/apps/back-in-stock'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -255,6 +268,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShopsShopIdAppsRouteImport
       parentRoute: typeof AuthenticatedShopsShopIdRoute
     }
+    '/_authenticated/shops/$shopId/apps/back-in-stock': {
+      id: '/_authenticated/shops/$shopId/apps/back-in-stock'
+      path: '/back-in-stock'
+      fullPath: '/shops/$shopId/apps/back-in-stock'
+      preLoaderRoute: typeof AuthenticatedShopsShopIdAppsBackInStockRouteImport
+      parentRoute: typeof AuthenticatedShopsShopIdAppsRoute
+    }
     '/_authenticated/shops/$shopId/apps/$appSlug': {
       id: '/_authenticated/shops/$shopId/apps/$appSlug'
       path: '/$appSlug'
@@ -267,12 +287,15 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedShopsShopIdAppsRouteChildren {
   AuthenticatedShopsShopIdAppsAppSlugRoute: typeof AuthenticatedShopsShopIdAppsAppSlugRoute
+  AuthenticatedShopsShopIdAppsBackInStockRoute: typeof AuthenticatedShopsShopIdAppsBackInStockRoute
 }
 
 const AuthenticatedShopsShopIdAppsRouteChildren: AuthenticatedShopsShopIdAppsRouteChildren =
   {
     AuthenticatedShopsShopIdAppsAppSlugRoute:
       AuthenticatedShopsShopIdAppsAppSlugRoute,
+    AuthenticatedShopsShopIdAppsBackInStockRoute:
+      AuthenticatedShopsShopIdAppsBackInStockRoute,
   }
 
 const AuthenticatedShopsShopIdAppsRouteWithChildren =

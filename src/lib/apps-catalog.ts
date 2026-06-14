@@ -28,11 +28,11 @@ export const APPS_CATALOG: AppDefinition[] = [
   },
   {
     slug: "back-in-stock",
-    name: "Back in stock",
-    tagline: "Notificeer klanten zodra producten weer leverbaar zijn",
-    description: "Binnenkort beschikbaar.",
+    name: "Back in Stock Alerts",
+    tagline: "Turn out-of-stock products into recovered revenue.",
+    description: "Laat klanten zich aanmelden voor een notificatie zodra een product weer op voorraad is.",
     category: "Conversie",
-    status: "coming-soon",
+    status: "available",
     image: backInStockAsset.url,
   },
   {
