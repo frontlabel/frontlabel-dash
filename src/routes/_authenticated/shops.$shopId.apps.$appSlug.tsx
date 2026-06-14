@@ -83,14 +83,14 @@ function AppSettingsPage() {
     if (rowId) {
       const { error } = await supabase
         .from("shop_apps")
-        .update({ enabled, settings })
+        .update({ enabled, settings: settings as unknown as Record<string, unknown> })
         .eq("id", rowId);
       if (error) toast.error(error.message);
       else toast.success("Opgeslagen");
     } else {
       const { data, error } = await supabase
         .from("shop_apps")
-        .insert({ shop_id: shopId, app_slug: appSlug, enabled, settings })
+        .insert({ shop_id: shopId, app_slug: appSlug, enabled, settings: settings as unknown as Record<string, unknown> })
         .select("id")
         .single();
       if (error) toast.error(error.message);

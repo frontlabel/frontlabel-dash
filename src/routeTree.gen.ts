@@ -10,11 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedPresetsRouteImport } from './routes/_authenticated/presets'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
+import { Route as AuthenticatedShopsNewRouteImport } from './routes/_authenticated/shops.new'
+import { Route as AuthenticatedShopsShopIdRouteImport } from './routes/_authenticated/shops.$shopId'
+import { Route as AuthenticatedShopsShopIdIndexRouteImport } from './routes/_authenticated/shops.$shopId.index'
+import { Route as AuthenticatedShopsShopIdAppsRouteImport } from './routes/_authenticated/shops.$shopId.apps'
+import { Route as AuthenticatedShopsShopIdAppsAppSlugRouteImport } from './routes/_authenticated/shops.$shopId.apps.$appSlug'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -22,30 +35,130 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPresetsRoute = AuthenticatedPresetsRouteImport.update({
+  id: '/presets',
+  path: '/presets',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAppsRoute = AuthenticatedAppsRouteImport.update({
+  id: '/apps',
+  path: '/apps',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedShopsNewRoute = AuthenticatedShopsNewRouteImport.update({
+  id: '/shops/new',
+  path: '/shops/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedShopsShopIdRoute =
+  AuthenticatedShopsShopIdRouteImport.update({
+    id: '/shops/$shopId',
+    path: '/shops/$shopId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedShopsShopIdIndexRoute =
+  AuthenticatedShopsShopIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedShopsShopIdRoute,
+  } as any)
+const AuthenticatedShopsShopIdAppsRoute =
+  AuthenticatedShopsShopIdAppsRouteImport.update({
+    id: '/apps',
+    path: '/apps',
+    getParentRoute: () => AuthenticatedShopsShopIdRoute,
+  } as any)
+const AuthenticatedShopsShopIdAppsAppSlugRoute =
+  AuthenticatedShopsShopIdAppsAppSlugRouteImport.update({
+    id: '/$appSlug',
+    path: '/$appSlug',
+    getParentRoute: () => AuthenticatedShopsShopIdAppsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/apps': typeof AuthenticatedAppsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/presets': typeof AuthenticatedPresetsRoute
+  '/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
+  '/shops/new': typeof AuthenticatedShopsNewRoute
+  '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
+  '/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
+  '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/apps': typeof AuthenticatedAppsRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/presets': typeof AuthenticatedPresetsRoute
+  '/shops/new': typeof AuthenticatedShopsNewRoute
+  '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
+  '/shops/$shopId': typeof AuthenticatedShopsShopIdIndexRoute
+  '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/apps': typeof AuthenticatedAppsRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/presets': typeof AuthenticatedPresetsRoute
+  '/_authenticated/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
+  '/_authenticated/shops/new': typeof AuthenticatedShopsNewRoute
+  '/_authenticated/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
+  '/_authenticated/shops/$shopId/': typeof AuthenticatedShopsShopIdIndexRoute
+  '/_authenticated/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/apps'
+    | '/dashboard'
+    | '/presets'
+    | '/shops/$shopId'
+    | '/shops/new'
+    | '/shops/$shopId/apps'
+    | '/shops/$shopId/'
+    | '/shops/$shopId/apps/$appSlug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth'
-  id: '__root__' | '/' | '/auth'
+  to:
+    | '/'
+    | '/auth'
+    | '/apps'
+    | '/dashboard'
+    | '/presets'
+    | '/shops/new'
+    | '/shops/$shopId/apps'
+    | '/shops/$shopId'
+    | '/shops/$shopId/apps/$appSlug'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/apps'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/presets'
+    | '/_authenticated/shops/$shopId'
+    | '/_authenticated/shops/new'
+    | '/_authenticated/shops/$shopId/apps'
+    | '/_authenticated/shops/$shopId/'
+    | '/_authenticated/shops/$shopId/apps/$appSlug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
 }
 
@@ -58,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -65,11 +185,119 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/presets': {
+      id: '/_authenticated/presets'
+      path: '/presets'
+      fullPath: '/presets'
+      preLoaderRoute: typeof AuthenticatedPresetsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/apps': {
+      id: '/_authenticated/apps'
+      path: '/apps'
+      fullPath: '/apps'
+      preLoaderRoute: typeof AuthenticatedAppsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/shops/new': {
+      id: '/_authenticated/shops/new'
+      path: '/shops/new'
+      fullPath: '/shops/new'
+      preLoaderRoute: typeof AuthenticatedShopsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/shops/$shopId': {
+      id: '/_authenticated/shops/$shopId'
+      path: '/shops/$shopId'
+      fullPath: '/shops/$shopId'
+      preLoaderRoute: typeof AuthenticatedShopsShopIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/shops/$shopId/': {
+      id: '/_authenticated/shops/$shopId/'
+      path: '/'
+      fullPath: '/shops/$shopId/'
+      preLoaderRoute: typeof AuthenticatedShopsShopIdIndexRouteImport
+      parentRoute: typeof AuthenticatedShopsShopIdRoute
+    }
+    '/_authenticated/shops/$shopId/apps': {
+      id: '/_authenticated/shops/$shopId/apps'
+      path: '/apps'
+      fullPath: '/shops/$shopId/apps'
+      preLoaderRoute: typeof AuthenticatedShopsShopIdAppsRouteImport
+      parentRoute: typeof AuthenticatedShopsShopIdRoute
+    }
+    '/_authenticated/shops/$shopId/apps/$appSlug': {
+      id: '/_authenticated/shops/$shopId/apps/$appSlug'
+      path: '/$appSlug'
+      fullPath: '/shops/$shopId/apps/$appSlug'
+      preLoaderRoute: typeof AuthenticatedShopsShopIdAppsAppSlugRouteImport
+      parentRoute: typeof AuthenticatedShopsShopIdAppsRoute
+    }
   }
 }
 
+interface AuthenticatedShopsShopIdAppsRouteChildren {
+  AuthenticatedShopsShopIdAppsAppSlugRoute: typeof AuthenticatedShopsShopIdAppsAppSlugRoute
+}
+
+const AuthenticatedShopsShopIdAppsRouteChildren: AuthenticatedShopsShopIdAppsRouteChildren =
+  {
+    AuthenticatedShopsShopIdAppsAppSlugRoute:
+      AuthenticatedShopsShopIdAppsAppSlugRoute,
+  }
+
+const AuthenticatedShopsShopIdAppsRouteWithChildren =
+  AuthenticatedShopsShopIdAppsRoute._addFileChildren(
+    AuthenticatedShopsShopIdAppsRouteChildren,
+  )
+
+interface AuthenticatedShopsShopIdRouteChildren {
+  AuthenticatedShopsShopIdAppsRoute: typeof AuthenticatedShopsShopIdAppsRouteWithChildren
+  AuthenticatedShopsShopIdIndexRoute: typeof AuthenticatedShopsShopIdIndexRoute
+}
+
+const AuthenticatedShopsShopIdRouteChildren: AuthenticatedShopsShopIdRouteChildren =
+  {
+    AuthenticatedShopsShopIdAppsRoute:
+      AuthenticatedShopsShopIdAppsRouteWithChildren,
+    AuthenticatedShopsShopIdIndexRoute: AuthenticatedShopsShopIdIndexRoute,
+  }
+
+const AuthenticatedShopsShopIdRouteWithChildren =
+  AuthenticatedShopsShopIdRoute._addFileChildren(
+    AuthenticatedShopsShopIdRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAppsRoute: typeof AuthenticatedAppsRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPresetsRoute: typeof AuthenticatedPresetsRoute
+  AuthenticatedShopsShopIdRoute: typeof AuthenticatedShopsShopIdRouteWithChildren
+  AuthenticatedShopsNewRoute: typeof AuthenticatedShopsNewRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAppsRoute: AuthenticatedAppsRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPresetsRoute: AuthenticatedPresetsRoute,
+  AuthenticatedShopsShopIdRoute: AuthenticatedShopsShopIdRouteWithChildren,
+  AuthenticatedShopsNewRoute: AuthenticatedShopsNewRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
