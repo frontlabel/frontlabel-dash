@@ -113,13 +113,31 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
   if (window.__shoplabelBIS) return; window.__shoplabelBIS = true;
   var s = ${payload};
   function ready(fn){if(document.readyState!=="loading")fn();else document.addEventListener("DOMContentLoaded",fn);}
-  function findSoldOut(){
-    // Heuristiek: zoek elementen met data-soldout, of een knop met "uitverkocht"
-    if(document.querySelector("[data-shoplabel-bis]"))return document.querySelector("[data-shoplabel-bis]");
-    var btns=document.querySelectorAll("button, .button, .btn");
+  function findAnchor(){
+    // 1) Expliciete hook
+    var hook=document.querySelector("[data-shoplabel-bis]");
+    if(hook)return {el:hook,soldOut:true};
+    // 2) Lightspeed standaard productformulier
+    var form=document.getElementById("product_configure_form");
+    if(form){
+      var soldOut=false;
+      var submit=form.querySelector('button[type="submit"], input[type="submit"]');
+      if(submit && (submit.disabled || /uitverkocht|sold\\s*out|niet\\s*leverbaar|out\\s*of\\s*stock/i.test(submit.textContent||submit.value||""))){
+        soldOut=true;
+      }
+      // sommige themes verbergen de submit-knop en tonen een "uitverkocht" label
+      if(!soldOut && /uitverkocht|sold\\s*out|niet\\s*leverbaar|out\\s*of\\s*stock/i.test(form.textContent||"")){
+        soldOut=true;
+      }
+      if(soldOut)return {el:form,soldOut:true};
+    }
+    // 3) Algemene fallback: knop met uitverkocht-tekst of disabled koopknop
+    var btns=document.querySelectorAll("button, .button, .btn, input[type='submit']");
     for(var i=0;i<btns.length;i++){
-      var t=(btns[i].textContent||"").trim().toLowerCase();
-      if(t==="uitverkocht"||t==="sold out"||btns[i].disabled){return btns[i].parentNode;}
+      var t=(btns[i].textContent||btns[i].value||"").trim().toLowerCase();
+      if(/^(uitverkocht|sold\\s*out|niet\\s*leverbaar|out\\s*of\\s*stock)$/i.test(t)||btns[i].disabled){
+        return {el:btns[i].parentNode,soldOut:true};
+      }
     }
     return null;
   }
@@ -134,7 +152,7 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
     };
   }
   ready(function(){
-    var anchor=findSoldOut();if(!anchor)return;
+    var anchor=findAnchor();if(!anchor||!anchor.soldOut)return;
     var css=".slbl-bis-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.buttonColor+";color:#fff;padding:10px 14px;border-radius:6px;font:inherit;font-weight:600;margin-top:10px}"
       +".slbl-bis-form{margin-top:10px;display:flex;gap:8px;flex-direction:column;font-family:system-ui,sans-serif}"
       +".slbl-bis-inp{font:inherit;padding:8px;border:1px solid #d1d5db;border-radius:6px}"
@@ -142,7 +160,10 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
     var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
     var wrap=document.createElement("div");wrap.className="slbl-bis-wrap";
     var btn=document.createElement("button");btn.type="button";btn.className="slbl-bis-btn";btn.textContent=s.buttonText;
-    wrap.appendChild(btn);anchor.appendChild(wrap);
+    wrap.appendChild(btn);
+    // Voor een <form> plakken we de knop ná de form zodat hij niet meegaat bij submit
+    if(anchor.el.tagName==="FORM"){anchor.el.parentNode.insertBefore(wrap,anchor.el.nextSibling);}
+    else{anchor.el.appendChild(wrap);}
     btn.addEventListener("click",function(){
       btn.style.display="none";
       var form=document.createElement("div");form.className="slbl-bis-form";
