@@ -80,11 +80,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Shoplabel — App admin voor Lightspeed shops" },
       { name: "description", content: "Beheer je Lightspeed shops en Shoplabel apps op één plek." },
       { name: "author", content: "Shoplabel" },
-      { property: "og:title", content: "Shoplabel App Admin" },
+      { property: "og:title", content: "Shoplabel — App admin voor Lightspeed shops" },
       { property: "og:description", content: "Beheer je Lightspeed shops en Shoplabel apps op één plek." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Shoplabel — App admin voor Lightspeed shops" },
+      { name: "twitter:description", content: "Beheer je Lightspeed shops en Shoplabel apps op één plek." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/925206da-dcc3-4d4d-b559-d57dfd7a25c5/id-preview-3218f6f1--818f6290-65fe-4f2a-9fa0-7d95790d5f04.lovable.app-1781464169358.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/925206da-dcc3-4d4d-b559-d57dfd7a25c5/id-preview-3218f6f1--818f6290-65fe-4f2a-9fa0-7d95790d5f04.lovable.app-1781464169358.png" },
     ],
     links: [
       {
