@@ -69,6 +69,28 @@ export const Route = createFileRoute("/api/public/back-in-stock/signup")({
           return json({ error: "could not save" }, 500);
         }
 
+        // Verstuur bevestigingsmail (best-effort; faalt nooit de signup)
+        try {
+          const { enqueueTransactionalEmail } = await import("@/lib/email/send-internal.server");
+          const { data: shop } = await supabaseAdmin
+            .from("shops")
+            .select("name")
+            .eq("id", input.shop_id)
+            .maybeSingle();
+          await enqueueTransactionalEmail({
+            templateName: "back-in-stock-confirmation",
+            recipientEmail: input.email,
+            idempotencyKey: `bis-confirm-${input.shop_id}-${input.product_handle}-${input.email}`,
+            templateData: {
+              productTitle: input.product_title,
+              productImageUrl: input.product_image_url,
+              shopName: shop?.name ?? undefined,
+            },
+          });
+        } catch (e) {
+          console.error("back-in-stock confirmation email failed", e);
+        }
+
         return json({ ok: true });
       },
     },

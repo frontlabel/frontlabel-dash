@@ -73,6 +73,29 @@ export const Route = createFileRoute("/api/public/price-alert/signup")({
           return json({ error: "could not save" }, 500);
         }
 
+        try {
+          const { enqueueTransactionalEmail } = await import("@/lib/email/send-internal.server");
+          const { data: shop } = await supabaseAdmin
+            .from("shops")
+            .select("name")
+            .eq("id", input.shop_id)
+            .maybeSingle();
+          await enqueueTransactionalEmail({
+            templateName: "price-alert-confirmation",
+            recipientEmail: input.email,
+            idempotencyKey: `pa-confirm-${input.shop_id}-${input.product_handle}-${input.email}-${input.target_price}`,
+            templateData: {
+              productTitle: input.product_title,
+              productImageUrl: input.product_image_url,
+              targetPrice: input.target_price,
+              currency: input.currency ?? "EUR",
+              shopName: shop?.name ?? undefined,
+            },
+          });
+        } catch (e) {
+          console.error("price-alert confirmation email failed", e);
+        }
+
         return json({ ok: true });
       },
     },
