@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { PageHeader } from "@/components/page-header";
 import { SectionCard, SectionLabel } from "@/components/section-card";
 import { APPS_CATALOG } from "@/lib/apps-catalog";
@@ -6,12 +6,18 @@ import { Badge } from "@/components/ui/badge";
 import { ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/apps")({
-  component: AppsCatalogPage,
+  component: AppsLayout,
 });
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   "age-verification": ShieldCheck,
 };
+
+function AppsLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  if (pathname !== "/apps") return <Outlet />;
+  return <AppsCatalogPage />;
+}
 
 function AppsCatalogPage() {
   return (
