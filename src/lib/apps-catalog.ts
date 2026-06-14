@@ -1,3 +1,10 @@
+import ageCheckAsset from "@/assets/squares-agecheck.jpg.asset.json";
+import backInStockAsset from "@/assets/squares-backinstock.jpg.asset.json";
+import filterByStockAsset from "@/assets/squares-filterbystock.jpg.asset.json";
+import instagramFeedAsset from "@/assets/squares-instagramfeed.jpg.asset.json";
+import priceAlertAsset from "@/assets/squares-pricealert.jpg.asset.json";
+import priceDropAsset from "@/assets/squares-pricedrop.jpg.asset.json";
+
 export interface AppDefinition {
   slug: string;
   name: string;
@@ -5,6 +12,7 @@ export interface AppDefinition {
   description: string;
   category: string;
   status: "available" | "coming-soon";
+  image?: string;
 }
 
 export const APPS_CATALOG: AppDefinition[] = [
@@ -16,22 +24,52 @@ export const APPS_CATALOG: AppDefinition[] = [
       "Toon bezoekers een leeftijdscheck voordat ze je shop binnenkomen. Volledig instelbaar in stijl en gedrag.",
     category: "Compliance",
     status: "available",
+    image: ageCheckAsset.url,
   },
   {
-    slug: "cookie-consent",
-    name: "Cookie Consent",
-    tagline: "GDPR-proof cookiebanner",
+    slug: "back-in-stock",
+    name: "Back in stock",
+    tagline: "Notificeer klanten zodra producten weer leverbaar zijn",
     description: "Binnenkort beschikbaar.",
-    category: "Compliance",
+    category: "Conversie",
     status: "coming-soon",
+    image: backInStockAsset.url,
   },
   {
-    slug: "review-prompts",
-    name: "Review Prompts",
-    tagline: "Vraag review op het juiste moment",
+    slug: "filter-by-stock",
+    name: "Filter by stock",
+    tagline: "Laat bezoekers filteren op voorraadstatus",
     description: "Binnenkort beschikbaar.",
-    category: "Growth",
+    category: "Merchandising",
     status: "coming-soon",
+    image: filterByStockAsset.url,
+  },
+  {
+    slug: "instagram-feed",
+    name: "Instagram feed",
+    tagline: "Toon je laatste Instagram posts op je shop",
+    description: "Binnenkort beschikbaar.",
+    category: "Social",
+    status: "coming-soon",
+    image: instagramFeedAsset.url,
+  },
+  {
+    slug: "price-alert",
+    name: "Price alert",
+    tagline: "Klanten waarschuwen bij prijsdalingen",
+    description: "Binnenkort beschikbaar.",
+    category: "Conversie",
+    status: "coming-soon",
+    image: priceAlertAsset.url,
+  },
+  {
+    slug: "price-drop-deal",
+    name: "Price drop deal",
+    tagline: "Tijdgebonden afslag-acties op je shop",
+    description: "Binnenkort beschikbaar.",
+    category: "Marketing",
+    status: "coming-soon",
+    image: priceDropAsset.url,
   },
 ];
 

@@ -6,7 +6,7 @@ import { SectionCard, SectionLabel } from "@/components/section-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { ChevronRight, ShieldCheck, Cookie, Star } from "lucide-react";
+import { ChevronRight, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/apps")({
@@ -15,8 +15,6 @@ export const Route = createFileRoute("/_authenticated/shops/$shopId/apps")({
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   "age-verification": ShieldCheck,
-  "cookie-consent": Cookie,
-  "review-prompts": Star,
 };
 
 function AppsLayout() {
@@ -77,9 +75,18 @@ function AppsList({ shopId }: { shopId: string }) {
             const inst = installed[app.slug];
             return (
               <li key={app.slug} className="flex items-center gap-4 px-5 py-4">
-                <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
-                  <Icon className="h-5 w-5 text-primary" />
-                </div>
+                {app.image ? (
+                  <img
+                    src={app.image}
+                    alt={app.name}
+                    className="h-12 w-12 rounded-md object-cover shrink-0"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="h-12 w-12 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                    <Icon className="h-5 w-5 text-primary" />
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">{app.name}</span>
