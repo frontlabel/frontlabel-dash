@@ -93,12 +93,7 @@ export const Route = createFileRoute("/api/public/age-verification.js")({
     +".slbl-av-badge{width:48px;height:48px;border-radius:9999px;background:"+s.primaryColor+";color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 12px}"
     +".slbl-av-h{font-size:18px;font-weight:600;margin:0 0 6px}"
     +".slbl-av-p{font-size:13px;opacity:.8;margin:0 0 16px}"
-    +".slbl-av-row{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px;margin-bottom:14px}"
-    +".slbl-av-row input{font:inherit;color:inherit;background:rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.15);border-radius:6px;padding:8px;text-align:center;width:100%;box-sizing:border-box}"
-    +".slbl-av-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.primaryColor+";color:#fff;padding:10px 14px;border-radius:"+Math.max(4,s.borderRadius-4)+"px;font:inherit;font-weight:600}"
-    +".slbl-av-no{margin-top:10px;background:none;border:0;color:inherit;opacity:.6;cursor:pointer;font:inherit;font-size:12px}"
-    +".slbl-av-err{color:#b91c1c;font-size:12px;margin:-6px 0 10px;min-height:14px}"
-    +"html.slbl-av-locked,body.slbl-av-locked{overflow:hidden!important}";
+    +".slbl-av-inp{font:inherit;color:inherit;background:rgba(0,0,0,.03);border:1px solid rgba(0,0,0,.15);border-radius:6px;padding:8px;text-align:center;width:100%;max-width:220px;box-sizing:border-box;margin-bottom:14px}"
   var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
 
   var ov=document.createElement("div");ov.className="slbl-av-ov";
