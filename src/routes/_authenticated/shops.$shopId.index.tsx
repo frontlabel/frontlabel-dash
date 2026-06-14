@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Copy, Eye, EyeOff } from "lucide-react";
+import { Copy, ExternalLink, Eye, EyeOff } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/")({
   component: ShopConnectionPage,
@@ -76,6 +76,10 @@ function ShopConnectionPage() {
     return <div className="p-6 text-sm text-muted-foreground">Laden…</div>;
   }
 
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const scriptUrl = `${origin}/api/public/shoplabel.js?shop_id=${shopId}`;
+  const snippet = `<script src="${scriptUrl}" defer></script>`;
+
   return (
     <div className="px-6 py-6 space-y-6 pb-16">
       <div className="flex items-center justify-between">
@@ -88,6 +92,37 @@ function ShopConnectionPage() {
             {saving ? "Opslaan…" : "Opslaan"}
           </Button>
         </div>
+      </div>
+
+      <div>
+        <SectionLabel>Shoplabel script</SectionLabel>
+        <SectionCard className="p-5 space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Plak dit script <strong>één keer</strong> in de <code>&lt;head&gt;</code> of vlak voor
+            <code> &lt;/body&gt;</code> van je Lightspeed-theme. Alle apps die je in deze shop activeert
+            (18+ verificatie, terug-op-voorraad meldingen, etc.) lopen automatisch via dit ene script —
+            je hoeft niets meer te installeren wanneer je een nieuwe app aanzet.
+          </p>
+          <div className="rounded-md border border-border bg-muted/40 p-3 font-mono text-xs break-all">
+            {snippet}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => copy(snippet, "Snippet")}>
+              <Copy className="h-4 w-4" /> Kopieer snippet
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => copy(scriptUrl, "Script-URL")}>
+              <Copy className="h-4 w-4" /> Kopieer URL
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <a href={scriptUrl} target="_blank" rel="noreferrer">
+                <ExternalLink className="h-4 w-4" /> Test script
+              </a>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Tip: zet apps op <strong>Actief</strong> en sla op — anders levert het script voor die app bewust niets uit.
+          </p>
+        </SectionCard>
       </div>
 
       <div>
