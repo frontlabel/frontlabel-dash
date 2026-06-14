@@ -24,7 +24,7 @@ import {
 } from "@/lib/apps-catalog";
 import type { Json } from "@/integrations/supabase/types";
 import { AgeVerificationPreview } from "@/components/age-verification-preview";
-import { Save, Palette, Copy, ExternalLink, ChevronRight, LayoutGrid, X } from "lucide-react";
+import { Save, Palette, ChevronRight, LayoutGrid, X } from "lucide-react";
 import { useShellHeader } from "@/components/shell-header-context";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/apps/$appSlug")({
@@ -177,19 +177,6 @@ function AppSettingsPage() {
     return <div className="p-6">App niet gevonden.</div>;
   }
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const scriptUrl = `${origin}/api/public/age-verification.js?shop_id=${shopId}`;
-  const snippet = `<script src="${scriptUrl}" defer></script>`;
-
-  async function copy(value: string, label: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success(`${label} gekopieerd`);
-    } catch {
-      toast.error("Kopiëren mislukt");
-    }
-  }
-
   return (
     <div className="pb-16">
       {savedAt && (
@@ -212,36 +199,6 @@ function AppSettingsPage() {
 
       <div className="px-6 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
         <div className="space-y-6 min-w-0">
-          <div>
-            <SectionLabel>Installeer op je shop</SectionLabel>
-            <SectionCard className="p-5 space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Plak dit script in de <code>&lt;head&gt;</code> of vlak voor <code>&lt;/body&gt;</code> van
-                je Lightspeed-theme (of via Algemene instellingen → Scripts). De popup verschijnt automatisch
-                zodra de app is ingeschakeld en opgeslagen.
-              </p>
-              <div className="rounded-md border border-border bg-muted/40 p-3 font-mono text-xs break-all">
-                {snippet}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => copy(snippet, "Snippet")}>
-                  <Copy className="h-4 w-4" /> Kopieer snippet
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => copy(scriptUrl, "Script-URL")}>
-                  <Copy className="h-4 w-4" /> Kopieer URL
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <a href={scriptUrl} target="_blank" rel="noreferrer">
-                    <ExternalLink className="h-4 w-4" /> Test script
-                  </a>
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Tip: zet de app op <strong>Actief</strong> en sla op — anders levert het script bewust niets uit.
-              </p>
-            </SectionCard>
-          </div>
-
           <div>
             <SectionLabel>Gedrag</SectionLabel>
             <SectionCard className="p-5 space-y-4">
