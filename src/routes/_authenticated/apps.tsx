@@ -18,7 +18,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 function AppsCatalogPage() {
   return (
     <div className="max-w-5xl mx-auto">
-      <PageHeader title="Apps" subtitle="Frontlabel apps die je per shop kunt installeren en configureren." />
+      <PageHeader title="Apps" subtitle="Shoplabel apps die je per shop kunt installeren en configureren." />
       <div className="px-6 pb-12">
         <SectionLabel>Beschikbaar</SectionLabel>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
