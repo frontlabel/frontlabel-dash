@@ -22,6 +22,7 @@ import {
   getApp,
   type AgeVerificationSettings,
 } from "@/lib/apps-catalog";
+import type { Json } from "@/integrations/supabase/types";
 import { AgeVerificationPreview } from "@/components/age-verification-preview";
 import { Save, Palette, ChevronLeft } from "lucide-react";
 
@@ -83,14 +84,14 @@ function AppSettingsPage() {
     if (rowId) {
       const { error } = await supabase
         .from("shop_apps")
-        .update({ enabled, settings: settings as unknown as Record<string, unknown> })
+        .update({ enabled, settings: settings as unknown as Json })
         .eq("id", rowId);
       if (error) toast.error(error.message);
       else toast.success("Opgeslagen");
     } else {
       const { data, error } = await supabase
         .from("shop_apps")
-        .insert({ shop_id: shopId, app_slug: appSlug, enabled, settings: settings as unknown as Record<string, unknown> })
+        .insert({ shop_id: shopId, app_slug: appSlug, enabled, settings: settings as unknown as Json })
         .select("id")
         .single();
       if (error) toast.error(error.message);
@@ -120,7 +121,7 @@ function AppSettingsPage() {
     };
     const { data, error } = await supabase
       .from("style_presets")
-      .insert({ owner_id: u.user.id, name: presetName, settings: visual })
+      .insert({ owner_id: u.user.id, name: presetName, settings: visual as unknown as Json })
       .select("id,name,settings")
       .single();
     if (error) toast.error(error.message);
