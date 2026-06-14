@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { SectionCard, SectionLabel } from "@/components/section-card";
 import { APPS_CATALOG } from "@/lib/apps-catalog";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Cookie, Star } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/apps")({
   component: AppsCatalogPage,
@@ -11,8 +11,6 @@ export const Route = createFileRoute("/_authenticated/apps")({
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   "age-verification": ShieldCheck,
-  "cookie-consent": Cookie,
-  "review-prompts": Star,
 };
 
 function AppsCatalogPage() {
@@ -27,9 +25,18 @@ function AppsCatalogPage() {
             return (
               <SectionCard key={app.slug} className="p-5">
                 <div className="flex items-start gap-4">
-                  <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                    <Icon className="h-5 w-5 text-primary" />
-                  </div>
+                  {app.image ? (
+                    <img
+                      src={app.image}
+                      alt={app.name}
+                      className="h-16 w-16 rounded-md object-cover shrink-0"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="h-16 w-16 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold">{app.name}</h3>
