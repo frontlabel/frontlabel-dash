@@ -260,3 +260,120 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
   });
 })();`;
 }
+const PA_DEFAULTS = {
+  buttonText: "Stel een prijswaarschuwing in",
+  buttonColor: "#111827",
+  newsletterOptIn: true,
+  currencySymbol: "\u20ac",
+};
+
+export function buildPriceAlertScript(rawSettings: Record<string, unknown>, shopId: string, origin: string): string {
+  const s = { ...PA_DEFAULTS, ...rawSettings } as typeof PA_DEFAULTS;
+  const payload = JSON.stringify({
+    ...s,
+    shopId,
+    endpoint: `${origin}/api/public/price-alert/signup`,
+  });
+  return `(function(){
+  if (window.__shoplabelPA) return; window.__shoplabelPA = true;
+  var s = ${payload};
+  function ready(fn){if(document.readyState!=="loading")fn();else document.addEventListener("DOMContentLoaded",fn);}
+  function findAnchor(){
+    var hook=document.querySelector("[data-shoplabel-pricealert]");
+    if(hook)return {el:hook,after:false};
+    var form=document.getElementById("product_configure_form");
+    if(form)return {el:form,after:true};
+    return null;
+  }
+  function parsePrice(t){
+    if(!t)return null;
+    var m=String(t).replace(/[^0-9,\\.]/g,"").replace(/\\.(?=\\d{3}(?:[,\\.]|$))/g,"").replace(",",".");
+    var n=parseFloat(m);
+    return isFinite(n)?n:null;
+  }
+  function getCurrentPrice(){
+    var meta=document.querySelector('meta[property="product:price:amount"], meta[itemprop="price"]');
+    if(meta){var v=parsePrice(meta.getAttribute("content"));if(v)return v;}
+    var el=document.querySelector('[itemprop="price"], .product-price, .price, [data-price]');
+    if(el){var v=parsePrice(el.getAttribute("content")||el.getAttribute("data-price")||el.textContent);if(v)return v;}
+    return null;
+  }
+  function productInfo(){
+    var h1=document.querySelector("h1");
+    var img=document.querySelector('meta[property="og:image"]');
+    var path=location.pathname.replace(/\\/+$/,"").split("/").pop()||location.pathname;
+    return {
+      product_handle: path,
+      product_title: h1?h1.textContent.trim():path,
+      product_image_url: img?img.getAttribute("content"):undefined
+    };
+  }
+  function inject(anchor){
+    if(document.querySelector(".slbl-pa-wrap"))return;
+    var css=".slbl-pa-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.buttonColor+";color:#fff;padding:10px 14px;border-radius:6px;font:inherit;font-weight:600;margin-top:10px}"
+      +".slbl-pa-row{display:flex;gap:8px;align-items:stretch;font-family:system-ui,sans-serif}"
+      +".slbl-pa-inp{font:inherit;padding:8px;border:1px solid #d1d5db;border-radius:6px;flex:1;min-width:0}"
+      +".slbl-pa-sym{display:flex;align-items:center;padding:0 12px;border:1px solid #d1d5db;border-radius:6px;background:#f3f4f6;font-weight:600}"
+      +".slbl-pa-msg{font-size:13px;margin-top:6px}"
+      +".slbl-pa-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.7);font-family:system-ui,sans-serif}"
+      +".slbl-pa-md{width:100%;max-width:380px;background:#fff;color:#1f2937;border-radius:12px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative}"
+      +".slbl-pa-md h3{margin:0 0 6px;font-size:18px;font-weight:600}"
+      +".slbl-pa-md p{margin:0 0 14px;font-size:13px;opacity:.8}"
+      +".slbl-pa-x{position:absolute;top:8px;right:10px;background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:#6b7280}"
+      +"html.slbl-pa-locked,body.slbl-pa-locked{overflow:hidden!important}";
+    var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
+    var wrap=document.createElement("div");wrap.className="slbl-pa-wrap";
+    var btn=document.createElement("button");btn.type="button";btn.className="slbl-pa-btn";btn.textContent=s.buttonText;
+    wrap.appendChild(btn);
+    if(anchor.after){anchor.el.parentNode.insertBefore(wrap,anchor.el.nextSibling);}
+    else{anchor.el.appendChild(wrap);}
+    btn.addEventListener("click",function(){
+      var current=getCurrentPrice();
+      var ov=document.createElement("div");ov.className="slbl-pa-ov";
+      var md=document.createElement("div");md.className="slbl-pa-md";md.setAttribute("role","dialog");md.setAttribute("aria-modal","true");
+      md.innerHTML='<button type="button" class="slbl-pa-x" aria-label="Sluiten">&times;</button>'
+        +'<h3>Prijswaarschuwing instellen</h3>'
+        +'<p>Vul je e-mailadres en gewenste prijs in. Zodra de prijs op of onder dat bedrag zakt, ontvang je een mail.</p>'
+        +'<div class="slbl-pa-row" style="margin-bottom:8px">'
+        +'<input type="email" class="slbl-pa-inp slbl-pa-email" placeholder="Je e-mailadres" required>'
+        +'</div>'
+        +'<div class="slbl-pa-row" style="margin-bottom:8px">'
+        +'<span class="slbl-pa-sym">'+s.currencySymbol+'</span>'
+        +'<input type="text" inputmode="decimal" class="slbl-pa-inp slbl-pa-target" placeholder="Jouw streefprijs"'+(current?(' value="'+current.toFixed(2).replace(".",",")+'"'):"")+'>'
+        +'</div>'
+        + (s.newsletterOptIn?'<label style="font-size:12px;display:flex;gap:6px;align-items:center;margin-bottom:8px"><input type="checkbox" class="slbl-pa-news" checked> Stuur me ook updates en aanbiedingen.</label>':'')
+        +'<button type="button" class="slbl-pa-btn slbl-pa-submit">Aanmelden</button>'
+        +'<div class="slbl-pa-msg"></div>';
+      ov.appendChild(md);
+      (document.body||document.documentElement).appendChild(ov);
+      document.documentElement.classList.add("slbl-pa-locked");document.body&&document.body.classList.add("slbl-pa-locked");
+      function close(){document.documentElement.classList.remove("slbl-pa-locked");document.body&&document.body.classList.remove("slbl-pa-locked");ov.remove();}
+      md.querySelector(".slbl-pa-x").addEventListener("click",close);
+      ov.addEventListener("click",function(e){if(e.target===ov)close();});
+      var email=md.querySelector(".slbl-pa-email");
+      var target=md.querySelector(".slbl-pa-target");
+      var news=md.querySelector(".slbl-pa-news");
+      var msg=md.querySelector(".slbl-pa-msg");
+      md.querySelector(".slbl-pa-submit").addEventListener("click",function(){
+        var em=(email.value||"").trim();
+        if(!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(em)){msg.style.color="#b91c1c";msg.textContent="Vul een geldig e-mailadres in.";return;}
+        var tp=parsePrice(target.value);
+        if(!tp||tp<=0){msg.style.color="#b91c1c";msg.textContent="Vul een geldige streefprijs in.";return;}
+        var info=productInfo();
+        msg.style.color="#6b7280";msg.textContent="Bezig met aanmelden\u2026";
+        fetch(s.endpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+          shop_id:s.shopId,product_handle:info.product_handle,product_title:info.product_title,product_image_url:info.product_image_url,
+          email:em,target_price:tp,current_price:current||undefined,newsletter_opt_in:news?news.checked:false
+        })}).then(function(r){
+          if(r.ok){msg.style.color="#047857";msg.textContent="Top! Je ontvangt een mail zodra de prijs jouw streefprijs bereikt.";md.querySelector(".slbl-pa-submit").style.display="none";email.disabled=true;target.disabled=true;}
+          else{msg.style.color="#b91c1c";msg.textContent="Aanmelden mislukt. Probeer het later opnieuw.";}
+        }).catch(function(){msg.style.color="#b91c1c";msg.textContent="Aanmelden mislukt. Probeer het later opnieuw.";});
+      });
+    });
+  }
+  ready(function(){
+    var anchor=findAnchor();if(!anchor)return;
+    inject(anchor);
+  });
+})();`;
+}
