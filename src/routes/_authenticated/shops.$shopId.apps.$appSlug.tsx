@@ -80,6 +80,13 @@ function AppSettingsPage() {
             <Save className="h-4 w-4" />
             {saving ? "Opslaan…" : "Opslaan"}
           </Button>
+        </div>
+      </div>
+    );
+    return () => setContent(null);
+  }, [shopId, app?.name, enabled, saving, setContent]);
+
+  useEffect(() => {
     supabase
       .from("shop_apps")
       .select("id,enabled,settings")
@@ -185,44 +192,18 @@ function AppSettingsPage() {
 
   return (
     <div className="pb-16">
-      <div className="sticky top-0 z-30 bg-background border-b border-border">
-        <div className="flex items-center justify-between px-6 py-3">
-          <nav className="flex items-center gap-2 text-sm min-w-0">
-            <LayoutGrid className="h-4 w-4 text-muted-foreground shrink-0" />
-            <Link
-              to="/shops/$shopId/apps"
-              params={{ shopId }}
-              className="text-foreground hover:underline truncate"
-            >
-              Apps
-            </Link>
-            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            <span className="text-foreground truncate">{app.name}</span>
-          </nav>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2 text-sm">
-              <Switch checked={enabled} onCheckedChange={setEnabled} id="enabled" />
-              <Label htmlFor="enabled" className="cursor-pointer">{enabled ? "Actief" : "Uit"}</Label>
-            </div>
-            <Button onClick={save} disabled={saving}>
-              <Save className="h-4 w-4" />
-              {saving ? "Opslaan…" : "Opslaan"}
-            </Button>
-          </div>
+      {savedAt && (
+        <div className="flex items-center justify-between px-6 py-2.5 bg-[hsl(120_60%_95%)] border-b border-[hsl(120_40%_80%)] text-[hsl(140_50%_30%)] text-sm">
+          <span>Wijzigingen succesvol opgeslagen!</span>
+          <button
+            onClick={() => setSavedAt(null)}
+            className="text-[hsl(140_50%_30%)] hover:opacity-70"
+            aria-label="Sluiten"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
-        {savedAt && (
-          <div className="flex items-center justify-between px-6 py-2.5 bg-[hsl(120_60%_95%)] border-t border-[hsl(120_40%_80%)] text-[hsl(140_50%_30%)] text-sm">
-            <span>Wijzigingen succesvol opgeslagen!</span>
-            <button
-              onClick={() => setSavedAt(null)}
-              className="text-[hsl(140_50%_30%)] hover:opacity-70"
-              aria-label="Sluiten"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        )}
-      </div>
+      )}
 
       <div className="px-6 pt-6 mb-6">
         <h2 className="text-xl font-bold">{app.name}</h2>
@@ -412,7 +393,7 @@ function AppSettingsPage() {
           </div>
         </div>
 
-        <div className="lg:sticky lg:top-24 self-start">
+        <div className="lg:sticky lg:top-6 self-start">
           <SectionLabel>Live preview</SectionLabel>
           <SectionCard className="p-4">
             <AgeVerificationPreview s={settings} />
