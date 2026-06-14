@@ -46,6 +46,7 @@ interface PresetRow {
 function AppSettingsPage() {
   const { shopId, appSlug } = Route.useParams();
   const app = useMemo(() => getApp(appSlug), [appSlug]);
+  const { setContent } = useShellHeader();
 
   const [rowId, setRowId] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(true);
@@ -54,6 +55,40 @@ function AppSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [presetName, setPresetName] = useState("");
   const [savedAt, setSavedAt] = useState<number | null>(null);
+
+  useEffect(() => {
+    setContent(
+      <div className="flex items-center justify-between w-full gap-3">
+        <nav className="flex items-center gap-2 text-sm min-w-0">
+          <LayoutGrid className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Link
+            to="/shops/$shopId/apps"
+            params={{ shopId }}
+            className="text-foreground hover:underline truncate"
+          >
+            Apps
+          </Link>
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-foreground truncate">{app?.name}</span>
+        </nav>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 text-sm">
+            <Switch checked={enabled} onCheckedChange={setEnabled} id="enabled-header" />
+            <Label htmlFor="enabled-header" className="cursor-pointer">{enabled ? "Actief" : "Uit"}</Label>
+          </div>
+          <Button onClick={saveSettings} disabled={saving} size="sm">
+            <Save className="h-4 w-4" />
+            {saving ? "Opslaan…" : "Opslaan"}
+          </Button>
+        </div>
+      </div>
+    );
+    return () => setContent(null);
+  }, [shopId, app?.name, enabled, saving, setContent]);
+
+  function saveSettings() {
+    save();
+  }
 
   useEffect(() => {
     supabase
