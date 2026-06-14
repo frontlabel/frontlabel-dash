@@ -19,6 +19,7 @@ import { Route as ApiPublicShoplabelDotjsRouteImport } from './routes/api/public
 import { Route as ApiPublicAgeVerificationDotjsRouteImport } from './routes/api/public/age-verification[.]js'
 import { Route as AuthenticatedShopsNewRouteImport } from './routes/_authenticated/shops.new'
 import { Route as AuthenticatedShopsShopIdRouteImport } from './routes/_authenticated/shops.$shopId'
+import { Route as AuthenticatedAppsAppSlugRouteImport } from './routes/_authenticated/apps.$appSlug'
 import { Route as AuthenticatedShopsShopIdIndexRouteImport } from './routes/_authenticated/shops.$shopId.index'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicBackInStockStockRouteImport } from './routes/api/public/back-in-stock.stock'
@@ -78,6 +79,12 @@ const AuthenticatedShopsShopIdRoute =
     path: '/shops/$shopId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAppsAppSlugRoute =
+  AuthenticatedAppsAppSlugRouteImport.update({
+    id: '/$appSlug',
+    path: '/$appSlug',
+    getParentRoute: () => AuthenticatedAppsRoute,
+  } as any)
 const AuthenticatedShopsShopIdIndexRoute =
   AuthenticatedShopsShopIdIndexRouteImport.update({
     id: '/',
@@ -124,9 +131,10 @@ const AuthenticatedShopsShopIdAppsAppSlugRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/apps': typeof AuthenticatedAppsRoute
+  '/apps': typeof AuthenticatedAppsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/presets': typeof AuthenticatedPresetsRoute
+  '/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
   '/shops/new': typeof AuthenticatedShopsNewRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
@@ -142,9 +150,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/apps': typeof AuthenticatedAppsRoute
+  '/apps': typeof AuthenticatedAppsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/presets': typeof AuthenticatedPresetsRoute
+  '/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/shops/new': typeof AuthenticatedShopsNewRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
   '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
@@ -161,9 +170,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/_authenticated/apps': typeof AuthenticatedAppsRoute
+  '/_authenticated/apps': typeof AuthenticatedAppsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/presets': typeof AuthenticatedPresetsRoute
+  '/_authenticated/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/_authenticated/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
   '/_authenticated/shops/new': typeof AuthenticatedShopsNewRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/apps'
     | '/dashboard'
     | '/presets'
+    | '/apps/$appSlug'
     | '/shops/$shopId'
     | '/shops/new'
     | '/api/public/age-verification.js'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/apps'
     | '/dashboard'
     | '/presets'
+    | '/apps/$appSlug'
     | '/shops/new'
     | '/api/public/age-verification.js'
     | '/api/public/shoplabel.js'
@@ -220,6 +232,7 @@ export interface FileRouteTypes {
     | '/_authenticated/apps'
     | '/_authenticated/dashboard'
     | '/_authenticated/presets'
+    | '/_authenticated/apps/$appSlug'
     | '/_authenticated/shops/$shopId'
     | '/_authenticated/shops/new'
     | '/api/public/age-verification.js'
@@ -316,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShopsShopIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/apps/$appSlug': {
+      id: '/_authenticated/apps/$appSlug'
+      path: '/$appSlug'
+      fullPath: '/apps/$appSlug'
+      preLoaderRoute: typeof AuthenticatedAppsAppSlugRouteImport
+      parentRoute: typeof AuthenticatedAppsRoute
+    }
     '/_authenticated/shops/$shopId/': {
       id: '/_authenticated/shops/$shopId/'
       path: '/'
@@ -368,6 +388,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAppsRouteChildren {
+  AuthenticatedAppsAppSlugRoute: typeof AuthenticatedAppsAppSlugRoute
+}
+
+const AuthenticatedAppsRouteChildren: AuthenticatedAppsRouteChildren = {
+  AuthenticatedAppsAppSlugRoute: AuthenticatedAppsAppSlugRoute,
+}
+
+const AuthenticatedAppsRouteWithChildren =
+  AuthenticatedAppsRoute._addFileChildren(AuthenticatedAppsRouteChildren)
+
 interface AuthenticatedShopsShopIdAppsRouteChildren {
   AuthenticatedShopsShopIdAppsAppSlugRoute: typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   AuthenticatedShopsShopIdAppsBackInStockRoute: typeof AuthenticatedShopsShopIdAppsBackInStockRoute
@@ -404,7 +435,7 @@ const AuthenticatedShopsShopIdRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAppsRoute: typeof AuthenticatedAppsRoute
+  AuthenticatedAppsRoute: typeof AuthenticatedAppsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPresetsRoute: typeof AuthenticatedPresetsRoute
   AuthenticatedShopsShopIdRoute: typeof AuthenticatedShopsShopIdRouteWithChildren
@@ -412,7 +443,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAppsRoute: AuthenticatedAppsRoute,
+  AuthenticatedAppsRoute: AuthenticatedAppsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPresetsRoute: AuthenticatedPresetsRoute,
   AuthenticatedShopsShopIdRoute: AuthenticatedShopsShopIdRouteWithChildren,

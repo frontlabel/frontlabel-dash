@@ -42,7 +42,11 @@ function AppsCatalogPage() {
                       {app.status === "coming-soon" ? (
                         <h3 className="font-semibold">{app.name}</h3>
                       ) : (
-                        <Link to="/dashboard" className="font-semibold">
+                        <Link
+                          to="/apps/$appSlug"
+                          params={{ appSlug: app.slug }}
+                          className="font-semibold"
+                        >
                           {app.name}
                         </Link>
                       )}
@@ -52,8 +56,12 @@ function AppsCatalogPage() {
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">{app.description}</p>
                     {app.status !== "coming-soon" && (
-                      <Link to="/dashboard" className="text-sm">
-                        Kies een shop om te installeren →
+                      <Link
+                        to="/apps/$appSlug"
+                        params={{ appSlug: app.slug }}
+                        className="text-sm"
+                      >
+                        Open app →
                       </Link>
                     )}
                   </div>
