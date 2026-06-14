@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const sidebarBody = (
     <>
       <div className="h-14 flex items-center gap-2 px-4 border-b border-sidebar-border">
-        <div className="h-7 w-7 rounded bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">S</div>
+        <div className="h-7 w-7 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold">S</div>
         <span className="font-semibold tracking-tight">shoplabel</span>
       </div>
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
@@ -42,7 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               to={item.to}
               onClick={() => setMobileOpen(false)}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded text-sm transition-colors",
+                "flex items-center gap-3 px-3 py-2.5 rounded transition-colors",
                 active
                   ? "bg-primary text-primary-foreground"
                   : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
@@ -56,7 +56,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
       <button
         onClick={signOut}
-        className="m-2 flex items-center gap-3 px-3 py-2.5 rounded text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+        className="m-2 flex items-center gap-3 px-3 py-2.5 rounded text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
       >
         <LogOut className="h-4 w-4" />
         Uitloggen
@@ -93,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span>Shoplabel App Admin</span>
           </div>
         </header>
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-auto" style={{ fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', WebkitTextSizeAdjust: '100%', fontSize: '14px', lineHeight: '24px' }}>{children}</main>
       </div>
     </div>
   );
