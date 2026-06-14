@@ -24,7 +24,7 @@ import {
 } from "@/lib/apps-catalog";
 import type { Json } from "@/integrations/supabase/types";
 import { AgeVerificationPreview } from "@/components/age-verification-preview";
-import { Save, Palette, ChevronLeft, Copy, ExternalLink } from "lucide-react";
+import { Save, Palette, Copy, ExternalLink, ChevronRight, LayoutGrid, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/apps/$appSlug")({
   component: AppSettingsPage,
@@ -52,6 +52,7 @@ function AppSettingsPage() {
   const [presets, setPresets] = useState<PresetRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [presetName, setPresetName] = useState("");
+  const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
     supabase
@@ -87,7 +88,7 @@ function AppSettingsPage() {
         .update({ enabled, settings: settings as unknown as Json })
         .eq("id", rowId);
       if (error) toast.error(error.message);
-      else toast.success("Opgeslagen");
+      else setSavedAt(Date.now());
     } else {
       const { data, error } = await supabase
         .from("shop_apps")
@@ -97,7 +98,7 @@ function AppSettingsPage() {
       if (error) toast.error(error.message);
       else {
         setRowId(data!.id);
-        toast.success("Opgeslagen");
+        setSavedAt(Date.now());
       }
     }
     setSaving(false);
@@ -158,33 +159,52 @@ function AppSettingsPage() {
   }
 
   return (
-    <div className="px-6 py-6 pb-16">
-      <div className="flex items-center justify-between mb-4">
-        <Link
-          to="/shops/$shopId/apps"
-          params={{ shopId }}
-          className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ChevronLeft className="h-4 w-4" /> Terug naar apps
-        </Link>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm">
-            <Switch checked={enabled} onCheckedChange={setEnabled} id="enabled" />
-            <Label htmlFor="enabled" className="cursor-pointer">{enabled ? "Actief" : "Uit"}</Label>
+    <div className="pb-16">
+      <div className="sticky top-0 z-30 bg-background border-b border-border">
+        <div className="flex items-center justify-between px-6 py-3">
+          <nav className="flex items-center gap-2 text-sm min-w-0">
+            <LayoutGrid className="h-4 w-4 text-muted-foreground shrink-0" />
+            <Link
+              to="/shops/$shopId/apps"
+              params={{ shopId }}
+              className="text-foreground hover:underline truncate"
+            >
+              Apps
+            </Link>
+            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-foreground truncate">{app.name}</span>
+          </nav>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 text-sm">
+              <Switch checked={enabled} onCheckedChange={setEnabled} id="enabled" />
+              <Label htmlFor="enabled" className="cursor-pointer">{enabled ? "Actief" : "Uit"}</Label>
+            </div>
+            <Button onClick={save} disabled={saving}>
+              <Save className="h-4 w-4" />
+              {saving ? "Opslaan…" : "Opslaan"}
+            </Button>
           </div>
-          <Button onClick={save} disabled={saving}>
-            <Save className="h-4 w-4" />
-            {saving ? "Opslaan…" : "Opslaan"}
-          </Button>
         </div>
+        {savedAt && (
+          <div className="flex items-center justify-between px-6 py-2.5 bg-[hsl(120_60%_95%)] border-t border-[hsl(120_40%_80%)] text-[hsl(140_50%_30%)] text-sm">
+            <span>Wijzigingen succesvol opgeslagen!</span>
+            <button
+              onClick={() => setSavedAt(null)}
+              className="text-[hsl(140_50%_30%)] hover:opacity-70"
+              aria-label="Sluiten"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="mb-6">
+      <div className="px-6 pt-6 mb-6">
         <h2 className="text-xl font-bold">{app.name}</h2>
         <p className="text-sm text-muted-foreground">{app.tagline}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
+      <div className="px-6 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
         <div className="space-y-6 min-w-0">
           <div>
             <SectionLabel>Installeer op je shop</SectionLabel>
