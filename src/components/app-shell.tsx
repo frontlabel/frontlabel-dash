@@ -96,7 +96,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 function HeaderBar({ mobileOpen, setMobileOpen }: { mobileOpen: boolean; setMobileOpen: (v: boolean) => void }) {
   const { content } = useShellHeader();
   return (
-    <header className="h-14 bg-card border-b border-border flex items-center px-4 md:px-6 gap-3">
+    <header className="sticky top-0 z-50 h-14 bg-card border-b border-border flex items-center px-6 gap-3">
       <button
         onClick={() => setMobileOpen(true)}
         className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted"
