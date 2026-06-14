@@ -76,21 +76,10 @@ function AppSettingsPage() {
             <Switch checked={enabled} onCheckedChange={setEnabled} id="enabled-header" />
             <Label htmlFor="enabled-header" className="cursor-pointer">{enabled ? "Actief" : "Uit"}</Label>
           </div>
-          <Button onClick={saveSettings} disabled={saving} size="sm">
+          <Button onClick={save} disabled={saving} size="sm">
             <Save className="h-4 w-4" />
             {saving ? "Opslaan…" : "Opslaan"}
           </Button>
-        </div>
-      </div>
-    );
-    return () => setContent(null);
-  }, [shopId, app?.name, enabled, saving, setContent]);
-
-  function saveSettings() {
-    save();
-  }
-
-  useEffect(() => {
     supabase
       .from("shop_apps")
       .select("id,enabled,settings")
