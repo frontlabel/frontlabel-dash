@@ -76,7 +76,12 @@ function ShopConnectionPage() {
     return <div className="p-6 text-sm text-muted-foreground">Laden…</div>;
   }
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  // Gebruik de stabiele publieke URL (preview-URL's vereisen Lovable-login en
+  // blokkeren externe requests met een 302 naar /auth).
+  const origin =
+    typeof window !== "undefined" && /id-preview--|lovableproject\.com/.test(window.location.host)
+      ? "https://project--818f6290-65fe-4f2a-9fa0-7d95790d5f04-dev.lovable.app"
+      : (typeof window !== "undefined" ? window.location.origin : "");
   const scriptUrl = `${origin}/api/public/shoplabel.js?shop_id=${shopId}`;
   const snippet = `<script src="${scriptUrl}" defer></script>`;
 
