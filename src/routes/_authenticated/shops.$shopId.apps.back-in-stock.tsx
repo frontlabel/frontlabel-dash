@@ -31,8 +31,6 @@ import { cn } from "@/lib/utils";
 import {
   Bell,
   ChevronRight,
-  Copy,
-  ExternalLink,
   ImageIcon,
   LayoutGrid,
   Mail,
@@ -175,19 +173,6 @@ function BackInStockPage() {
 
   const { buttonText, buttonColor, newsletterOptIn, emailSubject, brandColor, customMessage, scarcityUrgency } = settings;
 
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const scriptUrl = `${origin}/api/public/back-in-stock.js?shop_id=${shopId}`;
-  const snippet = `<script src="${scriptUrl}" defer></script>`;
-
-  async function copy(value: string, label: string) {
-    try {
-      await navigator.clipboard.writeText(value);
-      toast.success(`${label} gekopieerd`);
-    } catch {
-      toast.error("Kopiëren mislukt");
-    }
-  }
-
   // Wachtlijst state
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -257,33 +242,6 @@ function BackInStockPage() {
       <div className="px-6 py-6">
         {tab === "overview" && (
           <div className="space-y-6">
-          <div>
-            <SectionLabel>Installeer op je shop</SectionLabel>
-            <SectionCard className="p-5 space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Plak dit script in de <code>&lt;head&gt;</code> of vlak voor <code>&lt;/body&gt;</code> van je
-                Lightspeed-theme. De "Meld me wanneer beschikbaar"-knop verschijnt automatisch op uitverkochte
-                productpagina's zodra de app is ingeschakeld en opgeslagen.
-              </p>
-              <div className="rounded-md border border-border bg-muted/40 p-3 font-mono text-xs break-all">
-                {snippet}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => copy(snippet, "Snippet")}>
-                  <Copy className="h-4 w-4" /> Kopieer snippet
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => copy(scriptUrl, "Script-URL")}>
-                  <Copy className="h-4 w-4" /> Kopieer URL
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <a href={scriptUrl} target="_blank" rel="noreferrer">
-                    <ExternalLink className="h-4 w-4" /> Test script
-                  </a>
-                </Button>
-              </div>
-            </SectionCard>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <MetricCard
               label="Teruggewonnen omzet"
