@@ -19,11 +19,27 @@ const DEFAULTS = {
   primaryColor: "#2c7be5",
   textColor: "#1f2937",
   backgroundColor: "#ffffff",
-  overlayColor: "rgba(15, 23, 42, 0.75)",
+  overlayColor: "#0f172a",
+  overlayOpacity: 0.75,
   fontFamily: "Inter",
   backgroundImageUrl: "",
   borderRadius: 12,
+  blockUnderage: true,
+  blockDays: 365,
 };
+
+function hexToRgba(hex: string, alpha: number): string {
+  const a = Math.max(0, Math.min(1, Number.isFinite(alpha) ? alpha : 1));
+  if (!hex) return `rgba(0,0,0,${a})`;
+  if (hex.startsWith("rgb")) return hex;
+  let h = hex.replace("#", "").trim();
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  if (h.length !== 6) return `rgba(0,0,0,${a})`;
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
 
 function emptyScript(reason: string) {
   return new Response(`/* shoplabel age-verification: ${reason} */`, {
@@ -56,17 +72,23 @@ export const Route = createFileRoute("/api/public/age-verification.js")({
         }
 
         const s = { ...DEFAULTS, ...((data.settings as Record<string, unknown>) ?? {}) };
-        const payload = JSON.stringify(s);
+        const overlayRgba = hexToRgba(String(s.overlayColor), Number(s.overlayOpacity));
+        const payload = JSON.stringify({ ...s, _overlayRgba: overlayRgba });
 
         const js = `(function(){
   if (window.__shoplabelAV) return; window.__shoplabelAV = true;
   var s = ${payload};
   var COOKIE = "shoplabel_av_ok";
+  var BLOCK = "shoplabel_av_blocked";
   function getCookie(n){var m=document.cookie.match(new RegExp("(^| )"+n+"=([^;]+)"));return m?m[2]:null;}
   function setCookie(n,v,d){var e=new Date();e.setTime(e.getTime()+d*864e5);document.cookie=n+"="+v+";expires="+e.toUTCString()+";path=/;SameSite=Lax";}
   if (getCookie(COOKIE)==="1") return;
+  if (s.blockUnderage && getCookie(BLOCK)==="1"){window.location.replace(s.declineRedirect||"about:blank");return;}
 
-  var css = ".slbl-av-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;font-family:"+JSON.stringify(s.fontFamily)+",system-ui,sans-serif;background:"+JSON.stringify(s.overlayColor)+(s.backgroundImageUrl?(" url("+JSON.stringify(s.backgroundImageUrl)+") center/cover no-repeat"):"")+"}"
+  var ovBg = s.backgroundImageUrl
+    ? ("linear-gradient("+s._overlayRgba+","+s._overlayRgba+"), url("+JSON.stringify(s.backgroundImageUrl)+") center/cover no-repeat")
+    : s._overlayRgba;
+  var css = ".slbl-av-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;font-family:"+JSON.stringify(s.fontFamily)+",system-ui,sans-serif;background:"+ovBg+"}"
     +".slbl-av-md{width:100%;max-width:380px;background:"+s.backgroundColor+";color:"+s.textColor+";border-radius:"+s.borderRadius+"px;padding:24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}"
     +".slbl-av-badge{width:48px;height:48px;border-radius:9999px;background:"+s.primaryColor+";color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;margin:0 auto 12px}"
     +".slbl-av-h{font-size:18px;font-weight:600;margin:0 0 6px}"
@@ -107,9 +129,9 @@ export const Route = createFileRoute("/api/public/age-verification.js")({
     var bd=new Date(y,m-1,d);if(bd.getDate()!==d||bd.getMonth()!==m-1){err.textContent="Vul een geldige geboortedatum in.";return;}
     var today=new Date();var age=today.getFullYear()-y;var mm=today.getMonth()-(m-1);if(mm<0||(mm===0&&today.getDate()<d))age--;
     if(age>=s.minAge){setCookie(COOKIE,"1",s.rememberDays||30);unlock();ov.remove();}
-    else{window.location.replace(s.declineRedirect||"about:blank");}
+    else{if(s.blockUnderage){setCookie(BLOCK,"1",s.blockDays||365);}window.location.replace(s.declineRedirect||"about:blank");}
   });
-  ov.querySelector(".slbl-av-no").addEventListener("click",function(){window.location.replace(s.declineRedirect||"about:blank");});
+  ov.querySelector(".slbl-av-no").addEventListener("click",function(){if(s.blockUnderage){setCookie(BLOCK,"1",s.blockDays||365);}window.location.replace(s.declineRedirect||"about:blank");});
 })();`;
 
         return new Response(js, { status: 200, headers: CORS });
