@@ -1,6 +1,7 @@
-import type { AgeVerificationSettings } from "@/lib/apps-catalog";
+import { hexToRgba, type AgeVerificationSettings } from "@/lib/apps-catalog";
 
 export function AgeVerificationPreview({ s }: { s: AgeVerificationSettings }) {
+  const overlay = hexToRgba(s.overlayColor, s.overlayOpacity);
   return (
     <div
       className="relative w-full aspect-[9/16] max-h-[640px] rounded-lg overflow-hidden border border-border shadow-inner bg-muted"
@@ -15,8 +16,8 @@ export function AgeVerificationPreview({ s }: { s: AgeVerificationSettings }) {
         className="absolute inset-0 flex items-center justify-center p-4"
         style={{
           background: s.backgroundImageUrl
-            ? `${s.overlayColor}, url(${s.backgroundImageUrl}) center/cover no-repeat`
-            : s.overlayColor,
+            ? `linear-gradient(${overlay}, ${overlay}), url(${s.backgroundImageUrl}) center/cover no-repeat`
+            : overlay,
         }}
       >
         <div

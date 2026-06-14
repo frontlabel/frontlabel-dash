@@ -51,9 +51,12 @@ export interface AgeVerificationSettings {
   textColor: string;
   backgroundColor: string;
   overlayColor: string;
+  overlayOpacity: number;
   fontFamily: string;
   backgroundImageUrl: string;
   borderRadius: number;
+  blockUnderage: boolean;
+  blockDays: number;
 }
 
 export const DEFAULT_AGE_VERIFICATION: AgeVerificationSettings = {
@@ -67,10 +70,13 @@ export const DEFAULT_AGE_VERIFICATION: AgeVerificationSettings = {
   primaryColor: "#2c7be5",
   textColor: "#1f2937",
   backgroundColor: "#ffffff",
-  overlayColor: "rgba(15, 23, 42, 0.75)",
+  overlayColor: "#0f172a",
+  overlayOpacity: 0.75,
   fontFamily: "Inter",
   backgroundImageUrl: "",
   borderRadius: 12,
+  blockUnderage: true,
+  blockDays: 365,
 };
 
 export const FONT_OPTIONS = [
@@ -81,3 +87,16 @@ export const FONT_OPTIONS = [
   "Times New Roman",
   "Courier New",
 ];
+
+export function hexToRgba(hex: string, alpha: number): string {
+  const a = Math.max(0, Math.min(1, Number.isFinite(alpha) ? alpha : 1));
+  if (!hex) return `rgba(0,0,0,${a})`;
+  if (hex.startsWith("rgb")) return hex; // already rgba/rgb — leave as-is
+  let h = hex.replace("#", "").trim();
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  if (h.length !== 6) return `rgba(0,0,0,${a})`;
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}

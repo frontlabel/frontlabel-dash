@@ -115,6 +115,7 @@ function AppSettingsPage() {
       textColor: settings.textColor,
       backgroundColor: settings.backgroundColor,
       overlayColor: settings.overlayColor,
+      overlayOpacity: settings.overlayOpacity,
       fontFamily: settings.fontFamily,
       backgroundImageUrl: settings.backgroundImageUrl,
       borderRadius: settings.borderRadius,
@@ -266,10 +267,17 @@ function AppSettingsPage() {
                 <ColorField label="Knopkleur" value={settings.primaryColor} onChange={(v) => update("primaryColor", v)} />
                 <ColorField label="Tekstkleur" value={settings.textColor} onChange={(v) => update("textColor", v)} />
                 <ColorField label="Achtergrond modal" value={settings.backgroundColor} onChange={(v) => update("backgroundColor", v)} />
-                <div className="space-y-2">
-                  <Label>Overlay kleur</Label>
-                  <Input value={settings.overlayColor} onChange={(e) => update("overlayColor", e.target.value)} placeholder="rgba(0,0,0,0.75)" />
-                </div>
+                <ColorField label="Overlay kleur" value={settings.overlayColor} onChange={(v) => update("overlayColor", v)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Overlay transparantie: {Math.round(settings.overlayOpacity * 100)}%</Label>
+                <Slider
+                  value={[Math.round(settings.overlayOpacity * 100)]}
+                  min={0}
+                  max={100}
+                  step={1}
+                  onValueChange={([v]) => update("overlayOpacity", v / 100)}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Lettertype</Label>
@@ -292,6 +300,39 @@ function AppSettingsPage() {
                 <Slider value={[settings.borderRadius]} min={0} max={32} step={1}
                   onValueChange={([v]) => update("borderRadius", v)} />
               </div>
+            </SectionCard>
+          </div>
+
+          <div>
+            <SectionLabel>Te jonge bezoekers blokkeren</SectionLabel>
+            <SectionCard className="p-5 space-y-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="blockUnderage" className="cursor-pointer">Blokkeer toegang via cookie</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Wanneer een bezoeker een te jonge geboortedatum invult, wordt dit in een cookie onthouden.
+                    Zolang de cookie bestaat krijgt deze bezoeker de site niet meer te zien — tot de cookies worden gewist.
+                  </p>
+                </div>
+                <Switch
+                  id="blockUnderage"
+                  checked={settings.blockUnderage}
+                  onCheckedChange={(v) => update("blockUnderage", v)}
+                />
+              </div>
+              {settings.blockUnderage && (
+                <div className="space-y-2">
+                  <Label htmlFor="blockDays">Blokkeer voor (dagen)</Label>
+                  <Input
+                    id="blockDays"
+                    type="number"
+                    min={1}
+                    max={3650}
+                    value={settings.blockDays}
+                    onChange={(e) => update("blockDays", Number(e.target.value))}
+                  />
+                </div>
+              )}
             </SectionCard>
           </div>
 
