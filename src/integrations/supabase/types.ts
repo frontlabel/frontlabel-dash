@@ -14,7 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      shop_apps: {
+        Row: {
+          app_slug: string
+          created_at: string
+          enabled: boolean
+          id: string
+          settings: Json
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          app_slug: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          settings?: Json
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          app_slug?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          settings?: Json
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_apps_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shops: {
+        Row: {
+          api_key: string | null
+          api_secret: string | null
+          created_at: string
+          ecom_url: string | null
+          id: string
+          name: string
+          owner_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          api_key?: string | null
+          api_secret?: string | null
+          created_at?: string
+          ecom_url?: string | null
+          id?: string
+          name: string
+          owner_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string | null
+          api_secret?: string | null
+          created_at?: string
+          ecom_url?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      style_presets: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          settings: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          settings?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          settings?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
