@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      back_in_stock_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          newsletter_opt_in: boolean
+          notified_at: string | null
+          product_handle: string
+          product_image_url: string | null
+          product_title: string | null
+          purchased_at: string | null
+          shop_id: string
+          status: string
+          updated_at: string
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          newsletter_opt_in?: boolean
+          notified_at?: string | null
+          product_handle: string
+          product_image_url?: string | null
+          product_title?: string | null
+          purchased_at?: string | null
+          shop_id: string
+          status?: string
+          updated_at?: string
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          newsletter_opt_in?: boolean
+          notified_at?: string | null
+          product_handle?: string
+          product_image_url?: string | null
+          product_title?: string | null
+          purchased_at?: string | null
+          shop_id?: string
+          status?: string
+          updated_at?: string
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "back_in_stock_requests_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_apps: {
         Row: {
           app_slug: string
