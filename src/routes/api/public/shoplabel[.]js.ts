@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   buildAgeVerificationScript,
   buildBackInStockScript,
+  buildPriceAlertScript,
 } from "@/lib/widget-scripts.server";
 
 const CORS = {
@@ -48,6 +49,8 @@ export const Route = createFileRoute("/api/public/shoplabel.js")({
             parts.push(`/* age-verification */\n${buildAgeVerificationScript(settings)}`);
           } else if (row.app_slug === "back-in-stock") {
             parts.push(`/* back-in-stock */\n${buildBackInStockScript(settings, shopId, origin)}`);
+          } else if (row.app_slug === "price-alert") {
+            parts.push(`/* price-alert */\n${buildPriceAlertScript(settings, shopId, origin)}`);
           }
         }
 
