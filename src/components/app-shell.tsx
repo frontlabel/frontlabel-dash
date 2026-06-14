@@ -3,8 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Home, Package, Palette, LogOut, Plug, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 const nav = [
   { to: "/dashboard", label: "Shops", icon: Home },
@@ -75,23 +74,19 @@ export function AppShell({ children }: { children: ReactNode }) {
           side="left"
           className="w-72 p-0 bg-sidebar text-sidebar-foreground border-sidebar-border flex flex-col"
         >
-          <VisuallyHidden>
-            <SheetTitle>Navigatie</SheetTitle>
-          </VisuallyHidden>
+          <SheetTitle className="sr-only">Navigatie</SheetTitle>
           {sidebarBody}
         </SheetContent>
       </Sheet>
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-14 bg-card border-b border-border flex items-center px-4 md:px-6 gap-3">
-          <SheetTrigger asChild>
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted"
-              aria-label="Open menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-          </SheetTrigger>
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Plug className="h-4 w-4 text-primary" />
             <span>Shoplabel App Admin</span>
