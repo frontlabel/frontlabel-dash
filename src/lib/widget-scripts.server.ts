@@ -377,3 +377,110 @@ export function buildPriceAlertScript(rawSettings: Record<string, unknown>, shop
   });
 })();`;
 }
+
+const TC_DEFAULTS = {
+  buttonText: "Bereken hoeveel je nodig hebt",
+  buttonColor: "#111827",
+  tileWidthCm: 60,
+  tileHeightCm: 60,
+  piecesPerBox: 4,
+  marginPct: 10,
+  pricePerM2: 0,
+  currencySymbol: "\u20ac",
+  heading: "Tegel calculator",
+  intro: "Vul de afmetingen van je ruimte in. We berekenen direct hoeveel m\u00b2 en dozen je nodig hebt, inclusief marge voor snijverlies.",
+};
+
+export function buildTileCalculatorScript(rawSettings: Record<string, unknown>): string {
+  const s = { ...TC_DEFAULTS, ...rawSettings } as typeof TC_DEFAULTS;
+  const payload = JSON.stringify(s);
+  return `(function(){
+  if (window.__shoplabelTC) return; window.__shoplabelTC = true;
+  var s = ${payload};
+  function ready(fn){if(document.readyState!=="loading")fn();else document.addEventListener("DOMContentLoaded",fn);}
+  function findAnchor(){
+    var hook=document.querySelector("[data-shoplabel-tilecalc]");
+    if(hook)return {el:hook,after:false};
+    var form=document.getElementById("product_configure_form");
+    if(form)return {el:form,after:true};
+    return null;
+  }
+  function fmt(n){return (Math.round(n*100)/100).toFixed(2).replace(".",",");}
+  function fmtInt(n){return String(Math.ceil(n));}
+  function calc(lengthM, widthM, marginPct){
+    var area = lengthM * widthM;
+    var withMargin = area * (1 + (marginPct/100));
+    var tileArea = (s.tileWidthCm/100) * (s.tileHeightCm/100);
+    var tiles = tileArea > 0 ? Math.ceil(withMargin / tileArea) : 0;
+    var boxes = s.piecesPerBox > 0 ? Math.ceil(tiles / s.piecesPerBox) : 0;
+    var price = s.pricePerM2 > 0 ? (boxes * s.piecesPerBox * tileArea * s.pricePerM2) : 0;
+    return {area:area,withMargin:withMargin,tiles:tiles,boxes:boxes,price:price};
+  }
+  function inject(anchor){
+    if(document.querySelector(".slbl-tc-wrap"))return;
+    var css=".slbl-tc-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.buttonColor+";color:#fff;padding:10px 14px;border-radius:6px;font:inherit;font-weight:600;margin-top:10px}"
+      +".slbl-tc-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.7);font-family:system-ui,sans-serif}"
+      +".slbl-tc-md{width:100%;max-width:440px;background:#fff;color:#1f2937;border-radius:12px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative}"
+      +".slbl-tc-md h3{margin:0 0 6px;font-size:18px;font-weight:600}"
+      +".slbl-tc-md p{margin:0 0 14px;font-size:13px;opacity:.8}"
+      +".slbl-tc-x{position:absolute;top:8px;right:10px;background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:#6b7280}"
+      +".slbl-tc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}"
+      +".slbl-tc-field{display:flex;flex-direction:column;gap:4px}"
+      +".slbl-tc-field label{font-size:12px;color:#6b7280;font-weight:500}"
+      +".slbl-tc-inp{font:inherit;padding:8px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box}"
+      +".slbl-tc-res{margin-top:14px;padding:14px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb}"
+      +".slbl-tc-res-row{display:flex;justify-content:space-between;font-size:14px;padding:4px 0}"
+      +".slbl-tc-res-row strong{font-weight:600}"
+      +".slbl-tc-total{border-top:1px solid #e5e7eb;margin-top:6px;padding-top:8px;font-size:15px}"
+      +"html.slbl-tc-locked,body.slbl-tc-locked{overflow:hidden!important}";
+    var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
+    var wrap=document.createElement("div");wrap.className="slbl-tc-wrap";
+    var btn=document.createElement("button");btn.type="button";btn.className="slbl-tc-btn";btn.textContent=s.buttonText;
+    wrap.appendChild(btn);
+    if(anchor.after){anchor.el.parentNode.insertBefore(wrap,anchor.el.nextSibling);}
+    else{anchor.el.appendChild(wrap);}
+    btn.addEventListener("click",function(){
+      var ov=document.createElement("div");ov.className="slbl-tc-ov";
+      var md=document.createElement("div");md.className="slbl-tc-md";md.setAttribute("role","dialog");md.setAttribute("aria-modal","true");
+      md.innerHTML='<button type="button" class="slbl-tc-x" aria-label="Sluiten">&times;</button>'
+        +'<h3>'+s.heading+'</h3>'
+        +'<p>'+s.intro+'</p>'
+        +'<div class="slbl-tc-grid">'
+        +'<div class="slbl-tc-field"><label>Lengte (m)</label><input type="text" inputmode="decimal" class="slbl-tc-inp slbl-tc-len" placeholder="bv. 4,5"></div>'
+        +'<div class="slbl-tc-field"><label>Breedte (m)</label><input type="text" inputmode="decimal" class="slbl-tc-inp slbl-tc-wid" placeholder="bv. 3,2"></div>'
+        +'<div class="slbl-tc-field"><label>Snijverlies (%)</label><input type="number" min="0" max="50" class="slbl-tc-inp slbl-tc-mar" value="'+s.marginPct+'"></div>'
+        +'<div class="slbl-tc-field"><label>Tegel (cm)</label><input type="text" class="slbl-tc-inp slbl-tc-tile" value="'+s.tileWidthCm+' \u00d7 '+s.tileHeightCm+'" disabled></div>'
+        +'</div>'
+        +'<button type="button" class="slbl-tc-btn slbl-tc-calc">Bereken</button>'
+        +'<div class="slbl-tc-res" style="display:none"></div>';
+      ov.appendChild(md);
+      (document.body||document.documentElement).appendChild(ov);
+      document.documentElement.classList.add("slbl-tc-locked");document.body&&document.body.classList.add("slbl-tc-locked");
+      function close(){document.documentElement.classList.remove("slbl-tc-locked");document.body&&document.body.classList.remove("slbl-tc-locked");ov.remove();}
+      md.querySelector(".slbl-tc-x").addEventListener("click",close);
+      ov.addEventListener("click",function(e){if(e.target===ov)close();});
+      function parseNum(v){if(!v)return NaN;var n=parseFloat(String(v).replace(",","."));return isFinite(n)?n:NaN;}
+      md.querySelector(".slbl-tc-calc").addEventListener("click",function(){
+        var L=parseNum(md.querySelector(".slbl-tc-len").value);
+        var W=parseNum(md.querySelector(".slbl-tc-wid").value);
+        var M=parseNum(md.querySelector(".slbl-tc-mar").value);
+        var res=md.querySelector(".slbl-tc-res");
+        if(!L||!W||L<=0||W<=0){res.style.display="block";res.innerHTML='<div style="color:#b91c1c;font-size:13px">Vul een geldige lengte en breedte in.</div>';return;}
+        if(!isFinite(M)||M<0)M=s.marginPct;
+        var r=calc(L,W,M);
+        var rows=''
+          +'<div class="slbl-tc-res-row"><span>Oppervlakte</span><strong>'+fmt(r.area)+' m\u00b2</strong></div>'
+          +'<div class="slbl-tc-res-row"><span>Incl. '+fmt(M)+'% snijverlies</span><strong>'+fmt(r.withMargin)+' m\u00b2</strong></div>'
+          +'<div class="slbl-tc-res-row"><span>Aantal tegels</span><strong>'+fmtInt(r.tiles)+'</strong></div>'
+          +'<div class="slbl-tc-res-row"><span>Aantal dozen ('+s.piecesPerBox+' per doos)</span><strong>'+fmtInt(r.boxes)+'</strong></div>'
+          + (s.pricePerM2>0?('<div class="slbl-tc-res-row slbl-tc-total"><span>Totaalprijs</span><strong>'+s.currencySymbol+fmt(r.price)+'</strong></div>'):'');
+        res.style.display="block";res.innerHTML=rows;
+      });
+    });
+  }
+  ready(function(){
+    var anchor=findAnchor();if(!anchor)return;
+    inject(anchor);
+  });
+})();`;
+}
