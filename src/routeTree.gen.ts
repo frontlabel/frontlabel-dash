@@ -33,6 +33,7 @@ import { Route as ApiPublicPriceAlertSignupRouteImport } from './routes/api/publ
 import { Route as ApiPublicBackInStockStockRouteImport } from './routes/api/public/back-in-stock.stock'
 import { Route as ApiPublicBackInStockSignupRouteImport } from './routes/api/public/back-in-stock.signup'
 import { Route as AuthenticatedShopsShopIdAppsRouteImport } from './routes/_authenticated/shops.$shopId.apps'
+import { Route as AuthenticatedShopsShopIdAppsTileCalculatorRouteImport } from './routes/_authenticated/shops.$shopId.apps.tile-calculator'
 import { Route as AuthenticatedShopsShopIdAppsPriceAlertRouteImport } from './routes/_authenticated/shops.$shopId.apps.price-alert'
 import { Route as AuthenticatedShopsShopIdAppsBackInStockRouteImport } from './routes/_authenticated/shops.$shopId.apps.back-in-stock'
 import { Route as AuthenticatedShopsShopIdAppsAppSlugRouteImport } from './routes/_authenticated/shops.$shopId.apps.$appSlug'
@@ -167,6 +168,12 @@ const AuthenticatedShopsShopIdAppsRoute =
     path: '/apps',
     getParentRoute: () => AuthenticatedShopsShopIdRoute,
   } as any)
+const AuthenticatedShopsShopIdAppsTileCalculatorRoute =
+  AuthenticatedShopsShopIdAppsTileCalculatorRouteImport.update({
+    id: '/tile-calculator',
+    path: '/tile-calculator',
+    getParentRoute: () => AuthenticatedShopsShopIdAppsRoute,
+  } as any)
 const AuthenticatedShopsShopIdAppsPriceAlertRoute =
   AuthenticatedShopsShopIdAppsPriceAlertRouteImport.update({
     id: '/price-alert',
@@ -213,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
   '/shops/$shopId/apps/price-alert': typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
+  '/shops/$shopId/apps/tile-calculator': typeof AuthenticatedShopsShopIdAppsTileCalculatorRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -240,6 +248,7 @@ export interface FileRoutesByTo {
   '/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
   '/shops/$shopId/apps/price-alert': typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
+  '/shops/$shopId/apps/tile-calculator': typeof AuthenticatedShopsShopIdAppsTileCalculatorRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -270,6 +279,7 @@ export interface FileRoutesById {
   '/_authenticated/shops/$shopId/apps/$appSlug': typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   '/_authenticated/shops/$shopId/apps/back-in-stock': typeof AuthenticatedShopsShopIdAppsBackInStockRoute
   '/_authenticated/shops/$shopId/apps/price-alert': typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
+  '/_authenticated/shops/$shopId/apps/tile-calculator': typeof AuthenticatedShopsShopIdAppsTileCalculatorRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
     | '/shops/$shopId/apps/price-alert'
+    | '/shops/$shopId/apps/tile-calculator'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/shops/$shopId/apps/$appSlug'
     | '/shops/$shopId/apps/back-in-stock'
     | '/shops/$shopId/apps/price-alert'
+    | '/shops/$shopId/apps/tile-calculator'
   id:
     | '__root__'
     | '/'
@@ -356,6 +368,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shops/$shopId/apps/$appSlug'
     | '/_authenticated/shops/$shopId/apps/back-in-stock'
     | '/_authenticated/shops/$shopId/apps/price-alert'
+    | '/_authenticated/shops/$shopId/apps/tile-calculator'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -547,6 +560,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShopsShopIdAppsRouteImport
       parentRoute: typeof AuthenticatedShopsShopIdRoute
     }
+    '/_authenticated/shops/$shopId/apps/tile-calculator': {
+      id: '/_authenticated/shops/$shopId/apps/tile-calculator'
+      path: '/tile-calculator'
+      fullPath: '/shops/$shopId/apps/tile-calculator'
+      preLoaderRoute: typeof AuthenticatedShopsShopIdAppsTileCalculatorRouteImport
+      parentRoute: typeof AuthenticatedShopsShopIdAppsRoute
+    }
     '/_authenticated/shops/$shopId/apps/price-alert': {
       id: '/_authenticated/shops/$shopId/apps/price-alert'
       path: '/price-alert'
@@ -586,6 +606,7 @@ interface AuthenticatedShopsShopIdAppsRouteChildren {
   AuthenticatedShopsShopIdAppsAppSlugRoute: typeof AuthenticatedShopsShopIdAppsAppSlugRoute
   AuthenticatedShopsShopIdAppsBackInStockRoute: typeof AuthenticatedShopsShopIdAppsBackInStockRoute
   AuthenticatedShopsShopIdAppsPriceAlertRoute: typeof AuthenticatedShopsShopIdAppsPriceAlertRoute
+  AuthenticatedShopsShopIdAppsTileCalculatorRoute: typeof AuthenticatedShopsShopIdAppsTileCalculatorRoute
 }
 
 const AuthenticatedShopsShopIdAppsRouteChildren: AuthenticatedShopsShopIdAppsRouteChildren =
@@ -596,6 +617,8 @@ const AuthenticatedShopsShopIdAppsRouteChildren: AuthenticatedShopsShopIdAppsRou
       AuthenticatedShopsShopIdAppsBackInStockRoute,
     AuthenticatedShopsShopIdAppsPriceAlertRoute:
       AuthenticatedShopsShopIdAppsPriceAlertRoute,
+    AuthenticatedShopsShopIdAppsTileCalculatorRoute:
+      AuthenticatedShopsShopIdAppsTileCalculatorRoute,
   }
 
 const AuthenticatedShopsShopIdAppsRouteWithChildren =
