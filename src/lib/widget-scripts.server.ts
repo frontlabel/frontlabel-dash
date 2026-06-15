@@ -381,14 +381,23 @@ export function buildPriceAlertScript(rawSettings: Record<string, unknown>, shop
 const TC_DEFAULTS = {
   buttonText: "Bereken hoeveel je nodig hebt",
   buttonColor: "#111827",
-  tileWidthCm: 60,
-  tileHeightCm: 60,
-  piecesPerBox: 4,
+  calcMode: "package",
+  productName: "Tegels",
+  packageName: "dozen",
+  unitName: "stuks",
+  coveragePerPackage: 1.44,
+  unitWidthCm: 60,
+  unitHeightCm: 60,
+  rollWidthCm: 400,
+  rollLengthM: 0,
+  coverageM2PerLiter: 10,
+  packageSizeLiters: 2.5,
+  coats: 1,
   marginPct: 10,
   pricePerM2: 0,
   currencySymbol: "\u20ac",
-  heading: "Tegel calculator",
-  intro: "Vul de afmetingen van je ruimte in. We berekenen direct hoeveel m\u00b2 en dozen je nodig hebt, inclusief marge voor snijverlies.",
+  heading: "Hoeveel heb je nodig?",
+  intro: "Vul de afmetingen van je ruimte in. We berekenen direct hoeveel je nodig hebt, inclusief marge voor snijverlies.",
 };
 
 export function buildTileCalculatorScript(rawSettings: Record<string, unknown>): string {
@@ -407,15 +416,56 @@ export function buildTileCalculatorScript(rawSettings: Record<string, unknown>):
   }
   function fmt(n){return (Math.round(n*100)/100).toFixed(2).replace(".",",");}
   function fmtInt(n){return String(Math.ceil(n));}
+  function parseNum(v){if(!v)return NaN;var n=parseFloat(String(v).replace(",","."));return isFinite(n)?n:NaN;}
+
   function calc(lengthM, widthM, marginPct){
     var area = lengthM * widthM;
     var withMargin = area * (1 + (marginPct/100));
-    var tileArea = (s.tileWidthCm/100) * (s.tileHeightCm/100);
-    var tiles = tileArea > 0 ? Math.ceil(withMargin / tileArea) : 0;
-    var boxes = s.piecesPerBox > 0 ? Math.ceil(tiles / s.piecesPerBox) : 0;
-    var price = s.pricePerM2 > 0 ? (boxes * s.piecesPerBox * tileArea * s.pricePerM2) : 0;
-    return {area:area,withMargin:withMargin,tiles:tiles,boxes:boxes,price:price};
+    var result = {area:area, withMargin:withMargin};
+
+    if (s.calcMode === 'package') {
+      var coverage = s.coveragePerPackage || 1;
+      result.packages = coverage > 0 ? Math.ceil(withMargin / coverage) : 0;
+      if (s.unitWidthCm && s.unitHeightCm) {
+        var unitArea = (s.unitWidthCm/100) * (s.unitHeightCm/100);
+        result.pieces = unitArea > 0 ? Math.ceil(withMargin / unitArea) : 0;
+      }
+    } else if (s.calcMode === 'roll') {
+      var rollW = (s.rollWidthCm || 400) / 100;
+      var rollL = s.rollLengthM || 0;
+      if (rollL > 0) {
+        var rollArea = rollW * rollL;
+        result.rolls = rollArea > 0 ? Math.ceil(withMargin / rollArea) : 0;
+      } else {
+        result.rolls = Math.ceil(withMargin / rollW);
+      }
+      result.rollWidth = rollW;
+    } else if (s.calcMode === 'paint') {
+      var coverage = s.coverageM2PerLiter || 10;
+      var coats = s.coats || 1;
+      var liters = coverage > 0 ? Math.ceil((withMargin * coats) / coverage) : 0;
+      var pkgSize = s.packageSizeLiters || 1;
+      result.liters = liters;
+      result.packages = pkgSize > 0 ? Math.ceil(liters / pkgSize) : 0;
+    }
+
+    if (s.pricePerM2 > 0) {
+      result.price = withMargin * s.pricePerM2;
+    }
+    return result;
   }
+
+  function infoLabel(){
+    if (s.calcMode === 'package') {
+      return s.coveragePerPackage + ' m\u00b2 per ' + s.packageName;
+    } else if (s.calcMode === 'roll') {
+      return s.rollWidthCm + ' cm breed' + (s.rollLengthM > 0 ? ', ' + s.rollLengthM + ' m per rol' : '');
+    } else if (s.calcMode === 'paint') {
+      return s.coverageM2PerLiter + ' m\u00b2/L, ' + s.coats + ' laag' + (s.coats > 1 ? 'en' : '');
+    }
+    return '';
+  }
+
   function inject(anchor){
     if(document.querySelector(".slbl-tc-wrap"))return;
     var css=".slbl-tc-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.buttonColor+";color:#fff;padding:10px 14px;border-radius:6px;font:inherit;font-weight:600;margin-top:10px}"
@@ -449,7 +499,7 @@ export function buildTileCalculatorScript(rawSettings: Record<string, unknown>):
         +'<div class="slbl-tc-field"><label>Lengte (m)</label><input type="text" inputmode="decimal" class="slbl-tc-inp slbl-tc-len" placeholder="bv. 4,5"></div>'
         +'<div class="slbl-tc-field"><label>Breedte (m)</label><input type="text" inputmode="decimal" class="slbl-tc-inp slbl-tc-wid" placeholder="bv. 3,2"></div>'
         +'<div class="slbl-tc-field"><label>Snijverlies (%)</label><input type="number" min="0" max="50" class="slbl-tc-inp slbl-tc-mar" value="'+s.marginPct+'"></div>'
-        +'<div class="slbl-tc-field"><label>Tegel (cm)</label><input type="text" class="slbl-tc-inp slbl-tc-tile" value="'+s.tileWidthCm+' \u00d7 '+s.tileHeightCm+'" disabled></div>'
+        +'<div class="slbl-tc-field"><label>Product</label><input type="text" class="slbl-tc-inp slbl-tc-info" value="'+infoLabel()+'" disabled></div>'
         +'</div>'
         +'<button type="button" class="slbl-tc-btn slbl-tc-calc">Bereken</button>'
         +'<div class="slbl-tc-res" style="display:none"></div>';
@@ -459,7 +509,7 @@ export function buildTileCalculatorScript(rawSettings: Record<string, unknown>):
       function close(){document.documentElement.classList.remove("slbl-tc-locked");document.body&&document.body.classList.remove("slbl-tc-locked");ov.remove();}
       md.querySelector(".slbl-tc-x").addEventListener("click",close);
       ov.addEventListener("click",function(e){if(e.target===ov)close();});
-      function parseNum(v){if(!v)return NaN;var n=parseFloat(String(v).replace(",","."));return isFinite(n)?n:NaN;}
+
       md.querySelector(".slbl-tc-calc").addEventListener("click",function(){
         var L=parseNum(md.querySelector(".slbl-tc-len").value);
         var W=parseNum(md.querySelector(".slbl-tc-wid").value);
@@ -470,10 +520,27 @@ export function buildTileCalculatorScript(rawSettings: Record<string, unknown>):
         var r=calc(L,W,M);
         var rows=''
           +'<div class="slbl-tc-res-row"><span>Oppervlakte</span><strong>'+fmt(r.area)+' m\u00b2</strong></div>'
-          +'<div class="slbl-tc-res-row"><span>Incl. '+fmt(M)+'% snijverlies</span><strong>'+fmt(r.withMargin)+' m\u00b2</strong></div>'
-          +'<div class="slbl-tc-res-row"><span>Aantal tegels</span><strong>'+fmtInt(r.tiles)+'</strong></div>'
-          +'<div class="slbl-tc-res-row"><span>Aantal dozen ('+s.piecesPerBox+' per doos)</span><strong>'+fmtInt(r.boxes)+'</strong></div>'
-          + (s.pricePerM2>0?('<div class="slbl-tc-res-row slbl-tc-total"><span>Totaalprijs</span><strong>'+s.currencySymbol+fmt(r.price)+'</strong></div>'):'');
+          +'<div class="slbl-tc-res-row"><span>Incl. '+fmt(M)+'% snijverlies</span><strong>'+fmt(r.withMargin)+' m\u00b2</strong></div>';
+
+        if (s.calcMode === 'package') {
+          if (r.pieces !== undefined) {
+            rows += '<div class="slbl-tc-res-row"><span>Aantal '+s.unitName+'</span><strong>'+fmtInt(r.pieces)+'</strong></div>';
+          }
+          rows += '<div class="slbl-tc-res-row"><span>Aantal '+s.packageName+'</span><strong>'+fmtInt(r.packages)+'</strong></div>';
+        } else if (s.calcMode === 'roll') {
+          var rollLabel = s.rollLengthM > 0 ? 'Aantal ' + s.packageName : s.packageName + ' nodig';
+          rows += '<div class="slbl-tc-res-row"><span>'+rollLabel+'</span><strong>'+fmtInt(r.rolls)+'</strong></div>';
+          if (s.rollLengthM > 0) {
+            rows += '<div style="font-size:12px;color:#6b7280;margin-top:4px">Rolbreedte: '+fmt(r.rollWidth)+' m</div>';
+          }
+        } else if (s.calcMode === 'paint') {
+          rows += '<div class="slbl-tc-res-row"><span>Benodigde liters</span><strong>'+fmtInt(r.liters)+'</strong></div>';
+          rows += '<div class="slbl-tc-res-row"><span>Aantal '+s.packageName+'</span><strong>'+fmtInt(r.packages)+'</strong></div>';
+        }
+
+        if (s.pricePerM2>0){
+          rows += '<div class="slbl-tc-res-row slbl-tc-total"><span>Totaalprijs</span><strong>'+s.currencySymbol+fmt(r.price)+'</strong></div>';
+        }
         res.style.display="block";res.innerHTML=rows;
       });
     });
