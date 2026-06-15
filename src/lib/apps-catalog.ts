@@ -4,6 +4,7 @@ import filterByStockAsset from "@/assets/squares-filterbystock.jpg.asset.json";
 import instagramFeedAsset from "@/assets/squares-instagramfeed.jpg.asset.json";
 import priceAlertAsset from "@/assets/squares-pricealert.jpg.asset.json";
 import priceDropAsset from "@/assets/squares-pricedrop.jpg.asset.json";
+import tileCalculatorImg from "@/assets/squares-tilecalculator.jpg";
 
 export interface AppDefinition {
   slug: string;
@@ -71,6 +72,16 @@ export const APPS_CATALOG: AppDefinition[] = [
     category: "Marketing",
     status: "coming-soon",
     image: priceDropAsset.url,
+  },
+  {
+    slug: "tile-calculator",
+    name: "Tegel calculator",
+    tagline: "Bereken benodigde m² en dozen inclusief snijverlies",
+    description:
+      "Bezoekers vullen hun ruimte in en zien direct hoeveel m², dozen en welk bedrag ze nodig hebben — met instelbare marge voor snijverlies.",
+    category: "Conversie",
+    status: "available",
+    image: tileCalculatorImg,
   },
 ];
 
