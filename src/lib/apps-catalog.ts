@@ -75,10 +75,10 @@ export const APPS_CATALOG: AppDefinition[] = [
   },
   {
     slug: "tile-calculator",
-    name: "Tegel calculator",
-    tagline: "Bereken benodigde m² en dozen inclusief snijverlies",
+    name: "Vloer & wand calculator",
+    tagline: "Bereken benodigde hoeveelheid voor tegels, laminaat, tapijt, behang of verf",
     description:
-      "Bezoekers vullen hun ruimte in en zien direct hoeveel m², dozen en welk bedrag ze nodig hebben — met instelbare marge voor snijverlies.",
+      "Bezoekers vullen de afmetingen van hun ruimte in en zien direct hoeveel ze nodig hebben — voor tegels, laminaat, tapijt, behang, verf of elk ander product dat per m² wordt berekend.",
     category: "Conversie",
     status: "available",
     image: tileCalculatorImg,
