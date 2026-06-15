@@ -3,6 +3,7 @@ import {
   buildAgeVerificationScript,
   buildBackInStockScript,
   buildPriceAlertScript,
+  buildTileCalculatorScript,
 } from "@/lib/widget-scripts.server";
 
 const CORS = {
@@ -51,6 +52,8 @@ export const Route = createFileRoute("/api/public/shoplabel.js")({
             parts.push(`/* back-in-stock */\n${buildBackInStockScript(settings, shopId, origin)}`);
           } else if (row.app_slug === "price-alert") {
             parts.push(`/* price-alert */\n${buildPriceAlertScript(settings, shopId, origin)}`);
+          } else if (row.app_slug === "tile-calculator") {
+            parts.push(`/* tile-calculator */\n${buildTileCalculatorScript(settings)}`);
           }
         }
 
