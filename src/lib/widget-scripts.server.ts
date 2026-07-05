@@ -318,15 +318,21 @@ export function buildPriceAlertScript(rawSettings: Record<string, unknown>, shop
   function inject(anchor){
     if(document.querySelector(".slbl-pa-wrap"))return;
     var css=".slbl-pa-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.buttonColor+";color:#fff;padding:10px 14px;border-radius:6px;font:inherit;font-weight:600;margin-top:10px}"
-      +".slbl-pa-row{display:flex;gap:8px;align-items:stretch;font-family:system-ui,sans-serif}"
-      +".slbl-pa-inp{font:inherit;padding:8px;border:1px solid #d1d5db;border-radius:6px;flex:1;min-width:0}"
-      +".slbl-pa-sym{display:flex;align-items:center;padding:0 12px;border:1px solid #d1d5db;border-radius:6px;background:#f3f4f6;font-weight:600}"
-      +".slbl-pa-msg{font-size:13px;margin-top:6px}"
-      +".slbl-pa-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.7);font-family:system-ui,sans-serif}"
-      +".slbl-pa-md{width:100%;max-width:380px;background:#fff;color:#1f2937;border-radius:12px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative}"
-      +".slbl-pa-md h3{margin:0 0 6px;font-size:18px;font-weight:600}"
-      +".slbl-pa-md p{margin:0 0 14px;font-size:13px;opacity:.8}"
-      +".slbl-pa-x{position:absolute;top:8px;right:10px;background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:#6b7280}"
+      +".slbl-pa-row{display:flex;gap:10px;align-items:stretch;font-family:system-ui,sans-serif;margin-bottom:14px}"
+      +".slbl-pa-inp{font:inherit;font-size:15px;padding:14px 16px;border:2px solid "+s.buttonColor+";border-radius:12px;outline:none;color:#1e2a4a;background:#fff;flex:1;min-width:0;box-sizing:border-box}"
+      +".slbl-pa-inp::placeholder{color:#9ca3af}"
+      +".slbl-pa-sym{display:flex;align-items:center;padding:0 16px;border:2px solid "+s.buttonColor+";border-radius:12px;background:#f8fafc;font-weight:700;color:#1e2a4a;font-size:16px}"
+      +".slbl-pa-msg{font-size:13px;margin-top:8px;text-align:center}"
+      +".slbl-pa-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.55);font-family:system-ui,sans-serif}"
+      +".slbl-pa-md{width:100%;max-width:460px;background:#fff;color:#1e2a4a;border-radius:14px;padding:40px 40px 28px;box-shadow:0 25px 70px rgba(0,0,0,.35);position:relative;text-align:center}"
+      +".slbl-pa-md h3{margin:0 0 14px;font-size:28px;font-weight:700;color:#1e2a4a;line-height:1.15}"
+      +".slbl-pa-md p{margin:0 0 26px;font-size:15px;color:#6b7280;line-height:1.5}"
+      +".slbl-pa-x{position:absolute;top:14px;right:18px;background:none;border:0;font-size:28px;line-height:1;cursor:pointer;color:#9ca3af;padding:4px}"
+      +".slbl-pa-x:hover{color:#4b5563}"
+      +".slbl-pa-submit{background:"+s.buttonColor+"!important;border-radius:12px!important;padding:14px 16px!important;font-size:15px!important;margin-top:0!important}"
+      +".slbl-pa-news{font-size:12px;color:#6b7280;display:flex;gap:6px;align-items:center;justify-content:center;margin:10px 0 0}"
+      +".slbl-pa-foot{margin-top:22px;font-size:11px;letter-spacing:.12em;color:#9ca3af;text-transform:uppercase;text-align:center}"
+      +".slbl-pa-foot strong{color:#1e2a4a;font-weight:700;letter-spacing:0;text-transform:none;font-size:14px;margin-left:6px}"
       +"html.slbl-pa-locked,body.slbl-pa-locked{overflow:hidden!important}";
     var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
     var wrap=document.createElement("div");wrap.className="slbl-pa-wrap";
@@ -339,18 +345,19 @@ export function buildPriceAlertScript(rawSettings: Record<string, unknown>, shop
       var ov=document.createElement("div");ov.className="slbl-pa-ov";
       var md=document.createElement("div");md.className="slbl-pa-md";md.setAttribute("role","dialog");md.setAttribute("aria-modal","true");
       md.innerHTML='<button type="button" class="slbl-pa-x" aria-label="Sluiten">&times;</button>'
-        +'<h3>Prijswaarschuwing instellen</h3>'
-        +'<p>Vul je e-mailadres en gewenste prijs in. Zodra de prijs op of onder dat bedrag zakt, ontvang je een mail.</p>'
-        +'<div class="slbl-pa-row" style="margin-bottom:8px">'
-        +'<input type="email" class="slbl-pa-inp slbl-pa-email" placeholder="Je e-mailadres" required>'
+        +'<h3>Wacht op de juiste prijs!</h3>'
+        +'<p>We sturen je een mail zodra dit product jouw streefprijs bereikt.</p>'
+        +'<div class="slbl-pa-row">'
+        +'<input type="email" class="slbl-pa-inp slbl-pa-email" placeholder="bijv: mail@voorbeeld.nl" required>'
         +'</div>'
-        +'<div class="slbl-pa-row" style="margin-bottom:8px">'
+        +'<div class="slbl-pa-row">'
         +'<span class="slbl-pa-sym">'+s.currencySymbol+'</span>'
         +'<input type="text" inputmode="decimal" class="slbl-pa-inp slbl-pa-target" placeholder="Jouw streefprijs"'+(current?(' value="'+current.toFixed(2).replace(".",",")+'"'):"")+'>'
         +'</div>'
-        + (s.newsletterOptIn?'<label style="font-size:12px;display:flex;gap:6px;align-items:center;margin-bottom:8px"><input type="checkbox" class="slbl-pa-news" checked> Stuur me ook updates en aanbiedingen.</label>':'')
-        +'<button type="button" class="slbl-pa-btn slbl-pa-submit">Aanmelden</button>'
-        +'<div class="slbl-pa-msg"></div>';
+        +'<button type="button" class="slbl-pa-btn slbl-pa-submit">Stel prijswaarschuwing in</button>'
+        + (s.newsletterOptIn?'<label class="slbl-pa-news"><input type="checkbox" class="slbl-pa-news-cb" checked> Stuur me ook updates en aanbiedingen.</label>':'')
+        +'<div class="slbl-pa-msg"></div>'
+        +'<div class="slbl-pa-foot">Built with <strong>shoplabel</strong></div>';
       ov.appendChild(md);
       (document.body||document.documentElement).appendChild(ov);
       document.documentElement.classList.add("slbl-pa-locked");document.body&&document.body.classList.add("slbl-pa-locked");
@@ -359,7 +366,7 @@ export function buildPriceAlertScript(rawSettings: Record<string, unknown>, shop
       ov.addEventListener("click",function(e){if(e.target===ov)close();});
       var email=md.querySelector(".slbl-pa-email");
       var target=md.querySelector(".slbl-pa-target");
-      var news=md.querySelector(".slbl-pa-news");
+      var news=md.querySelector(".slbl-pa-news-cb");
       var msg=md.querySelector(".slbl-pa-msg");
       md.querySelector(".slbl-pa-submit").addEventListener("click",function(){
         var em=(email.value||"").trim();
