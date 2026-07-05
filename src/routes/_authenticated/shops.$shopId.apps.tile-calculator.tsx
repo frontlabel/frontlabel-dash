@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SectionCard, SectionLabel } from "@/components/section-card";
+import { DisplayModeField } from "@/components/display-mode-field";
 import { useShellHeader } from "@/components/shell-header-context";
 import { cn } from "@/lib/utils";
 import { Calculator, ChevronRight, LayoutGrid, Paintbrush, Ruler, Save, SquareStack, Package } from "lucide-react";
