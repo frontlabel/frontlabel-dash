@@ -104,6 +104,7 @@ const BIS_DEFAULTS = {
   buttonText: "Meld me wanneer beschikbaar",
   buttonColor: "#111827",
   newsletterOptIn: true,
+  displayMode: "popup" as "popup" | "drawer",
 };
 
 export function buildBackInStockScript(rawSettings: Record<string, unknown>, shopId: string, origin: string): string {
