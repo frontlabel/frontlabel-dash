@@ -178,14 +178,20 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
   function inject(anchor){
     if(document.querySelector(".slbl-bis-wrap"))return;
     var css=".slbl-bis-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.buttonColor+";color:#fff;padding:10px 14px;border-radius:6px;font:inherit;font-weight:600;margin-top:10px}"
-      +".slbl-bis-form{display:flex;gap:8px;flex-direction:column;font-family:system-ui,sans-serif}"
-      +".slbl-bis-inp{font:inherit;padding:8px;border:1px solid #d1d5db;border-radius:6px}"
-      +".slbl-bis-msg{font-size:13px;margin-top:6px}"
-      +".slbl-bis-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.7);font-family:system-ui,sans-serif}"
-      +".slbl-bis-md{width:100%;max-width:380px;background:#fff;color:#1f2937;border-radius:12px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative}"
-      +".slbl-bis-md h3{margin:0 0 6px;font-size:18px;font-weight:600}"
-      +".slbl-bis-md p{margin:0 0 14px;font-size:13px;opacity:.8}"
-      +".slbl-bis-x{position:absolute;top:8px;right:10px;background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:#6b7280}"
+      +".slbl-bis-form{display:flex;gap:14px;flex-direction:column;font-family:system-ui,sans-serif}"
+      +".slbl-bis-inp{font:inherit;font-size:15px;padding:14px 16px;border:2px solid "+s.buttonColor+";border-radius:12px;outline:none;color:#1e2a4a;background:#fff;width:100%;box-sizing:border-box}"
+      +".slbl-bis-inp::placeholder{color:#9ca3af}"
+      +".slbl-bis-msg{font-size:13px;margin-top:8px;text-align:center}"
+      +".slbl-bis-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.55);font-family:system-ui,sans-serif}"
+      +".slbl-bis-md{width:100%;max-width:460px;background:#fff;color:#1e2a4a;border-radius:14px;padding:40px 40px 28px;box-shadow:0 25px 70px rgba(0,0,0,.35);position:relative;text-align:center}"
+      +".slbl-bis-md h3{margin:0 0 14px;font-size:30px;font-weight:700;color:#1e2a4a;line-height:1.15}"
+      +".slbl-bis-md p{margin:0 0 26px;font-size:15px;color:#6b7280;line-height:1.5}"
+      +".slbl-bis-x{position:absolute;top:14px;right:18px;background:none;border:0;font-size:28px;line-height:1;cursor:pointer;color:#9ca3af;padding:4px}"
+      +".slbl-bis-x:hover{color:#4b5563}"
+      +".slbl-bis-submit{background:"+s.buttonColor+"!important;border-radius:12px!important;padding:14px 16px!important;font-size:15px!important;margin-top:0!important}"
+      +".slbl-bis-news{font-size:12px;color:#6b7280;display:flex;gap:6px;align-items:center;justify-content:center;margin-top:-4px}"
+      +".slbl-bis-foot{margin-top:22px;font-size:11px;letter-spacing:.12em;color:#9ca3af;text-transform:uppercase;text-align:center}"
+      +".slbl-bis-foot strong{color:#1e2a4a;font-weight:700;letter-spacing:0;text-transform:none;font-size:14px;margin-left:6px}"
       +"html.slbl-bis-locked,body.slbl-bis-locked{overflow:hidden!important}";
     var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
     var wrap=document.createElement("div");wrap.className="slbl-bis-wrap";
@@ -197,14 +203,15 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
       var ov=document.createElement("div");ov.className="slbl-bis-ov";
       var md=document.createElement("div");md.className="slbl-bis-md";md.setAttribute("role","dialog");md.setAttribute("aria-modal","true");
       md.innerHTML='<button type="button" class="slbl-bis-x" aria-label="Sluiten">&times;</button>'
-        +'<h3>Meld je aan</h3>'
-        +'<p>Laat je e-mailadres achter en we sturen je een bericht zodra dit product weer op voorraad is.</p>'
+        +'<h3>Tijdelijk uitverkocht!</h3>'
+        +'<p>We sturen je een mail als we dit artikel weer op voorraad hebben</p>'
         +'<div class="slbl-bis-form">'
-        +'<input type="email" class="slbl-bis-inp" placeholder="Je e-mailadres" required>'
-        + (s.newsletterOptIn?'<label style="font-size:12px;display:flex;gap:6px;align-items:center"><input type="checkbox" class="slbl-bis-news" checked> Stuur me ook updates en aanbiedingen.</label>':'')
-        +'<button type="button" class="slbl-bis-btn slbl-bis-submit">Aanmelden</button>'
+        +'<input type="email" class="slbl-bis-inp" placeholder="bijv: mail@voorbeeld.nl" required>'
+        +'<button type="button" class="slbl-bis-btn slbl-bis-submit">Geef me een seintje</button>'
+        + (s.newsletterOptIn?'<label class="slbl-bis-news"><input type="checkbox" class="slbl-bis-news-cb" checked> Stuur me ook updates en aanbiedingen.</label>':'')
         +'<div class="slbl-bis-msg"></div>'
-        +'</div>';
+        +'</div>'
+        +'<div class="slbl-bis-foot">Built with <strong>shoplabel</strong></div>';
       ov.appendChild(md);
       (document.body||document.documentElement).appendChild(ov);
       document.documentElement.classList.add("slbl-bis-locked");document.body&&document.body.classList.add("slbl-bis-locked");
@@ -213,7 +220,7 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
       ov.addEventListener("click",function(e){if(e.target===ov)close();});
       var form=md.querySelector(".slbl-bis-form");
       var inp=form.querySelector(".slbl-bis-inp");
-      var news=form.querySelector(".slbl-bis-news");
+      var news=form.querySelector(".slbl-bis-news-cb");
       var msg=form.querySelector(".slbl-bis-msg");
       form.querySelector(".slbl-bis-submit").addEventListener("click",function(){
         var email=(inp.value||"").trim();
