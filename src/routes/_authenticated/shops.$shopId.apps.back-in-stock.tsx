@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SectionCard, SectionLabel } from "@/components/section-card";
+import { DisplayModeField } from "@/components/display-mode-field";
 import { useShellHeader } from "@/components/shell-header-context";
 import { cn } from "@/lib/utils";
 import {
@@ -56,6 +57,7 @@ interface BackInStockSettings {
   brandColor: string;
   customMessage: string;
   scarcityUrgency: boolean;
+  displayMode: "popup" | "drawer";
 }
 
 const DEFAULTS: BackInStockSettings = {
@@ -67,6 +69,7 @@ const DEFAULTS: BackInStockSettings = {
   customMessage:
     "Hi {name}, het product waarop je wachtte is weer beschikbaar. Wees er snel bij voordat het opnieuw uitverkocht is!",
   scarcityUrgency: true,
+  displayMode: "popup",
 };
 
 interface WaitlistRow {
