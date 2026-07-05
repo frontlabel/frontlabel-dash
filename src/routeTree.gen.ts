@@ -17,6 +17,7 @@ import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe
 import { Route as AuthenticatedPresetsRouteImport } from './routes/_authenticated/presets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicShoplabelDotjsRouteImport } from './routes/api/public/shoplabel[.]js'
@@ -76,6 +77,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedAppsRoute = AuthenticatedAppsRouteImport.update({
   id: '/apps',
   path: '/apps',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/apps': typeof AuthenticatedAppsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/presets': typeof AuthenticatedPresetsRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/apps': typeof AuthenticatedAppsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/presets': typeof AuthenticatedPresetsRoute
@@ -265,6 +273,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/unsubscribe': typeof UnsubscribeRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/apps': typeof AuthenticatedAppsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/presets': typeof AuthenticatedPresetsRoute
@@ -297,6 +306,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/unsubscribe'
     | '/account'
+    | '/admin'
     | '/apps'
     | '/dashboard'
     | '/presets'
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/unsubscribe'
     | '/account'
+    | '/admin'
     | '/apps'
     | '/dashboard'
     | '/presets'
@@ -357,6 +368,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/unsubscribe'
     | '/_authenticated/account'
+    | '/_authenticated/admin'
     | '/_authenticated/apps'
     | '/_authenticated/dashboard'
     | '/_authenticated/presets'
@@ -458,6 +470,13 @@ declare module '@tanstack/react-router' {
       path: '/apps'
       fullPath: '/apps'
       preLoaderRoute: typeof AuthenticatedAppsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/account': {
@@ -664,6 +683,7 @@ const AuthenticatedShopsShopIdRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAppsRoute: typeof AuthenticatedAppsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPresetsRoute: typeof AuthenticatedPresetsRoute
@@ -673,6 +693,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAppsRoute: AuthenticatedAppsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPresetsRoute: AuthenticatedPresetsRoute,

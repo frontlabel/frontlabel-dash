@@ -1,15 +1,17 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Home, Package, Palette, LogOut, Plug, Menu, Store } from "lucide-react";
+import { Home, Package, Palette, LogOut, Plug, Menu, Store, User, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ShellHeaderProvider, useShellHeader } from "@/components/shell-header-context";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 
 const nav = [
   { to: "/dashboard", label: "Shops", icon: Home },
   { to: "/apps", label: "Apps", icon: Package },
   { to: "/presets", label: "Stijl presets", icon: Palette },
+  { to: "/account", label: "Account", icon: User },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -17,6 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [shops, setShops] = useState<Array<{ id: string; name: string }>>([]);
+  const isAdmin = useIsAdmin();
 
   useEffect(() => {
     setMobileOpen(false);
@@ -68,6 +71,21 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           );
         })}
+        {isAdmin && (
+          <Link
+            to="/admin"
+            onClick={() => setMobileOpen(false)}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded transition-colors",
+              pathname.startsWith("/admin")
+                ? "bg-primary text-primary-foreground"
+                : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+            )}
+          >
+            <Shield className="h-4 w-4" />
+            Superadmin
+          </Link>
+        )}
         {shops.length > 0 && (
           <div className="pt-4">
             <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
