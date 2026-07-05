@@ -422,6 +422,7 @@ const TC_DEFAULTS = {
   currencySymbol: "\u20ac",
   heading: "Hoeveel heb je nodig?",
   intro: "Vul de afmetingen van je ruimte in. We berekenen direct hoeveel je nodig hebt, inclusief marge voor snijverlies.",
+  displayMode: "popup" as "popup" | "drawer",
 };
 
 export function buildTileCalculatorScript(rawSettings: Record<string, unknown>): string {
@@ -493,19 +494,28 @@ export function buildTileCalculatorScript(rawSettings: Record<string, unknown>):
   function inject(anchor){
     if(document.querySelector(".slbl-tc-wrap"))return;
     var css=".slbl-tc-btn{display:block;width:100%;border:0;cursor:pointer;background:"+s.buttonColor+";color:#fff;padding:10px 14px;border-radius:6px;font:inherit;font-weight:600;margin-top:10px}"
-      +".slbl-tc-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.7);font-family:system-ui,sans-serif}"
-      +".slbl-tc-md{width:100%;max-width:440px;background:#fff;color:#1f2937;border-radius:12px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative}"
-      +".slbl-tc-md h3{margin:0 0 6px;font-size:18px;font-weight:600}"
-      +".slbl-tc-md p{margin:0 0 14px;font-size:13px;opacity:.8}"
-      +".slbl-tc-x{position:absolute;top:8px;right:10px;background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:#6b7280}"
-      +".slbl-tc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}"
-      +".slbl-tc-field{display:flex;flex-direction:column;gap:4px}"
-      +".slbl-tc-field label{font-size:12px;color:#6b7280;font-weight:500}"
-      +".slbl-tc-inp{font:inherit;padding:8px;border:1px solid #d1d5db;border-radius:6px;width:100%;box-sizing:border-box}"
-      +".slbl-tc-res{margin-top:14px;padding:14px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb}"
-      +".slbl-tc-res-row{display:flex;justify-content:space-between;font-size:14px;padding:4px 0}"
-      +".slbl-tc-res-row strong{font-weight:600}"
-      +".slbl-tc-total{border-top:1px solid #e5e7eb;margin-top:6px;padding-top:8px;font-size:15px}"
+      +".slbl-tc-ov{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(15,23,42,.55);font-family:system-ui,sans-serif}"
+      +".slbl-tc-md{width:100%;max-width:480px;background:#fff;color:#1e2a4a;border-radius:14px;padding:40px 40px 28px;box-shadow:0 25px 70px rgba(0,0,0,.35);position:relative;text-align:center}"
+      +".slbl-tc-md h3{margin:0 0 14px;font-size:28px;font-weight:700;color:#1e2a4a;line-height:1.15}"
+      +".slbl-tc-md p{margin:0 0 22px;font-size:15px;color:#6b7280;line-height:1.5}"
+      +".slbl-tc-x{position:absolute;top:14px;right:18px;background:none;border:0;font-size:28px;line-height:1;cursor:pointer;color:#9ca3af;padding:4px}"
+      +".slbl-tc-x:hover{color:#4b5563}"
+      +".slbl-tc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;text-align:left}"
+      +".slbl-tc-field{display:flex;flex-direction:column;gap:6px}"
+      +".slbl-tc-field label{font-size:12px;color:#6b7280;font-weight:600}"
+      +".slbl-tc-inp{font:inherit;font-size:15px;padding:12px 14px;border:2px solid "+s.buttonColor+";border-radius:12px;outline:none;color:#1e2a4a;background:#fff;width:100%;box-sizing:border-box}"
+      +".slbl-tc-inp:disabled{background:#f8fafc;color:#6b7280;border-color:#e5e7eb}"
+      +".slbl-tc-inp::placeholder{color:#9ca3af}"
+      +".slbl-tc-calc{background:"+s.buttonColor+"!important;border-radius:12px!important;padding:14px 16px!important;font-size:15px!important;margin-top:0!important}"
+      +".slbl-tc-res{margin-top:18px;padding:16px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc;text-align:left}"
+      +".slbl-tc-res-row{display:flex;justify-content:space-between;font-size:14px;padding:5px 0;color:#1e2a4a}"
+      +".slbl-tc-res-row strong{font-weight:700}"
+      +".slbl-tc-total{border-top:1px solid #e5e7eb;margin-top:8px;padding-top:10px;font-size:16px}"
+      +".slbl-tc-foot{margin-top:22px;font-size:11px;letter-spacing:.12em;color:#9ca3af;text-transform:uppercase;text-align:center}"
+      +".slbl-tc-foot strong{color:#1e2a4a;font-weight:700;letter-spacing:0;text-transform:none;font-size:14px;margin-left:6px}"
+      +".slbl-tc-ov.slbl-drawer{justify-content:flex-end;padding:0;background:rgba(15,23,42,.45)}"
+      +".slbl-tc-ov.slbl-drawer .slbl-tc-md{max-width:540px;width:100%;height:100%;max-height:100%;border-radius:0;padding:56px 40px 40px;overflow-y:auto;box-shadow:-20px 0 60px rgba(0,0,0,.25);animation:slbl-tc-slide .28s ease-out}"
+      +"@keyframes slbl-tc-slide{from{transform:translateX(30px);opacity:.4}to{transform:none;opacity:1}}"
       +"html.slbl-tc-locked,body.slbl-tc-locked{overflow:hidden!important}";
     var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
     var wrap=document.createElement("div");wrap.className="slbl-tc-wrap";
@@ -515,6 +525,7 @@ export function buildTileCalculatorScript(rawSettings: Record<string, unknown>):
     else{anchor.el.appendChild(wrap);}
     btn.addEventListener("click",function(){
       var ov=document.createElement("div");ov.className="slbl-tc-ov";
+      if(s.displayMode==="drawer")ov.className+=" slbl-drawer";
       var md=document.createElement("div");md.className="slbl-tc-md";md.setAttribute("role","dialog");md.setAttribute("aria-modal","true");
       md.innerHTML='<button type="button" class="slbl-tc-x" aria-label="Sluiten">&times;</button>'
         +'<h3>'+s.heading+'</h3>'
@@ -526,7 +537,8 @@ export function buildTileCalculatorScript(rawSettings: Record<string, unknown>):
         +'<div class="slbl-tc-field"><label>Product</label><input type="text" class="slbl-tc-inp slbl-tc-info" value="'+infoLabel()+'" disabled></div>'
         +'</div>'
         +'<button type="button" class="slbl-tc-btn slbl-tc-calc">Bereken</button>'
-        +'<div class="slbl-tc-res" style="display:none"></div>';
+        +'<div class="slbl-tc-res" style="display:none"></div>'
+        +'<div class="slbl-tc-foot">Built with <strong>shoplabel</strong></div>';
       ov.appendChild(md);
       (document.body||document.documentElement).appendChild(ov);
       document.documentElement.classList.add("slbl-tc-locked");document.body&&document.body.classList.add("slbl-tc-locked");
