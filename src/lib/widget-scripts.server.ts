@@ -193,6 +193,9 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
       +".slbl-bis-news{font-size:12px;color:#6b7280;display:flex;gap:6px;align-items:center;justify-content:center;margin-top:-4px}"
       +".slbl-bis-foot{margin-top:22px;font-size:11px;letter-spacing:.12em;color:#9ca3af;text-transform:uppercase;text-align:center}"
       +".slbl-bis-foot strong{color:#1e2a4a;font-weight:700;letter-spacing:0;text-transform:none;font-size:14px;margin-left:6px}"
+      +".slbl-bis-ov.slbl-drawer{justify-content:flex-end;padding:0;background:rgba(15,23,42,.45)}"
+      +".slbl-bis-ov.slbl-drawer .slbl-bis-md{max-width:520px;width:100%;height:100%;max-height:100%;border-radius:0;padding:56px 40px 40px;overflow-y:auto;box-shadow:-20px 0 60px rgba(0,0,0,.25);animation:slbl-bis-slide .28s ease-out}"
+      +"@keyframes slbl-bis-slide{from{transform:translateX(30px);opacity:.4}to{transform:none;opacity:1}}"
       +"html.slbl-bis-locked,body.slbl-bis-locked{overflow:hidden!important}";
     var st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
     var wrap=document.createElement("div");wrap.className="slbl-bis-wrap";
@@ -202,6 +205,7 @@ export function buildBackInStockScript(rawSettings: Record<string, unknown>, sho
     else{anchor.el.appendChild(wrap);}
     btn.addEventListener("click",function(){
       var ov=document.createElement("div");ov.className="slbl-bis-ov";
+      if(s.displayMode==="drawer")ov.className+=" slbl-drawer";
       var md=document.createElement("div");md.className="slbl-bis-md";md.setAttribute("role","dialog");md.setAttribute("aria-modal","true");
       md.innerHTML='<button type="button" class="slbl-bis-x" aria-label="Sluiten">&times;</button>'
         +'<h3>Tijdelijk uitverkocht!</h3>'
