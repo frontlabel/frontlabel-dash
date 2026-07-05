@@ -341,6 +341,10 @@ function BackInStockPage() {
                     Voeg een nieuwsbrief-opt-in toe om leads te verzamelen
                   </Label>
                 </div>
+                <DisplayModeField
+                  value={settings.displayMode}
+                  onChange={(v) => update("displayMode", v)}
+                />
               </SectionCard>
             </div>
 
