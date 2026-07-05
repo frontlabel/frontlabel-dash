@@ -43,6 +43,7 @@ interface FloorCalculatorSettings {
   currencySymbol: string;
   heading: string;
   intro: string;
+  displayMode: "popup" | "drawer";
 }
 
 const DEFAULTS: FloorCalculatorSettings = {
@@ -66,6 +67,7 @@ const DEFAULTS: FloorCalculatorSettings = {
   heading: "Hoeveel heb je nodig?",
   intro:
     "Vul de afmetingen van je ruimte in. We berekenen direct hoeveel je nodig hebt, inclusief marge voor snijverlies.",
+  displayMode: "popup",
 };
 
 const MODE_LABELS: Record<CalcMode, { label: string; icon: React.ReactNode; description: string }> = {
@@ -297,6 +299,10 @@ function WidgetTab({
               <Label htmlFor="intro">Inleidende tekst</Label>
               <Textarea id="intro" rows={3} value={settings.intro} onChange={(e) => update("intro", e.target.value)} />
             </div>
+            <DisplayModeField
+              value={settings.displayMode}
+              onChange={(v) => update("displayMode", v)}
+            />
           </SectionCard>
         </div>
 
