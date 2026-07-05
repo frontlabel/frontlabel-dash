@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SectionCard, SectionLabel } from "@/components/section-card";
+import { DisplayModeField } from "@/components/display-mode-field";
 import { useShellHeader } from "@/components/shell-header-context";
 import { cn } from "@/lib/utils";
 import {
@@ -57,6 +58,7 @@ interface PriceAlertSettings {
   customMessage: string;
   scarcityUrgency: boolean;
   currencySymbol: string;
+  displayMode: "popup" | "drawer";
 }
 
 const DEFAULTS: PriceAlertSettings = {
@@ -69,6 +71,7 @@ const DEFAULTS: PriceAlertSettings = {
     "Hi {name}, de prijs van {product} is gedaald naar {price}. Dat is gelijk aan of lager dan jouw streefprijs van {target}. Wees er snel bij voordat de aanbieding voorbij is!",
   scarcityUrgency: true,
   currencySymbol: "€",
+  displayMode: "popup",
 };
 
 interface AlertRow {
