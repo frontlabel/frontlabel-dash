@@ -44,7 +44,11 @@ function AppsCatalogPage() {
       <div className="px-6 pb-12">
         <SectionLabel>Beschikbaar</SectionLabel>
         <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {APPS_CATALOG.map((app) => {
+          {[...APPS_CATALOG]
+            .sort((a, b) =>
+              (a.status === "coming-soon" ? 1 : 0) - (b.status === "coming-soon" ? 1 : 0),
+            )
+            .map((app) => {
             const Icon = ICONS[app.slug] ?? ShieldCheck;
             const soon = app.status === "coming-soon";
             const isInstalled = !!installed[app.slug];
@@ -58,22 +62,16 @@ function AppsCatalogPage() {
                     <img
                       src={app.image}
                       alt={app.name}
-                      className="aspect-[4/3] w-full rounded-md object-cover"
+                      className="aspect-video w-full rounded-md object-cover object-bottom"
                       loading="lazy"
                     />
                   ) : (
-                    <div className="flex aspect-[4/3] w-full items-center justify-center rounded-md bg-primary/10">
+                    <div className="flex aspect-video w-full items-center justify-center rounded-md bg-primary/10">
                       <Icon className="h-8 w-8 text-primary" />
                     </div>
                   )}
                   <div className="mt-4 flex items-start justify-between gap-2">
                     <h3 className="text-base font-semibold text-gray-900">{app.name}</h3>
-                    {isInstalled && (
-                      <Badge className="shrink-0 gap-1 bg-green-100 text-green-800 hover:bg-green-100">
-                        <CheckCircle2 className="h-3 w-3" />
-                        Geïnstalleerd
-                      </Badge>
-                    )}
                     {!isInstalled && soon && (
                       <Badge variant="outline" className="shrink-0 text-xs">Binnenkort</Badge>
                     )}
@@ -93,7 +91,7 @@ function AppsCatalogPage() {
                           <Link
                             to="/apps/$appSlug"
                             params={{ appSlug: app.slug }}
-                            className="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-2 rounded-bl-lg border border-transparent py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+                            className={`relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-2 rounded-bl-lg border border-transparent py-3 text-sm font-semibold hover:bg-gray-50 ${isInstalled ? "text-green-600" : "text-gray-900"}`}
                           >
                             {isInstalled ? (
                               <>
