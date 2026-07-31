@@ -112,9 +112,9 @@ export interface AgeVerificationSettings {
 export const DEFAULT_AGE_VERIFICATION: AgeVerificationSettings = {
   minAge: 18,
   title: "Welkom",
-  description: "Bevestig je geboortedatum om door te gaan.",
-  buttonText: "Bevestigen",
-  declineText: "Ik ben jonger",
+  description: "Bevestig je leeftijd om door te gaan.",
+  buttonText: "Ja, ik ben 18 jaar en ouder",
+  declineText: "Nee",
   declineRedirect: "https://www.google.com",
   rememberDays: 30,
   primaryColor: "#5187e0",
