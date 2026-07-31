@@ -13,7 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import { ShellHeaderProvider, useShellHeader } from "@/components/shell-header-context";
+import { ShellHeaderProvider, useShellHeaderContent } from "@/components/shell-header-context";
 import { useIsAdmin } from "@/hooks/use-is-admin";
 
 const nav = [
@@ -225,7 +225,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function HeaderBar({ mobileOpen, setMobileOpen }: { mobileOpen: boolean; setMobileOpen: (v: boolean) => void }) {
-  const { content } = useShellHeader();
+  const content = useShellHeaderContent();
   return (
     <header
       className={cn(
