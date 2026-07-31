@@ -25,7 +25,7 @@ export function PageHeader({ title, subtitle, actions, breadcrumb }: PageHeaderP
   }, [title, breadcrumb, actions, setContent]);
 
   return (
-    <div className="mb-6">
+    <div className="px-6 pt-6 mb-6">
       <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
       {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
     </div>
