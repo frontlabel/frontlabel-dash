@@ -167,3 +167,105 @@ function DashboardPage() {
     </div>
   );
 }
+function RevenueCard() {
+  return (
+    <SectionCard className="p-6 shadow-sm flex flex-col">
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="text-sm font-semibold text-foreground">Totale Gegenereerde Omzet</h2>
+        <span className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+          <TrendingUp className="h-5 w-5 text-emerald-600" />
+        </span>
+      </div>
+      <div className="mt-6 text-4xl font-bold tracking-tight text-emerald-600">€ 3.840,00</div>
+      <div className="mt-4 flex items-start gap-2">
+        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-0 shrink-0">
+          +24%
+        </Badge>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          extra omzet door frontlabel add-ons deze maand
+        </p>
+      </div>
+    </SectionCard>
+  );
+}
+
+function HealthScoreCard() {
+  const score = 78;
+  const radius = 52;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference * (1 - score / 100);
+
+  return (
+    <SectionCard className="p-6 shadow-sm flex flex-col">
+      <h2 className="text-sm font-semibold text-foreground">Shop Health Score</h2>
+      <div className="mt-4 flex flex-col items-center">
+        <div className="relative h-32 w-32">
+          <svg viewBox="0 0 120 120" className="h-32 w-32 -rotate-90">
+            <circle
+              cx="60"
+              cy="60"
+              r={radius}
+              fill="none"
+              strokeWidth="10"
+              className="stroke-muted"
+            />
+            <circle
+              cx="60"
+              cy="60"
+              r={radius}
+              fill="none"
+              strokeWidth="10"
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              className="stroke-primary"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-2xl font-bold tracking-tight text-foreground">{score}</span>
+            <span className="text-xs text-muted-foreground">/ 100</span>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">3 van de 6 add-ons actief</p>
+      </div>
+      <Button className="mt-5 w-full">
+        <Sparkles className="h-4 w-4" /> Optimaliseer shop (+22%)
+      </Button>
+    </SectionCard>
+  );
+}
+
+const activity = [
+  {
+    icon: Mail,
+    text: "Back-in-Stock e-mail verzonden naar klant voor 'Sneakers Size 42'",
+    time: "2m geleden",
+  },
+  { icon: UserPlus, text: "Nieuwe inschrijving via Nieuwsbrief Pop-up", time: "5m geleden" },
+  { icon: ShieldCheck, text: "18+ Verificatie succesvol afgerond", time: "12m geleden" },
+  { icon: BellRing, text: "Price-Drop notificatie geactiveerd", time: "18m geleden" },
+];
+
+function ActivityFeedCard() {
+  return (
+    <SectionCard className="p-6 shadow-sm">
+      <h2 className="text-sm font-semibold text-foreground">Live Activiteiten Feed</h2>
+      <p className="text-xs text-muted-foreground mt-1">Realtime actie op je webshop</p>
+      <ul className="mt-5 space-y-4">
+        {activity.map((a) => {
+          const Icon = a.icon;
+          return (
+            <li key={a.text} className="flex items-start gap-3">
+              <span className="mt-1.5 h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+              <Icon className="mt-0.5 h-4 w-4 text-muted-foreground shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-foreground leading-snug">{a.text}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{a.time}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </SectionCard>
+  );
+}
