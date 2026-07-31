@@ -80,7 +80,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav className="flex flex-1 flex-col">
         <ul role="list" className="flex flex-1 flex-col gap-y-7">
           <li>
-            <ul role="list" className="-mx-2 space-y-1">
+            <ul role="list" className="-mx-2 space-y-1.5">
               {nav.map((item) => {
                 const active =
                   pathname === item.to ||
