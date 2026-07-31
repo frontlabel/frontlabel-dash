@@ -171,9 +171,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               to="/account"
               search={{ tab: "profile" }}
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground hover:bg-sidebar-accent"
+              className="flex items-center gap-x-4 px-6 py-3 text-base/6 font-semibold text-sidebar-foreground hover:text-sidebar-hover"
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-active text-xs font-semibold text-sidebar-active-foreground">
                 {(email ?? "?").charAt(0).toUpperCase()}
               </span>
               <span className="sr-only">Jouw profiel</span>
@@ -183,9 +183,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
             <button
               onClick={signOut}
-              className="flex w-full items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className="flex w-full items-center gap-x-4 px-6 py-3 text-base/6 font-semibold text-sidebar-foreground hover:text-sidebar-hover"
             >
-              <LogOut className="size-5 shrink-0 text-sidebar-foreground/60" />
+              <LogOut className="size-4 shrink-0 text-sidebar-foreground/60" />
               Uitloggen
             </button>
           </li>
