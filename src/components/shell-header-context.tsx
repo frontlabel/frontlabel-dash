@@ -1,24 +1,34 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
-interface ShellHeaderContextValue {
-  content: ReactNode | null;
-  setContent: (content: ReactNode | null) => void;
+type Listener = (content: ReactNode | null) => void;
+
+let current: ReactNode | null = null;
+const listeners = new Set<Listener>();
+
+function setContent(content: ReactNode | null) {
+  current = content;
+  listeners.forEach((l) => l(content));
 }
-
-const ShellHeaderContext = createContext<ShellHeaderContextValue>({
-  content: null,
-  setContent: () => {},
-});
 
 export function ShellHeaderProvider({ children }: { children: ReactNode }) {
-  const [content, setContent] = useState<ReactNode | null>(null);
-  return (
-    <ShellHeaderContext.Provider value={{ content, setContent }}>
-      {children}
-    </ShellHeaderContext.Provider>
-  );
+  return <>{children}</>;
 }
 
+/** Set the sticky topbar content. `setContent` is stable across renders. */
 export function useShellHeader() {
-  return useContext(ShellHeaderContext);
+  return { setContent };
+}
+
+/** Subscribe to the topbar content (used by the shell header only). */
+export function useShellHeaderContent() {
+  const [content, setLocal] = useState<ReactNode | null>(current);
+  useEffect(() => {
+    const listener: Listener = (c) => setLocal(c);
+    listeners.add(listener);
+    setLocal(current);
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
+  return content;
 }
