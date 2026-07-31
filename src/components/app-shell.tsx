@@ -100,18 +100,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </li>
                 );
               })}
-              {isAdmin && (
-                <li>
-                  <Link
-                    to="/admin"
-                    onClick={() => setMobileOpen(false)}
-                    className={navLinkClass(pathname.startsWith("/admin"))}
-                  >
-                  <Shield className={iconClass(pathname.startsWith("/admin"))} />
-                    Superadmin
-                  </Link>
-                </li>
-              )}
             </ul>
           </li>
 
@@ -150,7 +138,35 @@ export function AppShell({ children }: { children: ReactNode }) {
             </li>
           )}
 
-          <li className="-mx-6 mt-auto border-t border-sidebar-border">
+          <li className="mt-auto">
+            <ul role="list" className="-mx-2 space-y-1 border-t border-sidebar-border pt-4">
+              <li>
+                <Link
+                  to="/account"
+                  search={{ tab: "profile" }}
+                  onClick={() => setMobileOpen(false)}
+                  className={navLinkClass(pathname.startsWith("/account"))}
+                >
+                  <User className={iconClass(pathname.startsWith("/account"))} />
+                  Account
+                </Link>
+              </li>
+              {isAdmin && (
+                <li>
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileOpen(false)}
+                    className={navLinkClass(pathname.startsWith("/admin"))}
+                  >
+                    <ShieldCheck className={iconClass(pathname.startsWith("/admin"))} />
+                    Superadmin
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </li>
+
+          <li className="-mx-6 border-t border-sidebar-border">
             <Link
               to="/account"
               search={{ tab: "profile" }}
