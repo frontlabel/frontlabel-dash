@@ -210,8 +210,8 @@ function FloorCalculatorPage() {
         {tab === "overview" && <OverviewTab settings={settings} />}
         {tab === "widget" && <WidgetTab settings={settings} update={update} />}
         {tab === "preview" && <PreviewTab settings={settings} />}
-      <StickySaveBar onSave={save} saving={saving} />
       </div>
+      <StickySaveBar onSave={save} saving={saving} />
     </div>
   );
 }
