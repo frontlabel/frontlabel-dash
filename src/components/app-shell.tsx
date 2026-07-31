@@ -142,6 +142,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <li className="-mx-6 mt-auto border-t border-sidebar-border">
             <Link
               to="/account"
+              search={{ tab: "profile" }}
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground hover:bg-sidebar-accent"
             >
