@@ -66,16 +66,11 @@ function DashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="px-6 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Welkom terug, Webshop Eigenaar
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Dit is wat je add-ons vandaag voor je webshop doen.
-          </p>
-        </div>
-        <Select value={selectedShop} onValueChange={setSelectedShop}>
+      <PageHeader
+        title="Welkom terug, Webshop Eigenaar"
+        subtitle="Dit is wat je add-ons vandaag voor je webshop doen."
+        actions={
+          <Select value={selectedShop} onValueChange={setSelectedShop}>
           <SelectTrigger className="w-[220px] bg-card">
             <SelectValue placeholder="Selecteer shop" />
           </SelectTrigger>
