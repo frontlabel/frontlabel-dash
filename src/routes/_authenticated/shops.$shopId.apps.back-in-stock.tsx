@@ -1,5 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getRandomShopProducts } from "@/lib/shop-products.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,6 +94,22 @@ function BackInStockPage() {
   const [saving, setSaving] = useState(false);
   const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [tab, setTab] = useState<"overview" | "widget" | "email" | "waitlist">("overview");
+
+  // Echte producten uit de gekoppelde shop voor de voorbeelden
+  const fetchProducts = useServerFn(getRandomShopProducts);
+  const { data: productData } = useQuery({
+    queryKey: ["shop-sample-products", shopId],
+    queryFn: () => fetchProducts({ data: { shopId, count: 5 } }),
+    staleTime: 5 * 60_000,
+  });
+  const sample = productData?.products?.[0];
+  const sampleTitle = sample?.title ?? "Selvedge spijkerjas";
+  const sampleCategory = sample?.category ?? "Jassen";
+  const samplePrice =
+    sample?.price != null
+      ? new Intl.NumberFormat("nl-NL", { style: "currency", currency: sample.currency || "EUR" }).format(sample.price)
+      : "€189,00";
+  const sampleImage = sample?.image ?? null;
 
   function update<K extends keyof BackInStockSettings>(k: K, v: BackInStockSettings[K]) {
     setSettings((s) => ({ ...s, [k]: v }));
