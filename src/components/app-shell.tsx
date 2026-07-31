@@ -65,7 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const iconClass = (active: boolean) =>
     cn(
       "size-5 shrink-0",
-      active ? "text-sidebar-accent-foreground" : "text-muted-foreground group-hover:text-sidebar-accent-foreground",
+      active ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground",
     );
 
   const sidebarBody = (
@@ -74,7 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <img
           src="https://frontlabel.nl/wp-content/uploads/2025/10/frontlabel-logo-white@3x.png"
           alt="Frontlabel"
-          className="h-7 w-auto object-contain brightness-0"
+          className="h-7 w-auto object-contain"
         />
       </div>
       <nav className="flex flex-1 flex-col">
@@ -105,7 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           {shops.length > 0 && (
             <li>
-              <div className="text-xs/6 font-semibold text-muted-foreground">
+              <div className="text-xs/6 font-semibold text-sidebar-foreground/60">
                 Jouw shops
               </div>
               <ul role="list" className="-mx-2 mt-2 space-y-1">
@@ -124,7 +124,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                             "flex size-6 shrink-0 items-center justify-center rounded-lg border bg-sidebar text-[0.625rem] font-medium",
                             active
                               ? "border-sidebar-ring text-sidebar-accent-foreground"
-                              : "border-sidebar-border text-muted-foreground group-hover:border-sidebar-ring group-hover:text-sidebar-accent-foreground",
+                              : "border-sidebar-border text-sidebar-foreground/60 group-hover:border-sidebar-ring group-hover:text-sidebar-accent-foreground",
                           )}
                         >
                           {s.name.charAt(0).toUpperCase()}
@@ -173,7 +173,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground hover:bg-sidebar-accent"
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
                 {(email ?? "?").charAt(0).toUpperCase()}
               </span>
               <span className="sr-only">Jouw profiel</span>
@@ -185,7 +185,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={signOut}
               className="flex w-full items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
-              <LogOut className="size-5 shrink-0 text-muted-foreground" />
+              <LogOut className="size-5 shrink-0 text-sidebar-foreground/60" />
               Uitloggen
             </button>
           </li>
