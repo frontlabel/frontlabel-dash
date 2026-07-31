@@ -1,9 +1,11 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/page-header";
 import { SectionLabel } from "@/components/section-card";
 import { APPS_CATALOG } from "@/lib/apps-catalog";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Settings2, Download } from "lucide-react";
+import { ShieldCheck, Settings2, Download, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/apps")({
   component: AppsLayout,
@@ -20,6 +22,22 @@ function AppsLayout() {
 }
 
 function AppsCatalogPage() {
+  const [installed, setInstalled] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    supabase
+      .from("shop_apps")
+      .select("app_slug,enabled")
+      .then(({ data }) => {
+        const map: Record<string, boolean> = {};
+        (data ?? []).forEach((r) => {
+          const row = r as { app_slug: string; enabled: boolean };
+          map[row.app_slug] = map[row.app_slug] || row.enabled;
+        });
+        setInstalled(map);
+      });
+  }, []);
+
   return (
     <div className="max-w-5xl mx-auto">
       <PageHeader title="Apps" subtitle="Shoplabel apps die je per shop kunt installeren en configureren." />
@@ -29,34 +47,38 @@ function AppsCatalogPage() {
           {APPS_CATALOG.map((app) => {
             const Icon = ICONS[app.slug] ?? ShieldCheck;
             const soon = app.status === "coming-soon";
+            const isInstalled = !!installed[app.slug];
             return (
               <li
                 key={app.slug}
-                className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white text-center shadow-sm"
+                className="col-span-1 flex flex-col divide-y divide-gray-200 rounded-lg bg-white shadow-sm"
               >
-                <div className="flex flex-1 flex-col p-6 text-left">
-                  <div className="flex items-start gap-4">
-                    {app.image ? (
-                      <img
-                        src={app.image}
-                        alt={app.name}
-                        className="h-16 w-16 shrink-0 rounded-md object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md bg-primary/10">
-                        <Icon className="h-5 w-5 text-primary" />
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-sm font-medium text-gray-900">{app.name}</h3>
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                        <Badge variant="secondary" className="text-xs">{app.category}</Badge>
-                        {soon && <Badge variant="outline" className="text-xs">Binnenkort</Badge>}
-                      </div>
+                <div className="flex flex-1 flex-col p-4 text-left">
+                  {app.image ? (
+                    <img
+                      src={app.image}
+                      alt={app.name}
+                      className="aspect-[4/3] w-full rounded-md object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex aspect-[4/3] w-full items-center justify-center rounded-md bg-primary/10">
+                      <Icon className="h-8 w-8 text-primary" />
                     </div>
+                  )}
+                  <div className="mt-4 flex items-start justify-between gap-2">
+                    <h3 className="text-base font-semibold text-gray-900">{app.name}</h3>
+                    {isInstalled && (
+                      <Badge className="shrink-0 gap-1 bg-green-100 text-green-800 hover:bg-green-100">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Geïnstalleerd
+                      </Badge>
+                    )}
+                    {!isInstalled && soon && (
+                      <Badge variant="outline" className="shrink-0 text-xs">Binnenkort</Badge>
+                    )}
                   </div>
-                  <p className="mt-4 flex-1 text-sm text-muted-foreground">{app.description}</p>
+                  <p className="mt-2 flex-1 text-sm text-muted-foreground">{app.description}</p>
                 </div>
                 <div>
                   <div className="-mt-px flex divide-x divide-gray-200">
@@ -73,8 +95,17 @@ function AppsCatalogPage() {
                             params={{ appSlug: app.slug }}
                             className="relative -mr-px inline-flex w-0 flex-1 items-center justify-center gap-x-2 rounded-bl-lg border border-transparent py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50"
                           >
-                            <Download className="h-4 w-4 text-gray-400" />
-                            Installeer
+                            {isInstalled ? (
+                              <>
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                                Geïnstalleerd
+                              </>
+                            ) : (
+                              <>
+                                <Download className="h-4 w-4 text-gray-400" />
+                                Installeer
+                              </>
+                            )}
                           </Link>
                         </div>
                         <div className="-ml-px flex w-0 flex-1">
