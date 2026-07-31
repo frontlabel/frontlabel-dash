@@ -14,10 +14,6 @@ const nav = [
   { to: "/account", label: "Account", icon: User },
 ];
 
-const SIDEBAR_FONT = {
-  fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif',
-} as const;
-
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
@@ -174,7 +170,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SheetContent
           side="left"
           className="w-72 max-w-xs p-0 bg-sidebar text-sidebar-foreground border-sidebar-border flex flex-col"
-          style={{ ...SIDEBAR_FONT, fontSize: "16px" }}
         >
           <SheetTitle className="sr-only">Navigatie</SheetTitle>
           {sidebarBody}
@@ -184,7 +179,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Static sidebar for desktop */}
       <div
         className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col text-sidebar-foreground"
-        style={{ ...SIDEBAR_FONT, fontSize: "16px" }}
       >
         {sidebarBody}
       </div>
@@ -192,17 +186,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <ShellHeaderProvider>
         <div className="lg:pl-72 flex min-h-screen flex-col">
           <HeaderBar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-          <main
-            className="flex-1"
-            style={{
-              ...SIDEBAR_FONT,
-              WebkitTextSizeAdjust: "100%",
-              fontSize: "16px",
-              lineHeight: "24px",
-            }}
-          >
-            {children}
-          </main>
+          <main className="flex-1">{children}</main>
         </div>
       </ShellHeaderProvider>
     </div>
