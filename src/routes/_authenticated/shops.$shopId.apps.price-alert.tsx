@@ -28,6 +28,7 @@ import {
 import { SectionCard, SectionLabel } from "@/components/section-card";
 import { StickySaveBar } from "@/components/sticky-save-bar";
 import { DisplayModeField } from "@/components/display-mode-field";
+import { useDisableAppGuard } from "@/components/disable-app-dialog";
 import { useShellHeader } from "@/components/shell-header-context";
 import { cn } from "@/lib/utils";
 import {
@@ -142,7 +143,7 @@ function PriceAlertPage() {
         </nav>
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 text-sm">
-            <Switch id="app-active" checked={active} onCheckedChange={setActive} />
+            <Switch id="app-active" checked={active} onCheckedChange={requestToggle} />
             <Label htmlFor="app-active" className="cursor-pointer">
               {active ? "Actief" : "Uit"}
             </Label>
@@ -155,7 +156,7 @@ function PriceAlertPage() {
       </div>,
     );
     return () => setContent(null);
-  }, [shopId, active, saving, settings, rowId, setContent]);
+  }, [shopId, active, saving, settings, rowId, setContent, requestToggle]);
 
   useEffect(() => {
     supabase
@@ -603,6 +604,7 @@ function PriceAlertPage() {
         )}
       </div>
       <StickySaveBar onSave={save} saving={saving} />
+      {disableDialog}
     </div>
   );
 }
