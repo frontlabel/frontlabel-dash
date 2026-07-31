@@ -29,18 +29,12 @@ export function AgeVerificationPreview({ s }: { s: AgeVerificationSettings }) {
             borderRadius: `${s.borderRadius}px`,
           }}
         >
-          <div
-            className="mx-auto mb-3 h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
-            style={{ background: s.primaryColor }}
-          >
-            {s.minAge}+
-          </div>
           <h2 className="text-lg font-semibold mb-1" style={{ color: s.textColor }}>
             {s.title}
           </h2>
           <p className="text-xs opacity-80 mb-4">{s.description}</p>
           <button
-            className="w-full py-2 rounded text-sm font-medium text-white"
+            className="w-full py-3 rounded text-sm font-semibold text-white"
             style={{
               background: s.primaryColor,
               borderRadius: `${Math.max(4, s.borderRadius - 4)}px`,
@@ -48,7 +42,10 @@ export function AgeVerificationPreview({ s }: { s: AgeVerificationSettings }) {
           >
             {s.buttonText}
           </button>
-          <button className="mt-2 text-xs opacity-60 hover:opacity-100">
+          <button
+            className="mt-2 w-full py-3 rounded text-sm font-semibold bg-white text-gray-900 border border-black/15"
+            style={{ borderRadius: `${Math.max(4, s.borderRadius - 4)}px` }}
+          >
             {s.declineText}
           </button>
         </div>
