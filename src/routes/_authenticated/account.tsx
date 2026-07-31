@@ -46,10 +46,9 @@ function AccountPage() {
         title="Account instellingen"
         subtitle="Beheer je profiel, notificatievoorkeuren en abonnement."
       />
-      <div className="px-6 pb-12 grid grid-cols-1 md:grid-cols-[220px_1fr] gap-6">
-        <nav className="space-y-1">
+      <div className="px-6 pb-12">
+        <nav className="flex gap-8 border-b border-gray-200 mb-6">
           {TABS.map((t) => {
-            const Icon = t.icon;
             const active = tab === t.id;
             return (
               <Link
@@ -57,13 +56,12 @@ function AccountPage() {
                 to="/account"
                 search={{ tab: t.id }}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  "-mb-px border-b-2 pb-3 text-sm font-medium transition-colors",
                   active
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-foreground/70 hover:bg-muted",
+                    ? "border-indigo-600 text-indigo-600"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300",
                 )}
               >
-                <Icon className="h-4 w-4" />
                 {t.label}
               </Link>
             );
