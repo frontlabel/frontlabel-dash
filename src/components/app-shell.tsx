@@ -108,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="text-xs/6 font-semibold text-sidebar-foreground/60">
                 Jouw shops
               </div>
-              <ul role="list" className="-mx-2 mt-2 space-y-1">
+              <ul role="list" className="-mx-2 mt-1.5 space-y-1.5">
                 {shops.map((s) => {
                   const active = activeShopId === s.id;
                   return (
