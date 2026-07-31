@@ -1,6 +1,15 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Home, Package, Palette, LogOut, Menu, Store, User, Shield } from "lucide-react";
+import {
+  LayoutDashboard,
+  Package,
+  BarChart3,
+  Palette,
+  LogOut,
+  Menu,
+  User,
+  ShieldCheck,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -8,10 +17,10 @@ import { ShellHeaderProvider, useShellHeader } from "@/components/shell-header-c
 import { useIsAdmin } from "@/hooks/use-is-admin";
 
 const nav = [
-  { to: "/dashboard", label: "Shops", icon: Home },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/apps", label: "Apps", icon: Package },
+  { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/presets", label: "Stijl presets", icon: Palette },
-  { to: "/account", label: "Account", icon: User },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -91,18 +100,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </li>
                 );
               })}
-              {isAdmin && (
-                <li>
-                  <Link
-                    to="/admin"
-                    onClick={() => setMobileOpen(false)}
-                    className={navLinkClass(pathname.startsWith("/admin"))}
-                  >
-                  <Shield className={iconClass(pathname.startsWith("/admin"))} />
-                    Superadmin
-                  </Link>
-                </li>
-              )}
             </ul>
           </li>
 
@@ -141,7 +138,35 @@ export function AppShell({ children }: { children: ReactNode }) {
             </li>
           )}
 
-          <li className="-mx-6 mt-auto border-t border-sidebar-border">
+          <li className="mt-auto">
+            <ul role="list" className="-mx-2 space-y-1 border-t border-sidebar-border pt-4">
+              <li>
+                <Link
+                  to="/account"
+                  search={{ tab: "profile" }}
+                  onClick={() => setMobileOpen(false)}
+                  className={navLinkClass(pathname.startsWith("/account"))}
+                >
+                  <User className={iconClass(pathname.startsWith("/account"))} />
+                  Account
+                </Link>
+              </li>
+              {isAdmin && (
+                <li>
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileOpen(false)}
+                    className={navLinkClass(pathname.startsWith("/admin"))}
+                  >
+                    <ShieldCheck className={iconClass(pathname.startsWith("/admin"))} />
+                    Superadmin
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </li>
+
+          <li className="-mx-6 border-t border-sidebar-border">
             <Link
               to="/account"
               search={{ tab: "profile" }}
