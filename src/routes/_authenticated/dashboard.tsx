@@ -94,10 +94,13 @@ function DashboardPage() {
         </Select>
       </div>
 
-      <div className="px-6 pb-8 grid gap-5 lg:grid-cols-3">
-        <RevenueCard />
+      <StatsRow />
+
+      <div className="px-6 pt-8 pb-8 grid gap-5 lg:grid-cols-3">
         <HealthScoreCard />
-        <ActivityFeedCard />
+        <div className="lg:col-span-2">
+          <ActivityFeedCard />
+        </div>
       </div>
 
       <div className="px-6 pb-12">
@@ -167,25 +170,36 @@ function DashboardPage() {
     </div>
   );
 }
-function RevenueCard() {
+const stats = [
+  { name: "Gegenereerde omzet", value: "€ 3.840,00", change: "+24%", changeType: "positive" },
+  { name: "Actieve add-ons", value: "3 van 6", change: "+1", changeType: "positive" },
+  { name: "Nieuwe inschrijvingen", value: "182", change: "+12,4%", changeType: "positive" },
+  { name: "Gemiste conversies", value: "27", change: "-3,1%", changeType: "negative" },
+] as const;
+
+function StatsRow() {
   return (
-    <SectionCard className="p-6 shadow-sm flex flex-col">
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="text-sm font-semibold text-foreground">Totale Gegenereerde Omzet</h2>
-        <span className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
-          <TrendingUp className="h-5 w-5 text-emerald-600" />
-        </span>
-      </div>
-      <div className="mt-6 text-4xl font-bold tracking-tight text-emerald-600">€ 3.840,00</div>
-      <div className="mt-4 flex items-start gap-2">
-        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-0 shrink-0">
-          +24%
-        </Badge>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          extra omzet door frontlabel add-ons deze maand
-        </p>
-      </div>
-    </SectionCard>
+    <dl className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-4 border-y border-border">
+      {stats.map((stat) => (
+        <div
+          key={stat.name}
+          className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 bg-card px-4 py-10 sm:px-6 xl:px-8"
+        >
+          <dt className="text-sm/6 font-medium text-muted-foreground">{stat.name}</dt>
+          <dd
+            className={cn(
+              "text-xs font-medium",
+              stat.changeType === "negative" ? "text-rose-600" : "text-foreground",
+            )}
+          >
+            {stat.change}
+          </dd>
+          <dd className="w-full flex-none text-3xl/10 font-medium tracking-tight text-foreground">
+            {stat.value}
+          </dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -197,7 +211,7 @@ function HealthScoreCard() {
 
   return (
     <SectionCard className="p-6 shadow-sm flex flex-col">
-      <h2 className="text-sm font-semibold text-foreground">Shop Health Score</h2>
+      <h2 className="text-sm font-semibold text-foreground">Shop health score</h2>
       <div className="mt-4 flex flex-col items-center">
         <div className="relative h-32 w-32">
           <svg viewBox="0 0 120 120" className="h-32 w-32 -rotate-90">
@@ -249,7 +263,7 @@ const activity = [
 function ActivityFeedCard() {
   return (
     <SectionCard className="p-6 shadow-sm">
-      <h2 className="text-sm font-semibold text-foreground">Live Activiteiten Feed</h2>
+      <h2 className="text-sm font-semibold text-foreground">Live activiteiten feed</h2>
       <p className="text-xs text-muted-foreground mt-1">Realtime actie op je webshop</p>
       <ul className="mt-5 space-y-4">
         {activity.map((a) => {
