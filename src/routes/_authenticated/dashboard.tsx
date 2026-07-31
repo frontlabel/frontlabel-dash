@@ -96,7 +96,7 @@ function DashboardPage() {
 
       <div className="px-6 pt-8 pb-8 grid gap-5 lg:grid-cols-3">
         <RevenueCard />
-        <HealthScoreCard />
+        <HealthScoreCard shopId={selectedShop} />
         <ActivityFeedCard />
       </div>
 
