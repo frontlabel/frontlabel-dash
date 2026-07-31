@@ -22,6 +22,7 @@ import {
   UserPlus,
   ShieldCheck,
   BellRing,
+  TrendingUp,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
