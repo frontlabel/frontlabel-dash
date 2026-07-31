@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, TrendingDown } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 /** Wat bezoekers missen zodra de app uit staat, per app. */
 const MISSED_ACTION: Record<string, string> = {
