@@ -87,10 +87,11 @@ function DashboardPage() {
               ))
             )}
           </SelectContent>
-        </Select>
-      </div>
+          </Select>
+        }
+      />
 
-      <div className="px-6 pt-8 pb-8 grid gap-5 lg:grid-cols-3">
+      <div className="px-6 pb-8 grid gap-5 lg:grid-cols-3">
         <RevenueCard />
         <HealthScoreCard shopId={selectedShop} />
         <ActivityFeedCard />
