@@ -104,7 +104,7 @@ function PricingPage() {
             </div>
           </div>
           <div className="text-sm text-muted-foreground">
-            Volgende factuurdatum: <span className="font-medium text-foreground">—</span>
+            Volgende factuurdatum: <span className="font-medium text-foreground">Nog niet gepland</span>
           </div>
         </SectionCard>
 
