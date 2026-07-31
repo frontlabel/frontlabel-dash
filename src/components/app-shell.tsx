@@ -1,6 +1,6 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Home, Package, Palette, LogOut, Plug, Menu, Store, User, Shield } from "lucide-react";
+import { Home, Package, Palette, LogOut, Menu, Store, User, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const iconClass = (active: boolean) =>
     cn(
-      "size-6 shrink-0",
+      "size-5 shrink-0",
       active ? "text-sidebar-accent-foreground" : "text-muted-foreground group-hover:text-sidebar-accent-foreground",
     );
 
@@ -202,7 +202,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 function HeaderBar({ mobileOpen, setMobileOpen }: { mobileOpen: boolean; setMobileOpen: (v: boolean) => void }) {
   const { content } = useShellHeader();
   return (
-    <header className="sticky top-0 z-50 h-14 bg-card border-b border-border flex items-center">
+    <header
+      className={cn(
+        "sticky top-0 z-50 flex items-center",
+        content
+          ? "h-14 border-b border-border bg-card"
+          : "h-14 lg:hidden border-b border-border bg-card",
+      )}
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 w-full flex items-center gap-3">
         <button
           onClick={() => setMobileOpen(true)}
@@ -211,14 +218,7 @@ function HeaderBar({ mobileOpen, setMobileOpen }: { mobileOpen: boolean; setMobi
         >
           <Menu className="size-6" />
         </button>
-        {content ? (
-          <div className="flex-1 min-w-0">{content}</div>
-        ) : (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Plug className="h-4 w-4 text-primary" />
-            <span>Shoplabel App Admin</span>
-          </div>
-        )}
+        {content ? <div className="flex-1 min-w-0">{content}</div> : null}
       </div>
     </header>
   );
