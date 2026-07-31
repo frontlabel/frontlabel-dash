@@ -1,5 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getRandomShopProducts } from "@/lib/shop-products.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -91,6 +94,22 @@ function BackInStockPage() {
   const [saving, setSaving] = useState(false);
   const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [tab, setTab] = useState<"overview" | "widget" | "email" | "waitlist">("overview");
+
+  // Echte producten uit de gekoppelde shop voor de voorbeelden
+  const fetchProducts = useServerFn(getRandomShopProducts);
+  const { data: productData } = useQuery({
+    queryKey: ["shop-sample-products", shopId],
+    queryFn: () => fetchProducts({ data: { shopId, count: 5 } }),
+    staleTime: 5 * 60_000,
+  });
+  const sample = productData?.products?.[0];
+  const sampleTitle = sample?.title ?? "Selvedge spijkerjas";
+  const sampleCategory = sample?.category ?? "Jassen";
+  const samplePrice =
+    sample?.price != null
+      ? new Intl.NumberFormat("nl-NL", { style: "currency", currency: sample.currency || "EUR" }).format(sample.price)
+      : "€189,00";
+  const sampleImage = sample?.image ?? null;
 
   function update<K extends keyof BackInStockSettings>(k: K, v: BackInStockSettings[K]) {
     setSettings((s) => ({ ...s, [k]: v }));
@@ -354,17 +373,21 @@ function BackInStockPage() {
               <SectionCard className="p-5">
                 <div className="rounded-md border border-border bg-background p-5">
                   <div className="grid grid-cols-[120px_1fr] gap-4">
-                    <div className="h-32 rounded-md bg-muted flex items-center justify-center">
-                      <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                    <div className="h-32 rounded-md bg-muted flex items-center justify-center overflow-hidden">
+                      {sampleImage ? (
+                        <img src={sampleImage} alt={sampleTitle} className="h-full w-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                      )}
                     </div>
                     <div className="space-y-2">
                       <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                        Jassen
+                        {sampleCategory}
                       </div>
                       <div className="font-semibold text-base leading-tight">
-                        Selvedge spijkerjas
+                        {sampleTitle}
                       </div>
-                      <div className="text-sm font-medium">€189,00</div>
+                      <div className="text-sm font-medium">{samplePrice}</div>
                       <Badge variant="destructive" className="text-xs">Uitverkocht</Badge>
                     </div>
                   </div>
@@ -468,12 +491,16 @@ function BackInStockPage() {
                     <div className="text-xs text-muted-foreground">
                       Onderwerp: <span className="text-foreground">{emailSubject}</span>
                     </div>
-                    <div className="rounded-md bg-muted h-44 flex items-center justify-center">
-                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    <div className="rounded-md bg-muted h-44 flex items-center justify-center overflow-hidden">
+                      {sampleImage ? (
+                        <img src={sampleImage} alt={sampleTitle} className="h-full w-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      )}
                     </div>
                     <div className="space-y-1">
-                      <div className="font-semibold text-lg">Selvedge spijkerjas</div>
-                      <div className="text-sm font-medium">€189,00</div>
+                      <div className="font-semibold text-lg">{sampleTitle}</div>
+                      <div className="text-sm font-medium">{samplePrice}</div>
                     </div>
                     {scarcityUrgency && (
                       <div className="text-xs font-medium text-amber-600">
