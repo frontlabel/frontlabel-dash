@@ -373,17 +373,21 @@ function BackInStockPage() {
               <SectionCard className="p-5">
                 <div className="rounded-md border border-border bg-background p-5">
                   <div className="grid grid-cols-[120px_1fr] gap-4">
-                    <div className="h-32 rounded-md bg-muted flex items-center justify-center">
-                      <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                    <div className="h-32 rounded-md bg-muted flex items-center justify-center overflow-hidden">
+                      {sampleImage ? (
+                        <img src={sampleImage} alt={sampleTitle} className="h-full w-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                      )}
                     </div>
                     <div className="space-y-2">
                       <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                        Jassen
+                        {sampleCategory}
                       </div>
                       <div className="font-semibold text-base leading-tight">
-                        Selvedge spijkerjas
+                        {sampleTitle}
                       </div>
-                      <div className="text-sm font-medium">€189,00</div>
+                      <div className="text-sm font-medium">{samplePrice}</div>
                       <Badge variant="destructive" className="text-xs">Uitverkocht</Badge>
                     </div>
                   </div>
@@ -487,12 +491,16 @@ function BackInStockPage() {
                     <div className="text-xs text-muted-foreground">
                       Onderwerp: <span className="text-foreground">{emailSubject}</span>
                     </div>
-                    <div className="rounded-md bg-muted h-44 flex items-center justify-center">
-                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                    <div className="rounded-md bg-muted h-44 flex items-center justify-center overflow-hidden">
+                      {sampleImage ? (
+                        <img src={sampleImage} alt={sampleTitle} className="h-full w-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      )}
                     </div>
                     <div className="space-y-1">
-                      <div className="font-semibold text-lg">Selvedge spijkerjas</div>
-                      <div className="text-sm font-medium">€189,00</div>
+                      <div className="font-semibold text-lg">{sampleTitle}</div>
+                      <div className="text-sm font-medium">{samplePrice}</div>
                     </div>
                     {scarcityUrgency && (
                       <div className="text-xs font-medium text-amber-600">
