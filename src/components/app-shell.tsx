@@ -123,8 +123,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                           className={cn(
                             "flex size-6 shrink-0 items-center justify-center rounded-lg border bg-sidebar text-[0.625rem] font-medium",
                             active
-                              ? "border-sidebar-ring text-sidebar-accent-foreground"
-                              : "border-sidebar-border text-sidebar-foreground/60 group-hover:border-sidebar-ring group-hover:text-sidebar-accent-foreground",
+                              ? "border-sidebar-active text-sidebar-active-foreground"
+                              : "border-sidebar-border text-sidebar-foreground/60 group-hover:border-sidebar-active group-hover:text-sidebar-hover",
                           )}
                         >
                           {s.name.charAt(0).toUpperCase()}
