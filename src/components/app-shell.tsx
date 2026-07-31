@@ -59,13 +59,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       "group flex items-center gap-x-3 rounded-md p-2 text-base/6 font-semibold transition-colors",
       active
         ? "bg-sidebar-active text-sidebar-active-foreground"
-        : "text-sidebar-foreground hover:text-sidebar-hover",
+        : "text-sidebar-foreground hover:bg-sidebar-hover",
     );
 
   const iconClass = (active: boolean) =>
     cn(
       "size-4 shrink-0",
-      active ? "text-sidebar-active-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-hover",
+      active ? "text-sidebar-active-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground",
     );
 
   const sidebarBody = (
@@ -124,7 +124,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                             "flex size-6 shrink-0 items-center justify-center rounded-lg border bg-sidebar text-[0.625rem] font-medium",
                             active
                               ? "border-sidebar-active text-sidebar-active-foreground"
-                              : "border-sidebar-border text-sidebar-foreground/60 group-hover:border-sidebar-active group-hover:text-sidebar-hover",
+                              : "border-sidebar-border text-sidebar-foreground/60 group-hover:border-sidebar-active group-hover:text-sidebar-foreground",
                           )}
                         >
                           {s.name.charAt(0).toUpperCase()}
@@ -171,7 +171,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               to="/account"
               search={{ tab: "profile" }}
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-x-4 px-6 py-3 text-base/6 font-semibold text-sidebar-foreground hover:text-sidebar-hover"
+              className="flex items-center gap-x-4 px-6 py-3 text-base/6 font-semibold text-sidebar-foreground hover:bg-sidebar-hover"
             >
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-active text-xs font-semibold text-sidebar-active-foreground">
                 {(email ?? "?").charAt(0).toUpperCase()}
@@ -183,7 +183,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
             <button
               onClick={signOut}
-              className="flex w-full items-center gap-x-4 px-6 py-3 text-base/6 font-semibold text-sidebar-foreground hover:text-sidebar-hover"
+              className="flex w-full items-center gap-x-4 px-6 py-3 text-base/6 font-semibold text-sidebar-foreground hover:bg-sidebar-hover"
             >
               <LogOut className="size-4 shrink-0 text-sidebar-foreground/60" />
               Uitloggen
