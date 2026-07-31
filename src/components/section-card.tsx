@@ -11,7 +11,7 @@ export function SectionLabel({ children }: { children: ReactNode }) {
 
 export function SectionCard({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("bg-card border border-border rounded-md", className)}>
+    <div className={cn("overflow-hidden rounded-lg bg-white shadow-sm", className)}>
       {children}
     </div>
   );
