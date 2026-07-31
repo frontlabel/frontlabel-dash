@@ -31,6 +31,7 @@ import {
 import { SectionCard, SectionLabel } from "@/components/section-card";
 import { StickySaveBar } from "@/components/sticky-save-bar";
 import { DisplayModeField } from "@/components/display-mode-field";
+import { useDisableAppGuard } from "@/components/disable-app-dialog";
 import { useShellHeader } from "@/components/shell-header-context";
 import { cn } from "@/lib/utils";
 import {
@@ -95,6 +96,13 @@ function BackInStockPage() {
   const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
   const [tab, setTab] = useState<"overview" | "widget" | "email" | "waitlist">("overview");
 
+  const { requestToggle, dialog: disableDialog } = useDisableAppGuard({
+    appName: "Back in Stock Alerts",
+    appSlug: APP_SLUG,
+    active,
+    setActive,
+  });
+
   // Echte producten uit de gekoppelde shop voor de voorbeelden
   const fetchProducts = useServerFn(getRandomShopProducts);
   const { data: productData } = useQuery({
@@ -156,7 +164,7 @@ function BackInStockPage() {
         </nav>
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 text-sm">
-            <Switch id="app-active" checked={active} onCheckedChange={setActive} />
+            <Switch id="app-active" checked={active} onCheckedChange={requestToggle} />
             <Label htmlFor="app-active" className="cursor-pointer">
               {active ? "Actief" : "Uit"}
             </Label>
@@ -169,7 +177,7 @@ function BackInStockPage() {
       </div>,
     );
     return () => setContent(null);
-  }, [shopId, active, saving, settings, rowId, setContent]);
+  }, [shopId, active, saving, settings, rowId, setContent, requestToggle]);
 
   // Laad bestaande instellingen + wachtlijst
   useEffect(() => {
@@ -588,6 +596,7 @@ function BackInStockPage() {
         )}
       </div>
       <StickySaveBar onSave={save} saving={saving} />
+      {disableDialog}
     </div>
   );
 }
