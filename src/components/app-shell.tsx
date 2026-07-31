@@ -47,19 +47,25 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const navLinkClass = (active: boolean) =>
     cn(
-      "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold transition-colors",
+      "group flex items-center gap-x-3 rounded-md p-2 text-sm/6 font-semibold transition-colors",
       active
         ? "bg-sidebar-accent text-sidebar-accent-foreground"
-        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+    );
+
+  const iconClass = (active: boolean) =>
+    cn(
+      "size-6 shrink-0",
+      active ? "text-sidebar-accent-foreground" : "text-muted-foreground group-hover:text-sidebar-accent-foreground",
     );
 
   const sidebarBody = (
-    <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-sidebar px-6 pb-4">
+    <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-sidebar-border bg-sidebar px-6 pb-4">
       <div className="flex h-16 shrink-0 items-center">
         <img
           src="http://frontlabel.nl/wp-content/uploads/2025/10/frontlabel-logo-white@3x.png"
           alt="Frontlabel"
-          className="h-7 w-auto object-contain"
+          className="h-7 w-auto object-contain brightness-0"
         />
       </div>
       <nav className="flex flex-1 flex-col">
@@ -92,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     onClick={() => setMobileOpen(false)}
                     className={navLinkClass(pathname.startsWith("/admin"))}
                   >
-                    <Shield className="size-6 shrink-0" />
+                  <Shield className={iconClass(pathname.startsWith("/admin"))} />
                     Superadmin
                   </Link>
                 </li>
@@ -102,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           {shops.length > 0 && (
             <li>
-              <div className="text-xs/6 font-semibold text-sidebar-foreground/50">
+              <div className="text-xs/6 font-semibold text-muted-foreground">
                 Jouw shops
               </div>
               <ul role="list" className="-mx-2 mt-2 space-y-1">
@@ -118,10 +124,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                       >
                         <span
                           className={cn(
-                            "flex size-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium",
+                            "flex size-6 shrink-0 items-center justify-center rounded-lg border bg-sidebar text-[0.625rem] font-medium",
                             active
-                              ? "border-sidebar-ring bg-sidebar text-sidebar-accent-foreground"
-                              : "border-sidebar-border bg-sidebar text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground",
+                              ? "border-sidebar-ring text-sidebar-accent-foreground"
+                              : "border-sidebar-border text-muted-foreground group-hover:border-sidebar-ring group-hover:text-sidebar-accent-foreground",
                           )}
                         >
                           {s.name.charAt(0).toUpperCase()}
@@ -142,7 +148,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground hover:bg-sidebar-accent"
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold text-secondary-foreground">
                 {(email ?? "?").charAt(0).toUpperCase()}
               </span>
               <span className="sr-only">Jouw profiel</span>
@@ -152,9 +158,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
             <button
               onClick={signOut}
-              className="flex w-full items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className="flex w-full items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
-              <LogOut className="size-5 shrink-0" />
+              <LogOut className="size-5 shrink-0 text-muted-foreground" />
               Uitloggen
             </button>
           </li>
