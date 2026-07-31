@@ -1,3 +1,4 @@
+import { PageHeader } from "@/components/page-header";
 import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,10 +37,8 @@ function ShopLayout() {
     <div className="max-w-6xl mx-auto">
       {!onAppDetail && (
         <>
-          <div className="sticky top-14 lg:top-0 z-40 border-b border-border bg-card px-6 py-4">
-            <h1 className="text-base font-semibold tracking-tight">{shopName || "Shop"}</h1>
-          </div>
-          <div className="px-6 mt-4 border-b border-border">
+          <PageHeader title={shopName || "Shop"} />
+          <div className="px-6 border-b border-border">
             <div className="flex gap-1">
               {tabs.map((t) => {
                 const active = t.exact ? pathname === t.to : pathname.startsWith(t.to);
