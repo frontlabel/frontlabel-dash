@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { useDisableAppGuard } from "@/components/disable-app-dialog";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
@@ -88,6 +89,12 @@ function AppSettingsPage() {
   const [presets, setPresets] = useState<PresetRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const { requestToggle, dialog: disableDialog } = useDisableAppGuard({
+    appName: app?.name ?? "deze app",
+    appSlug,
+    active: enabled,
+    setActive: setEnabled,
+  });
 
   useEffect(() => {
     setContent(
@@ -106,7 +113,7 @@ function AppSettingsPage() {
         </nav>
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 text-sm">
-            <Switch checked={enabled} onCheckedChange={setEnabled} id="enabled-header" />
+            <Switch checked={enabled} onCheckedChange={requestToggle} id="enabled-header" />
             <Label htmlFor="enabled-header" className="cursor-pointer">
               {enabled ? "Actief" : "Uit"}
             </Label>
@@ -115,7 +122,7 @@ function AppSettingsPage() {
       </div>
     );
     return () => setContent(null);
-  }, [shopId, app?.name, enabled, setContent]);
+  }, [shopId, app?.name, enabled, setContent, requestToggle]);
 
   useEffect(() => {
     supabase
@@ -240,7 +247,7 @@ function AppSettingsPage() {
                       Zet de leeftijdscheck aan of uit voor deze shop.
                     </p>
                   </div>
-                  <Switch id="enabledMain" checked={enabled} onCheckedChange={setEnabled} />
+                  <Switch id="enabledMain" checked={enabled} onCheckedChange={requestToggle} />
                 </div>
               </FormRow>
 
@@ -377,6 +384,7 @@ function AppSettingsPage() {
           </Button>
         </div>
       </div>
+      {disableDialog}
     </div>
   );
 }
