@@ -53,7 +53,7 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 const inputCls =
-  "rounded-lg border-gray-300 bg-white shadow-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:border-purple-500";
+  "rounded-lg border-gray-300 bg-white shadow-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500";
 
 function FormRow({
   title,
@@ -65,13 +65,13 @@ function FormRow({
   children: ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-x-8 gap-y-6 py-10 md:grid-cols-3">
-      <div>
+    <SectionCard className="p-6">
+      <div className="mb-6">
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
       </div>
-      <div className="md:col-span-2 space-y-6 max-w-2xl">{children}</div>
-    </div>
+      <div className="space-y-6">{children}</div>
+    </SectionCard>
   );
 }
 
