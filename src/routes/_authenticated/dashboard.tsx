@@ -169,7 +169,7 @@ function DashboardPage() {
 }
 function RevenueCard() {
   return (
-    <SectionCard className="p-6 shadow-sm flex flex-col">
+    <SectionCard className="p-6 flex flex-col">
       <div className="flex items-start justify-between">
         <h2 className="text-sm font-semibold text-foreground">Totale Gegenereerde Omzet</h2>
         <div className="rounded-full bg-emerald-100 p-2">
@@ -194,7 +194,7 @@ function HealthScoreCard() {
   const offset = circumference * (1 - score / 100);
 
   return (
-    <SectionCard className="p-6 shadow-sm flex flex-col">
+    <SectionCard className="p-6 flex flex-col">
       <h2 className="text-sm font-semibold text-foreground">Shop Health Score</h2>
       <div className="mt-4 flex flex-col items-center">
         <div className="relative h-32 w-32">
@@ -246,7 +246,7 @@ const activity = [
 
 function ActivityFeedCard() {
   return (
-    <SectionCard className="p-6 shadow-sm">
+    <SectionCard className="p-6">
       <h2 className="text-sm font-semibold text-foreground">Live Activiteiten Feed</h2>
       <p className="text-xs text-muted-foreground mt-1">Realtime actie op je webshop</p>
       <ul className="mt-5 space-y-4">
