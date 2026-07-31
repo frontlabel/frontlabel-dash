@@ -169,7 +169,7 @@ function DashboardPage() {
 }
 function RevenueCard() {
   return (
-    <SectionCard className="p-6 shadow-sm flex flex-col">
+    <SectionCard className="p-6 flex flex-col">
       <div className="flex items-start justify-between">
         <h2 className="text-sm font-semibold text-foreground">Totale Gegenereerde Omzet</h2>
         <div className="rounded-full bg-emerald-100 p-2">
