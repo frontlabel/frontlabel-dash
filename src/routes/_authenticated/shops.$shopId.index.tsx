@@ -93,7 +93,7 @@ function ShopConnectionPage() {
         </p>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{active ? "Verbonden" : "Niet verbonden"}</Badge>
-          <Button onClick={save} disabled={saving}>
+          <Button onClick={save} disabled={saving} className="py-3 h-auto">
             {saving ? "Opslaan…" : "Opslaan"}
           </Button>
         </div>
