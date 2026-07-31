@@ -167,30 +167,23 @@ function DashboardPage() {
     </div>
   );
 }
-const stats = [
-  { name: "Totale abonnees", stat: "71.897" },
-  { name: "Gem. openpercentage", stat: "58,16%" },
-  { name: "Gem. klikpercentage", stat: "24,57%" },
-];
-
-function StatsRow() {
+function RevenueCard() {
   return (
-    <div className="px-6">
-      <h3 className="text-base font-semibold text-gray-900">Afgelopen 30 dagen</h3>
-      <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
-        {stats.map((item) => (
-          <div
-            key={item.name}
-            className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm sm:p-6"
-          >
-            <dt className="truncate text-sm font-medium text-gray-500">{item.name}</dt>
-            <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
-              {item.stat}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </div>
+    <SectionCard className="p-6 shadow-sm flex flex-col">
+      <div className="flex items-start justify-between">
+        <h2 className="text-sm font-semibold text-foreground">Totale Gegenereerde Omzet</h2>
+        <div className="rounded-full bg-emerald-100 p-2">
+          <TrendingUp className="h-5 w-5 text-emerald-600" />
+        </div>
+      </div>
+      <div className="mt-4">
+        <div className="text-3xl font-bold text-emerald-600">€ 3.840,00</div>
+        <div className="mt-2 flex items-center gap-2">
+          <Badge className="bg-emerald-100 text-emerald-700 border-0 hover:bg-emerald-100">+24%</Badge>
+          <span className="text-sm text-muted-foreground">extra omzet door frontlabel add-ons deze maand</span>
+        </div>
+      </div>
+    </SectionCard>
   );
 }
 
