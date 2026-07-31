@@ -32,10 +32,10 @@ export const Route = createFileRoute("/_authenticated/account")({
 });
 
 const TABS = [
-  { id: "profile", label: "Profiel", icon: User },
-  { id: "notifications", label: "Notificaties", icon: Bell },
-  { id: "subscription", label: "Abonnement", icon: CreditCard },
-  { id: "billing", label: "Facturatie", icon: Receipt },
+  { id: "profile", label: "Profiel", icon: User, href: "/account" as const },
+  { id: "notifications", label: "Notificaties", icon: Bell, href: "/account" as const },
+  { id: "subscription", label: "Abonnement", icon: CreditCard, href: "/account" as const },
+  { id: "billing", label: "Facturatie", icon: Receipt, href: "/pricing" as const },
 ] as const;
 
 function AccountPage() {

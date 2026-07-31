@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as EmailUnsubscribeRouteImport } from './routes/email/unsubscribe'
+import { Route as AuthenticatedPricingRouteImport } from './routes/_authenticated.pricing'
 import { Route as AuthenticatedPresetsRouteImport } from './routes/_authenticated/presets'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppsRouteImport } from './routes/_authenticated/apps'
@@ -70,6 +71,11 @@ const EmailUnsubscribeRoute = EmailUnsubscribeRouteImport.update({
   id: '/email/unsubscribe',
   path: '/email/unsubscribe',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPricingRoute = AuthenticatedPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedPresetsRoute = AuthenticatedPresetsRouteImport.update({
   id: '/presets',
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/apps': typeof AuthenticatedAppsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/presets': typeof AuthenticatedPresetsRoute
+  '/pricing': typeof AuthenticatedPricingRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
@@ -261,6 +268,7 @@ export interface FileRoutesByTo {
   '/apps': typeof AuthenticatedAppsRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/presets': typeof AuthenticatedPresetsRoute
+  '/pricing': typeof AuthenticatedPricingRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/shops/new': typeof AuthenticatedShopsNewRoute
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/_authenticated/apps': typeof AuthenticatedAppsRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/presets': typeof AuthenticatedPresetsRoute
+  '/_authenticated/pricing': typeof AuthenticatedPricingRoute
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/_authenticated/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/_authenticated/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/apps'
     | '/dashboard'
     | '/presets'
+    | '/pricing'
     | '/email/unsubscribe'
     | '/apps/$appSlug'
     | '/shops/$shopId'
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/apps'
     | '/dashboard'
     | '/presets'
+    | '/pricing'
     | '/email/unsubscribe'
     | '/apps/$appSlug'
     | '/shops/new'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/_authenticated/apps'
     | '/_authenticated/dashboard'
     | '/_authenticated/presets'
+    | '/_authenticated/pricing'
     | '/email/unsubscribe'
     | '/_authenticated/apps/$appSlug'
     | '/_authenticated/shops/$shopId'
@@ -482,6 +494,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/email/unsubscribe'
       preLoaderRoute: typeof EmailUnsubscribeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/pricing': {
+      id: '/_authenticated/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof AuthenticatedPricingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/presets': {
       id: '/_authenticated/presets'
@@ -727,6 +746,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppsRoute: typeof AuthenticatedAppsRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedPresetsRoute: typeof AuthenticatedPresetsRoute
+  AuthenticatedPricingRoute: typeof AuthenticatedPricingRoute
   AuthenticatedShopsShopIdRoute: typeof AuthenticatedShopsShopIdRouteWithChildren
   AuthenticatedShopsNewRoute: typeof AuthenticatedShopsNewRoute
 }
@@ -738,6 +758,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppsRoute: AuthenticatedAppsRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedPresetsRoute: AuthenticatedPresetsRoute,
+  AuthenticatedPricingRoute: AuthenticatedPricingRoute,
   AuthenticatedShopsShopIdRoute: AuthenticatedShopsShopIdRouteWithChildren,
   AuthenticatedShopsNewRoute: AuthenticatedShopsNewRoute,
 }
@@ -767,3 +788,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
