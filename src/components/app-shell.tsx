@@ -85,7 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       onClick={() => setMobileOpen(false)}
                       className={navLinkClass(active)}
                     >
-                      <Icon className="size-6 shrink-0" />
+                      <Icon className={iconClass(active)} />
                       {item.label}
                     </Link>
                   </li>
