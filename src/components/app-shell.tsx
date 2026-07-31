@@ -56,16 +56,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const navLinkClass = (active: boolean) =>
     cn(
-      "group flex items-center gap-x-3 rounded-md p-2 text-sm/6 font-semibold transition-colors",
+      "group flex items-center gap-x-3 rounded-md p-2 text-base/6 font-semibold transition-colors",
       active
-        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        ? "bg-sidebar-active text-sidebar-active-foreground"
+        : "text-sidebar-foreground hover:text-sidebar-hover",
     );
 
   const iconClass = (active: boolean) =>
     cn(
-      "size-5 shrink-0",
-      active ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground",
+      "size-4 shrink-0",
+      active ? "text-sidebar-active-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-hover",
     );
 
   const sidebarBody = (
@@ -80,7 +80,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav className="flex flex-1 flex-col">
         <ul role="list" className="flex flex-1 flex-col gap-y-7">
           <li>
-            <ul role="list" className="-mx-2 space-y-1">
+            <ul role="list" className="-mx-2 space-y-1.5">
               {nav.map((item) => {
                 const active =
                   pathname === item.to ||
@@ -108,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="text-xs/6 font-semibold text-sidebar-foreground/60">
                 Jouw shops
               </div>
-              <ul role="list" className="-mx-2 mt-2 space-y-1">
+              <ul role="list" className="-mx-2 mt-1.5 space-y-1.5">
                 {shops.map((s) => {
                   const active = activeShopId === s.id;
                   return (
@@ -123,8 +123,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                           className={cn(
                             "flex size-6 shrink-0 items-center justify-center rounded-lg border bg-sidebar text-[0.625rem] font-medium",
                             active
-                              ? "border-sidebar-ring text-sidebar-accent-foreground"
-                              : "border-sidebar-border text-sidebar-foreground/60 group-hover:border-sidebar-ring group-hover:text-sidebar-accent-foreground",
+                              ? "border-sidebar-active text-sidebar-active-foreground"
+                              : "border-sidebar-border text-sidebar-foreground/60 group-hover:border-sidebar-active group-hover:text-sidebar-hover",
                           )}
                         >
                           {s.name.charAt(0).toUpperCase()}
@@ -171,9 +171,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               to="/account"
               search={{ tab: "profile" }}
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground hover:bg-sidebar-accent"
+              className="flex items-center gap-x-4 px-6 py-3 text-base/6 font-semibold text-sidebar-foreground hover:text-sidebar-hover"
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-active text-xs font-semibold text-sidebar-active-foreground">
                 {(email ?? "?").charAt(0).toUpperCase()}
               </span>
               <span className="sr-only">Jouw profiel</span>
@@ -183,9 +183,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
             <button
               onClick={signOut}
-              className="flex w-full items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className="flex w-full items-center gap-x-4 px-6 py-3 text-base/6 font-semibold text-sidebar-foreground hover:text-sidebar-hover"
             >
-              <LogOut className="size-5 shrink-0 text-sidebar-foreground/60" />
+              <LogOut className="size-4 shrink-0 text-sidebar-foreground/60" />
               Uitloggen
             </button>
           </li>
