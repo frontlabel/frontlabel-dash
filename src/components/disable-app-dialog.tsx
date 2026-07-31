@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, TrendingDown } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 /** Wat bezoekers missen zodra de app uit staat, per app. */
 const MISSED_ACTION: Record<string, string> = {
@@ -49,47 +49,49 @@ export function DisableAppDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden gap-0">
-        <div className="p-6 sm:p-8">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-            <AlertTriangle className="h-3.5 w-3.5" /> Mogelijke omzetdaling
-          </span>
-          <DialogTitle className="mt-4 text-xl font-bold tracking-tight leading-snug">
-            Weet je zeker dat je {appName} wilt uitschakelen?
-          </DialogTitle>
-          <DialogDescription className="sr-only">
-            Bevestig het uitschakelen van {appName}.
-          </DialogDescription>
-
-          <div className="mt-5 rounded-lg bg-muted/60 p-4 flex gap-3">
-            <TrendingDown className="h-5 w-5 shrink-0 text-amber-600 mt-0.5" />
-            <p className="text-sm text-foreground leading-relaxed">
-              Afgelopen 30 dagen heeft deze add-on naar schatting{" "}
-              <span className="font-semibold">{money},-</span> aan extra omzet en{" "}
-              <span className="font-semibold">{actions} acties</span> gegenereerd op je webshop.
-            </p>
+      <DialogContent className="sm:max-w-lg p-6 gap-0 rounded-lg">
+        <div>
+          <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-amber-100">
+            <AlertTriangle className="size-6 text-amber-600" aria-hidden="true" />
           </div>
-
-          <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-            Door deze app uit te schakelen, mis je direct potentiële kopers die{" "}
-            {getMissedAction(appSlug)}.
-          </p>
-
-          <div className="mt-7 flex flex-col items-center gap-3">
-            <Button className="w-full py-3" onClick={() => onOpenChange(false)}>
-              Nee, behoud deze app
-            </Button>
-            <button
-              type="button"
-              onClick={() => {
-                onConfirmDisable();
-                onOpenChange(false);
-              }}
-              className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground transition-colors"
-            >
-              Ja, uitschakelen en risico nemen
-            </button>
+          <div className="mt-3 text-center sm:mt-5">
+            <DialogTitle className="text-base font-semibold text-foreground">
+              Weet je zeker dat je {appName} wilt uitschakelen?
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Bevestig het uitschakelen van {appName}.
+            </DialogDescription>
+            <div className="mt-2 space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Afgelopen 30 dagen heeft deze add-on naar schatting{" "}
+                <span className="font-semibold text-foreground">{money},-</span> aan extra omzet en{" "}
+                <span className="font-semibold text-foreground">{actions} acties</span> gegenereerd
+                op je webshop.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Door deze app uit te schakelen, mis je direct potentiële kopers die{" "}
+                {getMissedAction(appSlug)}.
+              </p>
+            </div>
           </div>
+        </div>
+        <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+          <Button
+            className="w-full py-3 sm:col-start-2"
+            onClick={() => onOpenChange(false)}
+          >
+            Nee, behoud deze app
+          </Button>
+          <Button
+            variant="outline"
+            className="mt-3 w-full py-3 sm:col-start-1 sm:mt-0"
+            onClick={() => {
+              onConfirmDisable();
+              onOpenChange(false);
+            }}
+          >
+            Ja, uitschakelen
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
