@@ -22,6 +22,7 @@ import {
   UserPlus,
   ShieldCheck,
   BellRing,
+  TrendingUp,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -93,13 +94,10 @@ function DashboardPage() {
         </Select>
       </div>
 
-      <StatsRow />
-
       <div className="px-6 pt-8 pb-8 grid gap-5 lg:grid-cols-3">
+        <RevenueCard />
         <HealthScoreCard />
-        <div className="lg:col-span-2">
-          <ActivityFeedCard />
-        </div>
+        <ActivityFeedCard />
       </div>
 
       <div className="px-6 pb-12">
@@ -169,30 +167,23 @@ function DashboardPage() {
     </div>
   );
 }
-const stats = [
-  { name: "Totale abonnees", stat: "71.897" },
-  { name: "Gem. openpercentage", stat: "58,16%" },
-  { name: "Gem. klikpercentage", stat: "24,57%" },
-];
-
-function StatsRow() {
+function RevenueCard() {
   return (
-    <div className="px-6">
-      <h3 className="text-base font-semibold text-gray-900">Afgelopen 30 dagen</h3>
-      <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
-        {stats.map((item) => (
-          <div
-            key={item.name}
-            className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm sm:p-6"
-          >
-            <dt className="truncate text-sm font-medium text-gray-500">{item.name}</dt>
-            <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
-              {item.stat}
-            </dd>
-          </div>
-        ))}
-      </dl>
-    </div>
+    <SectionCard className="p-6 shadow-sm flex flex-col">
+      <div className="flex items-start justify-between">
+        <h2 className="text-sm font-semibold text-foreground">Totale Gegenereerde Omzet</h2>
+        <div className="rounded-full bg-emerald-100 p-2">
+          <TrendingUp className="h-5 w-5 text-emerald-600" />
+        </div>
+      </div>
+      <div className="mt-4">
+        <div className="text-3xl font-bold text-emerald-600">€ 3.840,00</div>
+        <div className="mt-2 flex items-center gap-2">
+          <Badge className="bg-emerald-100 text-emerald-700 border-0 hover:bg-emerald-100">+24%</Badge>
+          <span className="text-sm text-muted-foreground">extra omzet door frontlabel add-ons deze maand</span>
+        </div>
+      </div>
+    </SectionCard>
   );
 }
 
@@ -204,7 +195,7 @@ function HealthScoreCard() {
 
   return (
     <SectionCard className="p-6 shadow-sm flex flex-col">
-      <h2 className="text-sm font-semibold text-foreground">Shop health score</h2>
+      <h2 className="text-sm font-semibold text-foreground">Shop Health Score</h2>
       <div className="mt-4 flex flex-col items-center">
         <div className="relative h-32 w-32">
           <svg viewBox="0 0 120 120" className="h-32 w-32 -rotate-90">
@@ -256,7 +247,7 @@ const activity = [
 function ActivityFeedCard() {
   return (
     <SectionCard className="p-6 shadow-sm">
-      <h2 className="text-sm font-semibold text-foreground">Live activiteiten feed</h2>
+      <h2 className="text-sm font-semibold text-foreground">Live Activiteiten Feed</h2>
       <p className="text-xs text-muted-foreground mt-1">Realtime actie op je webshop</p>
       <ul className="mt-5 space-y-4">
         {activity.map((a) => {
