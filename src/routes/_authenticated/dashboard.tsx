@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SectionCard } from "@/components/section-card";
+import { APPS_CATALOG } from "@/lib/apps-catalog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -187,26 +188,51 @@ function RevenueCard() {
   );
 }
 
-function HealthScoreCard() {
-  const score = 78;
+const CORE_APPS = APPS_CATALOG.filter((a) => a.status === "available");
+const BASE_SCORE = 20;
+const POINTS_PER_APP = 20;
+
+function HealthScoreCard({ shopId }: { shopId?: string | undefined }) {
+  const [activeSlugs, setActiveSlugs] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!shopId) {
+      setActiveSlugs([]);
+      return;
+    }
+    supabase
+      .from("shop_apps")
+      .select("app_slug,enabled")
+      .eq("shop_id", shopId)
+      .eq("enabled", true)
+      .then(({ data }) => {
+        setActiveSlugs(((data as { app_slug: string }[]) ?? []).map((r) => r.app_slug));
+      });
+  }, [shopId]);
+
+  const activeCore = CORE_APPS.filter((a) => activeSlugs.includes(a.slug));
+  const score = Math.min(100, BASE_SCORE + activeCore.length * POINTS_PER_APP);
+  const isOptimal = activeCore.length === CORE_APPS.length;
+  const nextApp = CORE_APPS.find((a) => !activeSlugs.includes(a.slug));
+
   const radius = 52;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference * (1 - score / 100);
 
   return (
     <SectionCard className="p-6 flex flex-col">
-      <h2 className="text-sm font-semibold text-foreground">Shop Health Score</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold text-foreground">Shop Health Score</h2>
+        {isOptimal && (
+          <Badge className="bg-emerald-100 text-emerald-700 border-0 hover:bg-emerald-100 gap-1">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Optimale Conversie
+          </Badge>
+        )}
+      </div>
       <div className="mt-4 flex flex-col items-center">
         <div className="relative h-32 w-32">
           <svg viewBox="0 0 120 120" className="h-32 w-32 -rotate-90">
-            <circle
-              cx="60"
-              cy="60"
-              r={radius}
-              fill="none"
-              strokeWidth="10"
-              className="stroke-muted"
-            />
+            <circle cx="60" cy="60" r={radius} fill="none" strokeWidth="10" className="stroke-muted" />
             <circle
               cx="60"
               cy="60"
@@ -216,19 +242,40 @@ function HealthScoreCard() {
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={offset}
-              className="stroke-primary"
+              className={isOptimal ? "stroke-emerald-500" : "stroke-primary"}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-2xl font-bold tracking-tight text-foreground">{score}</span>
-            <span className="text-xs text-muted-foreground">/ 100</span>
+            {isOptimal ? (
+              <>
+                <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                <span className="mt-1 text-xl font-bold tracking-tight text-foreground">100</span>
+                <span className="text-xs text-muted-foreground">/ 100</span>
+              </>
+            ) : (
+              <>
+                <span className="text-2xl font-bold tracking-tight text-foreground">{score}</span>
+                <span className="text-xs text-muted-foreground">/ 100</span>
+              </>
+            )}
           </div>
         </div>
-        <p className="mt-3 text-sm text-muted-foreground">3 van de 6 add-ons actief</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {activeCore.length} van de {CORE_APPS.length} add-ons actief
+        </p>
       </div>
-      <Button className="mt-5 w-full">
-        <Sparkles className="h-4 w-4" /> Optimaliseer shop (+22%)
-      </Button>
+
+      {nextApp && shopId ? (
+        <Button asChild className="mt-5 w-full">
+          <Link to="/shops/$shopId/apps/$appSlug" params={{ shopId, appSlug: nextApp.slug }}>
+            <Sparkles className="h-4 w-4" /> Activeer {nextApp.name} (+15% score)
+          </Link>
+        </Button>
+      ) : (
+        <p className="mt-5 text-center text-sm text-emerald-700 font-medium">
+          Alle kern-apps staan aan. Top!
+        </p>
+      )}
     </SectionCard>
   );
 }
