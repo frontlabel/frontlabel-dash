@@ -171,35 +171,29 @@ function DashboardPage() {
   );
 }
 const stats = [
-  { name: "Gegenereerde omzet", value: "€ 3.840,00", change: "+24%", changeType: "positive" },
-  { name: "Actieve add-ons", value: "3 van 6", change: "+1", changeType: "positive" },
-  { name: "Nieuwe inschrijvingen", value: "182", change: "+12,4%", changeType: "positive" },
-  { name: "Gemiste conversies", value: "27", change: "-3,1%", changeType: "negative" },
-] as const;
+  { name: "Totale abonnees", stat: "71.897" },
+  { name: "Gem. openpercentage", stat: "58,16%" },
+  { name: "Gem. klikpercentage", stat: "24,57%" },
+];
 
 function StatsRow() {
   return (
-    <dl className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-4 border-y border-border">
-      {stats.map((stat) => (
-        <div
-          key={stat.name}
-          className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 bg-card px-4 py-10 sm:px-6 xl:px-8"
-        >
-          <dt className="text-sm/6 font-medium text-muted-foreground">{stat.name}</dt>
-          <dd
-            className={cn(
-              "text-xs font-medium",
-              stat.changeType === "negative" ? "text-rose-600" : "text-foreground",
-            )}
+    <div className="px-6">
+      <h3 className="text-base font-semibold text-gray-900">Afgelopen 30 dagen</h3>
+      <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+        {stats.map((item) => (
+          <div
+            key={item.name}
+            className="overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm sm:p-6"
           >
-            {stat.change}
-          </dd>
-          <dd className="w-full flex-none text-3xl/10 font-medium tracking-tight text-foreground">
-            {stat.value}
-          </dd>
-        </div>
-      ))}
-    </dl>
+            <dt className="truncate text-sm font-medium text-gray-500">{item.name}</dt>
+            <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900">
+              {item.stat}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }
 
