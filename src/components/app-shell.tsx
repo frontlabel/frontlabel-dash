@@ -1,6 +1,15 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Home, Package, Palette, LogOut, Menu, Store, User, Shield } from "lucide-react";
+import {
+  LayoutDashboard,
+  Package,
+  BarChart3,
+  Palette,
+  LogOut,
+  Menu,
+  User,
+  ShieldCheck,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -8,10 +17,10 @@ import { ShellHeaderProvider, useShellHeader } from "@/components/shell-header-c
 import { useIsAdmin } from "@/hooks/use-is-admin";
 
 const nav = [
-  { to: "/dashboard", label: "Shops", icon: Home },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/apps", label: "Apps", icon: Package },
+  { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/presets", label: "Stijl presets", icon: Palette },
-  { to: "/account", label: "Account", icon: User },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
