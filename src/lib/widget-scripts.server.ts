@@ -4,9 +4,9 @@
 const AV_DEFAULTS = {
   minAge: 18,
   title: "Welkom",
-  description: "Bevestig je geboortedatum om door te gaan.",
-  buttonText: "Bevestigen",
-  declineText: "Ik ben jonger",
+  description: "Bevestig je leeftijd om door te gaan.",
+  buttonText: "Ja, ik ben 18 jaar en ouder",
+  declineText: "Nee",
   declineRedirect: "https://www.google.com",
   rememberDays: 30,
   primaryColor: "#5187e0",
@@ -68,8 +68,6 @@ export function buildAgeVerificationScript(rawSettings: Record<string, unknown>)
   ov.innerHTML='<div class="slbl-av-md" role="dialog" aria-modal="true">'
     +'<div class="slbl-av-badge">'+s.minAge+'+</div>'
     +'<h2 class="slbl-av-h"></h2><p class="slbl-av-p"></p>'
-    +'<input type="date" autocomplete="bday" class="slbl-av-inp">'
-    +'<div class="slbl-av-err"></div>'
     +'<button class="slbl-av-btn"></button>'
     +'<button class="slbl-av-no"></button></div>';
   ov.querySelector(".slbl-av-h").textContent=s.title;
@@ -82,19 +80,8 @@ export function buildAgeVerificationScript(rawSettings: Record<string, unknown>)
   function attach(){(document.body||document.documentElement).appendChild(ov);lock();}
   if(document.body)attach();else document.addEventListener("DOMContentLoaded",attach);
 
-  var err=ov.querySelector(".slbl-av-err");
-  var dateInp=ov.querySelector(".slbl-av-inp");
-
   ov.querySelector(".slbl-av-btn").addEventListener("click",function(){
-    var val=dateInp.value;
-    if(!val){err.textContent="Vul een geldige geboortedatum in.";return;}
-    var parts=val.split("-");
-    var y=+parts[0],m=+parts[1],d=+parts[2];
-    if(!d||!m||!y||y<1900){err.textContent="Vul een geldige geboortedatum in.";return;}
-    var bd=new Date(y,m-1,d);if(bd.getDate()!==d||bd.getMonth()!==m-1){err.textContent="Vul een geldige geboortedatum in.";return;}
-    var today=new Date();var age=today.getFullYear()-y;var mm=today.getMonth()-(m-1);if(mm<0||(mm===0&&today.getDate()<d))age--;
-    if(age>=s.minAge){setCookie(COOKIE,"1",s.rememberDays||30);unlock();ov.remove();}
-    else{if(s.blockUnderage){setCookie(BLOCK,"1",s.blockDays||365);}window.location.replace(s.declineRedirect||"about:blank");}
+    setCookie(COOKIE,"1",s.rememberDays||30);unlock();ov.remove();
   });
   ov.querySelector(".slbl-av-no").addEventListener("click",function(){if(s.blockUnderage){setCookie(BLOCK,"1",s.blockDays||365);}window.location.replace(s.declineRedirect||"about:blank");});
 })();`;

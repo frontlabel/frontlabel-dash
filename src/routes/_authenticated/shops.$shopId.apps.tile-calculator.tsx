@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SectionCard, SectionLabel } from "@/components/section-card";
+import { StickySaveBar } from "@/components/sticky-save-bar";
 import { DisplayModeField } from "@/components/display-mode-field";
 import { useShellHeader } from "@/components/shell-header-context";
 import { cn } from "@/lib/utils";
@@ -210,6 +211,7 @@ function FloorCalculatorPage() {
         {tab === "widget" && <WidgetTab settings={settings} update={update} />}
         {tab === "preview" && <PreviewTab settings={settings} />}
       </div>
+      <StickySaveBar onSave={save} saving={saving} />
     </div>
   );
 }

@@ -39,13 +39,6 @@ export function AgeVerificationPreview({ s }: { s: AgeVerificationSettings }) {
             {s.title}
           </h2>
           <p className="text-xs opacity-80 mb-4">{s.description}</p>
-          <input
-            readOnly
-            type="date"
-            autoComplete="bday"
-            className="w-full text-center text-sm py-1.5 border rounded mb-4"
-            style={{ borderColor: "rgba(0,0,0,0.15)" }}
-          />
           <button
             className="w-full py-2 rounded text-sm font-medium text-white"
             style={{

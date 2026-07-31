@@ -24,6 +24,7 @@ import {
 } from "@/lib/apps-catalog";
 import type { Json } from "@/integrations/supabase/types";
 import { AgeVerificationPreview } from "@/components/age-verification-preview";
+import { SectionCard } from "@/components/section-card";
 import { Save, ChevronRight, LayoutGrid, X, Zap } from "lucide-react";
 import { useShellHeader } from "@/components/shell-header-context";
 
@@ -53,7 +54,7 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 const inputCls =
-  "rounded-lg border-gray-300 bg-white shadow-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:border-purple-500";
+  "rounded-lg border-gray-300 bg-white shadow-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:border-indigo-500";
 
 function FormRow({
   title,
@@ -65,13 +66,13 @@ function FormRow({
   children: ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-x-8 gap-y-6 py-10 md:grid-cols-3">
-      <div>
+    <SectionCard className="p-6">
+      <div className="mb-6">
         <h2 className="text-base font-semibold text-foreground">{title}</h2>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
       </div>
-      <div className="md:col-span-2 space-y-6 max-w-2xl">{children}</div>
-    </div>
+      <div className="space-y-6">{children}</div>
+    </SectionCard>
   );
 }
 
@@ -205,7 +206,7 @@ function AppSettingsPage() {
               className={cn(
                 "-mb-px border-b-2 pb-3 text-sm font-medium transition-colors",
                 tab === t.id
-                  ? "border-purple-600 text-purple-700"
+                  ? "border-indigo-600 text-indigo-600"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300",
               )}
             >
@@ -215,8 +216,8 @@ function AppSettingsPage() {
         </nav>
       </div>
 
-      <div className="px-8 grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
-        <div className="lg:col-span-3 min-w-0 divide-y divide-gray-200">
+      <div className="px-8 pt-8 grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
+        <div className="lg:col-span-3 min-w-0 space-y-6">
           {tab === "algemeen" && (
             <>
               <FormRow title="Basis instellingen" description="Beheer de basisfuncties van de pop-up.">
@@ -286,7 +287,7 @@ function AppSettingsPage() {
                 <div className="flex flex-wrap gap-2">
                   {presets.map((p) => (
                     <button key={p.id} type="button" onClick={() => applyPreset(p.id)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100 transition-colors">
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 transition-colors">
                       <Zap className="h-3.5 w-3.5" />
                       Neem kleuren over uit "{p.name}"
                     </button>
@@ -351,19 +352,9 @@ function AppSettingsPage() {
             </FormRow>
           )}
 
-          <div className="pt-8">
-            <Button
-              onClick={save}
-              disabled={saving}
-              className="rounded-lg bg-purple-600 text-white hover:bg-purple-700"
-            >
-              <Save className="h-4 w-4" />
-              {saving ? "Opslaan…" : "Opslaan"}
-            </Button>
-          </div>
         </div>
 
-        <div className="lg:col-span-2 lg:sticky lg:top-8 self-start pt-10">
+        <div className="lg:col-span-2 lg:sticky lg:top-8 self-start">
           <div className="rounded-2xl bg-gray-900/5 p-6">
             <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Live preview
@@ -375,6 +366,15 @@ function AppSettingsPage() {
               Voorbeeld werkt live mee terwijl je instellingen wijzigt.
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="sticky bottom-0 z-10 mt-8 border-t border-gray-200 bg-white/90 backdrop-blur px-8 py-3">
+        <div className="flex justify-end">
+          <Button onClick={save} disabled={saving} className="rounded-lg">
+            <Save className="h-4 w-4" />
+            {saving ? "Opslaan…" : "Opslaan"}
+          </Button>
         </div>
       </div>
     </div>
