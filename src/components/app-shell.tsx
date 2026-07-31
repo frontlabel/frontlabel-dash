@@ -56,16 +56,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const navLinkClass = (active: boolean) =>
     cn(
-      "group flex items-center gap-x-3 rounded-md p-2 text-sm/6 font-semibold transition-colors",
+      "group flex items-center gap-x-3 rounded-md p-2 text-base/6 font-semibold transition-colors",
       active
-        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        ? "bg-sidebar-active text-sidebar-active-foreground"
+        : "text-sidebar-foreground hover:text-sidebar-hover",
     );
 
   const iconClass = (active: boolean) =>
     cn(
-      "size-5 shrink-0",
-      active ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground",
+      "size-4 shrink-0",
+      active ? "text-sidebar-active-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-hover",
     );
 
   const sidebarBody = (
