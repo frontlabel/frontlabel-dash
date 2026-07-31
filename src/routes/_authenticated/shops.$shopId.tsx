@@ -36,8 +36,8 @@ function ShopLayout() {
     <div className="max-w-6xl mx-auto">
       {!onAppDetail && (
         <>
-          <div className="px-6 pt-8">
-            <h1 className="text-2xl font-bold tracking-tight">{shopName || "Shop"}</h1>
+          <div className="sticky top-14 lg:top-0 z-40 border-b border-border bg-card px-6 py-4">
+            <h1 className="text-base font-semibold tracking-tight">{shopName || "Shop"}</h1>
           </div>
           <div className="px-6 mt-4 border-b border-border">
             <div className="flex gap-1">
