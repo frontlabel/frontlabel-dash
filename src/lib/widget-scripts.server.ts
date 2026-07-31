@@ -492,8 +492,8 @@ export function buildTileCalculatorScript(rawSettings: Record<string, unknown>):
       +".slbl-tc-res{margin-top:18px;padding:16px;border:1px solid #e5e7eb;border-radius:12px;background:#f8fafc;text-align:left}"
       +".slbl-tc-res-row{display:flex;justify-content:space-between;font-size:inherit;padding:5px 0;color:#1e2a4a}"
       +".slbl-tc-res-row strong{font-weight:700}"
-      +".slbl-tc-total{border-top:1px solid #e5e7eb;margin-top:8px;padding-top:10px;font-size:16px}"
-      +".slbl-tc-foot{margin-top:22px;font-size:11px;letter-spacing:.12em;color:#9ca3af;text-transform:uppercase;text-align:center}"
+      +".slbl-tc-total{border-top:1px solid #e5e7eb;margin-top:8px;padding-top:10px;font-size:1.1em}"
+      +".slbl-tc-foot{margin-top:22px;font-size:inherit;letter-spacing:.12em;color:#9ca3af;text-transform:uppercase;text-align:center}"
       +".slbl-tc-foot strong{color:#1e2a4a;font-weight:700;letter-spacing:0;text-transform:none;font-size:14px;margin-left:6px}"
       +".slbl-tc-ov.slbl-drawer{justify-content:flex-end;padding:0;background:rgba(15,23,42,.45)}"
       +".slbl-tc-ov.slbl-drawer .slbl-tc-md{max-width:540px;width:100%;height:100%;max-height:100%;border-radius:0;padding:56px 40px 40px;overflow-y:auto;box-shadow:-20px 0 60px rgba(0,0,0,.25);animation:slbl-tc-slide .28s ease-out}"
@@ -533,7 +533,7 @@ export function buildTileCalculatorScript(rawSettings: Record<string, unknown>):
         var W=parseNum(md.querySelector(".slbl-tc-wid").value);
         var M=parseNum(md.querySelector(".slbl-tc-mar").value);
         var res=md.querySelector(".slbl-tc-res");
-        if(!L||!W||L<=0||W<=0){res.style.display="block";res.innerHTML='<div style="color:#b91c1c;font-size:13px">Vul een geldige lengte en breedte in.</div>';return;}
+        if(!L||!W||L<=0||W<=0){res.style.display="block";res.innerHTML='<div style="color:#b91c1c;font-size:inherit">Vul een geldige lengte en breedte in.</div>';return;}
         if(!isFinite(M)||M<0)M=s.marginPct;
         var r=calc(L,W,M);
         var rows=''
@@ -549,7 +549,7 @@ export function buildTileCalculatorScript(rawSettings: Record<string, unknown>):
           var rollLabel = s.rollLengthM > 0 ? 'Aantal ' + s.packageName : s.packageName + ' nodig';
           rows += '<div class="slbl-tc-res-row"><span>'+rollLabel+'</span><strong>'+fmtInt(r.rolls)+'</strong></div>';
           if (s.rollLengthM > 0) {
-            rows += '<div style="font-size:12px;color:#6b7280;margin-top:4px">Rolbreedte: '+fmt(r.rollWidth)+' m</div>';
+            rows += '<div style="font-size:inherit;color:#6b7280;margin-top:4px">Rolbreedte: '+fmt(r.rollWidth)+' m</div>';
           }
         } else if (s.calcMode === 'paint') {
           rows += '<div class="slbl-tc-res-row"><span>Benodigde liters</span><strong>'+fmtInt(r.liters)+'</strong></div>';
