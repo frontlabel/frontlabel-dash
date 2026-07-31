@@ -563,35 +563,50 @@ export type Database = {
       }
       shops: {
         Row: {
+          access_token: string | null
           api_key: string | null
+          api_language: string
           api_secret: string | null
           created_at: string
           ecom_url: string | null
           id: string
           name: string
-          owner_id: string
+          owner_id: string | null
+          plan_type: string
+          shop_domain: string | null
+          shop_id: number | null
           status: string
           updated_at: string
         }
         Insert: {
+          access_token?: string | null
           api_key?: string | null
+          api_language?: string
           api_secret?: string | null
           created_at?: string
           ecom_url?: string | null
           id?: string
           name: string
-          owner_id: string
+          owner_id?: string | null
+          plan_type?: string
+          shop_domain?: string | null
+          shop_id?: number | null
           status?: string
           updated_at?: string
         }
         Update: {
+          access_token?: string | null
           api_key?: string | null
+          api_language?: string
           api_secret?: string | null
           created_at?: string
           ecom_url?: string | null
           id?: string
           name?: string
-          owner_id?: string
+          owner_id?: string | null
+          plan_type?: string
+          shop_domain?: string | null
+          shop_id?: number | null
           status?: string
           updated_at?: string
         }
