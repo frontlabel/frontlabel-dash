@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { useShellHeader } from "@/components/shell-header-context";
 
 interface PageHeaderProps {
   title: string;
@@ -7,19 +8,24 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
-  return (
-    <div className="sticky top-14 lg:top-0 z-40 mb-6 border-b border-border bg-card">
-      <div className="px-6 py-4 flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-base font-semibold tracking-tight text-foreground truncate">
-            {title}
-          </h1>
+  const { setContent } = useShellHeader();
+
+  useEffect(() => {
+    setContent(
+      <div className="flex items-center justify-between w-full gap-3">
+        <div className="flex items-center gap-2 text-sm min-w-0">
+          <span className="text-foreground font-medium truncate">{title}</span>
           {subtitle && (
-            <p className="hidden sm:block text-sm text-muted-foreground truncate">{subtitle}</p>
+            <span className="hidden md:inline text-muted-foreground truncate">
+              {subtitle}
+            </span>
           )}
         </div>
-        {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
-      </div>
-    </div>
-  );
+        {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}
+      </div>,
+    );
+    return () => setContent(null);
+  }, [title, subtitle, actions, setContent]);
+
+  return null;
 }
