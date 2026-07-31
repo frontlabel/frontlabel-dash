@@ -50,6 +50,18 @@ function AuthPage() {
 
   const isSignup = mode === "signup";
 
+  async function handleForgotPassword() {
+    if (!email) {
+      toast.error("Vul eerst je e-mailadres in.");
+      return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) toast.error(error.message);
+    else toast.success("Check je mail voor de herstel-link.");
+  }
+
   return (
     <div className="min-h-screen bg-muted/40">
       <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8">
