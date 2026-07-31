@@ -371,7 +371,7 @@ function AppSettingsPage() {
 
       <div className="sticky bottom-0 z-10 mt-8 border-t border-gray-200 bg-white/90 backdrop-blur px-8 py-3">
         <div className="flex justify-end">
-          <Button onClick={save} disabled={saving} className="rounded-lg py-3 h-auto">
+          <Button onClick={save} disabled={saving} className="rounded-lg">
             <Save className="h-4 w-4" />
             {saving ? "Opslaan…" : "Opslaan"}
           </Button>
