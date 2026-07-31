@@ -194,7 +194,7 @@ function HealthScoreCard() {
   const offset = circumference * (1 - score / 100);
 
   return (
-    <SectionCard className="p-6 shadow-sm flex flex-col">
+    <SectionCard className="p-6 flex flex-col">
       <h2 className="text-sm font-semibold text-foreground">Shop Health Score</h2>
       <div className="mt-4 flex flex-col items-center">
         <div className="relative h-32 w-32">
