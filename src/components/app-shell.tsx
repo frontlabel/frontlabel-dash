@@ -55,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const iconClass = (active: boolean) =>
     cn(
-      "size-6 shrink-0",
+      "size-5 shrink-0",
       active ? "text-sidebar-accent-foreground" : "text-muted-foreground group-hover:text-sidebar-accent-foreground",
     );
 
