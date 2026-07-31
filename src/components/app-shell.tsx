@@ -14,12 +14,17 @@ const nav = [
   { to: "/account", label: "Account", icon: User },
 ];
 
+const SIDEBAR_FONT = {
+  fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif',
+} as const;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [shops, setShops] = useState<Array<{ id: string; name: string }>>([]);
   const isAdmin = useIsAdmin();
+  const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -33,6 +38,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       .then(({ data }) => setShops((data as Array<{ id: string; name: string }> | null) ?? []));
   }, []);
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+  }, []);
+
   const activeShopId = pathname.match(/^\/shops\/([^/]+)/)?.[1] ?? null;
 
   async function signOut() {
@@ -40,109 +49,160 @@ export function AppShell({ children }: { children: ReactNode }) {
     navigate({ to: "/auth", replace: true });
   }
 
+  const navLinkClass = (active: boolean) =>
+    cn(
+      "group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold transition-colors",
+      active
+        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+    );
+
   const sidebarBody = (
-    <>
-      <div className="h-14 flex items-center px-4 border-b border-sidebar-border">
+    <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-sidebar px-6 pb-4">
+      <div className="flex h-16 shrink-0 items-center">
         <img
           src="http://frontlabel.nl/wp-content/uploads/2025/10/frontlabel-logo-white@3x.png"
           alt="Frontlabel"
           className="h-7 w-auto object-contain"
         />
       </div>
-      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-        {nav.map((item) => {
-          const active = pathname === item.to || pathname.startsWith(item.to + "/") ||
-            (item.to === "/dashboard" && pathname.startsWith("/shops"));
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded transition-colors",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+      <nav className="flex flex-1 flex-col">
+        <ul role="list" className="flex flex-1 flex-col gap-y-7">
+          <li>
+            <ul role="list" className="-mx-2 space-y-1">
+              {nav.map((item) => {
+                const active =
+                  pathname === item.to ||
+                  pathname.startsWith(item.to + "/") ||
+                  (item.to === "/dashboard" && pathname.startsWith("/shops"));
+                const Icon = item.icon;
+                return (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      onClick={() => setMobileOpen(false)}
+                      className={navLinkClass(active)}
+                    >
+                      <Icon className="size-6 shrink-0" />
+                      {item.label}
+                    </Link>
+                  </li>
+                );
+              })}
+              {isAdmin && (
+                <li>
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileOpen(false)}
+                    className={navLinkClass(pathname.startsWith("/admin"))}
+                  >
+                    <Shield className="size-6 shrink-0" />
+                    Superadmin
+                  </Link>
+                </li>
               )}
+            </ul>
+          </li>
+
+          {shops.length > 0 && (
+            <li>
+              <div className="text-xs/6 font-semibold text-sidebar-foreground/50">
+                Jouw shops
+              </div>
+              <ul role="list" className="-mx-2 mt-2 space-y-1">
+                {shops.map((s) => {
+                  const active = activeShopId === s.id;
+                  return (
+                    <li key={s.id}>
+                      <Link
+                        to="/shops/$shopId"
+                        params={{ shopId: s.id }}
+                        onClick={() => setMobileOpen(false)}
+                        className={navLinkClass(active)}
+                      >
+                        <span
+                          className={cn(
+                            "flex size-6 shrink-0 items-center justify-center rounded-lg border text-[0.625rem] font-medium",
+                            active
+                              ? "border-sidebar-ring bg-sidebar text-sidebar-accent-foreground"
+                              : "border-sidebar-border bg-sidebar text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground",
+                          )}
+                        >
+                          {s.name.charAt(0).toUpperCase()}
+                        </span>
+                        <span className="truncate">{s.name}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </li>
+          )}
+
+          <li className="-mx-6 mt-auto border-t border-sidebar-border">
+            <Link
+              to="/account"
+              search={{ tab: "profile" }}
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground hover:bg-sidebar-accent"
             >
-              <Icon className="h-4 w-4" />
-              {item.label}
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold text-sidebar-accent-foreground">
+                {(email ?? "?").charAt(0).toUpperCase()}
+              </span>
+              <span className="sr-only">Jouw profiel</span>
+              <span aria-hidden="true" className="truncate">
+                {email ?? "Account"}
+              </span>
             </Link>
-          );
-        })}
-        {isAdmin && (
-          <Link
-            to="/admin"
-            onClick={() => setMobileOpen(false)}
-            className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded transition-colors",
-              pathname.startsWith("/admin")
-                ? "bg-primary text-primary-foreground"
-                : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            )}
-          >
-            <Shield className="h-4 w-4" />
-            Superadmin
-          </Link>
-        )}
-        {shops.length > 0 && (
-          <div className="pt-4">
-            <div className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
-              Shops
-            </div>
-            {shops.map((s) => {
-              const active = activeShopId === s.id;
-              return (
-                <Link
-                  key={s.id}
-                  to="/shops/$shopId"
-                  params={{ shopId: s.id }}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded transition-colors text-sm",
-                    active
-                      ? "bg-primary text-primary-foreground"
-                      : "text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  )}
-                >
-                  <Store className="h-4 w-4" />
-                  <span className="truncate">{s.name}</span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
+            <button
+              onClick={signOut}
+              className="flex w-full items-center gap-x-4 px-6 py-3 text-sm/6 font-semibold text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <LogOut className="size-5 shrink-0" />
+              Uitloggen
+            </button>
+          </li>
+        </ul>
       </nav>
-      <button
-        onClick={signOut}
-        className="m-2 flex items-center gap-3 px-3 py-2.5 rounded text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-      >
-        <LogOut className="h-4 w-4" />
-        Uitloggen
-      </button>
-    </>
+    </div>
   );
 
   return (
-    <div className="min-h-screen flex w-full bg-background">
-      <aside className="hidden md:flex w-60 shrink-0 bg-sidebar text-sidebar-foreground flex-col" style={{ fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: '16px' }}>
-        {sidebarBody}
-      </aside>
+    <div className="min-h-screen bg-background">
+      {/* Mobile sidebar */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent
           side="left"
-          className="w-72 p-0 bg-sidebar text-sidebar-foreground border-sidebar-border flex flex-col"
-          style={{ fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', fontSize: '16px' }}
+          className="w-72 max-w-xs p-0 bg-sidebar text-sidebar-foreground border-sidebar-border flex flex-col"
+          style={{ ...SIDEBAR_FONT, fontSize: "16px" }}
         >
           <SheetTitle className="sr-only">Navigatie</SheetTitle>
           {sidebarBody}
         </SheetContent>
       </Sheet>
+
+      {/* Static sidebar for desktop */}
+      <div
+        className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col text-sidebar-foreground"
+        style={{ ...SIDEBAR_FONT, fontSize: "16px" }}
+      >
+        {sidebarBody}
+      </div>
+
       <ShellHeaderProvider>
-        <div className="flex-1 flex flex-col min-w-0 overflow-auto">
+        <div className="lg:pl-72 flex min-h-screen flex-col">
           <HeaderBar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-          <main className="flex-1" style={{ fontFamily: 'Lato, -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', WebkitTextSizeAdjust: '100%', fontSize: '16px', lineHeight: '24px' }}>{children}</main>
+          <main
+            className="flex-1"
+            style={{
+              ...SIDEBAR_FONT,
+              WebkitTextSizeAdjust: "100%",
+              fontSize: "16px",
+              lineHeight: "24px",
+            }}
+          >
+            {children}
+          </main>
         </div>
       </ShellHeaderProvider>
     </div>
@@ -153,13 +213,13 @@ function HeaderBar({ mobileOpen, setMobileOpen }: { mobileOpen: boolean; setMobi
   const { content } = useShellHeader();
   return (
     <header className="sticky top-0 z-50 h-14 bg-card border-b border-border flex items-center">
-      <div className="max-w-6xl mx-auto px-6 w-full flex items-center gap-3">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 w-full flex items-center gap-3">
         <button
           onClick={() => setMobileOpen(true)}
-          className="md:hidden inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted"
+          className="lg:hidden -m-2.5 inline-flex items-center justify-center h-9 w-9 rounded-md text-foreground hover:bg-muted"
           aria-label="Open menu"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="size-6" />
         </button>
         {content ? (
           <div className="flex-1 min-w-0">{content}</div>
