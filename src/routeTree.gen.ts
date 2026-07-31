@@ -24,6 +24,7 @@ import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticate
 import { Route as LovableEmailSuppressionRouteImport } from './routes/lovable/email/suppression'
 import { Route as ApiPublicShoplabelDotjsRouteImport } from './routes/api/public/shoplabel[.]js'
 import { Route as ApiPublicAgeVerificationDotjsRouteImport } from './routes/api/public/age-verification[.]js'
+import { Route as ApiAuthLightspeedRouteImport } from './routes/api/auth.lightspeed'
 import { Route as AuthenticatedShopsNewRouteImport } from './routes/_authenticated/shops.new'
 import { Route as AuthenticatedShopsShopIdRouteImport } from './routes/_authenticated/shops.$shopId'
 import { Route as AuthenticatedAppsAppSlugRouteImport } from './routes/_authenticated/apps.$appSlug'
@@ -36,6 +37,7 @@ import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/em
 import { Route as ApiPublicPriceAlertSignupRouteImport } from './routes/api/public/price-alert.signup'
 import { Route as ApiPublicBackInStockStockRouteImport } from './routes/api/public/back-in-stock.stock'
 import { Route as ApiPublicBackInStockSignupRouteImport } from './routes/api/public/back-in-stock.signup'
+import { Route as ApiPublicAuthLightspeedRouteImport } from './routes/api/public/auth.lightspeed'
 import { Route as AuthenticatedShopsShopIdAppsRouteImport } from './routes/_authenticated/shops.$shopId.apps'
 import { Route as AuthenticatedShopsShopIdAppsTileCalculatorRouteImport } from './routes/_authenticated/shops.$shopId.apps.tile-calculator'
 import { Route as AuthenticatedShopsShopIdAppsPriceAlertRouteImport } from './routes/_authenticated/shops.$shopId.apps.price-alert'
@@ -117,6 +119,11 @@ const ApiPublicAgeVerificationDotjsRoute =
     path: '/api/public/age-verification.js',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiAuthLightspeedRoute = ApiAuthLightspeedRouteImport.update({
+  id: '/api/auth/lightspeed',
+  path: '/api/auth/lightspeed',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedShopsNewRoute = AuthenticatedShopsNewRouteImport.update({
   id: '/shops/new',
   path: '/shops/new',
@@ -186,6 +193,11 @@ const ApiPublicBackInStockSignupRoute =
     path: '/api/public/back-in-stock/signup',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicAuthLightspeedRoute = ApiPublicAuthLightspeedRouteImport.update({
+  id: '/api/public/auth/lightspeed',
+  path: '/api/public/auth/lightspeed',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedShopsShopIdAppsRoute =
   AuthenticatedShopsShopIdAppsRouteImport.update({
     id: '/apps',
@@ -232,10 +244,12 @@ export interface FileRoutesByFullPath {
   '/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
   '/shops/new': typeof AuthenticatedShopsNewRoute
+  '/api/auth/lightspeed': typeof ApiAuthLightspeedRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
   '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
+  '/api/public/auth/lightspeed': typeof ApiPublicAuthLightspeedRoute
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
   '/api/public/price-alert/signup': typeof ApiPublicPriceAlertSignupRoute
@@ -264,10 +278,12 @@ export interface FileRoutesByTo {
   '/email/unsubscribe': typeof EmailUnsubscribeRoute
   '/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/shops/new': typeof AuthenticatedShopsNewRoute
+  '/api/auth/lightspeed': typeof ApiAuthLightspeedRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
   '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
+  '/api/public/auth/lightspeed': typeof ApiPublicAuthLightspeedRoute
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
   '/api/public/price-alert/signup': typeof ApiPublicPriceAlertSignupRoute
@@ -299,10 +315,12 @@ export interface FileRoutesById {
   '/_authenticated/apps/$appSlug': typeof AuthenticatedAppsAppSlugRoute
   '/_authenticated/shops/$shopId': typeof AuthenticatedShopsShopIdRouteWithChildren
   '/_authenticated/shops/new': typeof AuthenticatedShopsNewRoute
+  '/api/auth/lightspeed': typeof ApiAuthLightspeedRoute
   '/api/public/age-verification.js': typeof ApiPublicAgeVerificationDotjsRoute
   '/api/public/shoplabel.js': typeof ApiPublicShoplabelDotjsRoute
   '/lovable/email/suppression': typeof LovableEmailSuppressionRoute
   '/_authenticated/shops/$shopId/apps': typeof AuthenticatedShopsShopIdAppsRouteWithChildren
+  '/api/public/auth/lightspeed': typeof ApiPublicAuthLightspeedRoute
   '/api/public/back-in-stock/signup': typeof ApiPublicBackInStockSignupRoute
   '/api/public/back-in-stock/stock': typeof ApiPublicBackInStockStockRoute
   '/api/public/price-alert/signup': typeof ApiPublicPriceAlertSignupRoute
@@ -334,10 +352,12 @@ export interface FileRouteTypes {
     | '/apps/$appSlug'
     | '/shops/$shopId'
     | '/shops/new'
+    | '/api/auth/lightspeed'
     | '/api/public/age-verification.js'
     | '/api/public/shoplabel.js'
     | '/lovable/email/suppression'
     | '/shops/$shopId/apps'
+    | '/api/public/auth/lightspeed'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
     | '/api/public/price-alert/signup'
@@ -366,10 +386,12 @@ export interface FileRouteTypes {
     | '/email/unsubscribe'
     | '/apps/$appSlug'
     | '/shops/new'
+    | '/api/auth/lightspeed'
     | '/api/public/age-verification.js'
     | '/api/public/shoplabel.js'
     | '/lovable/email/suppression'
     | '/shops/$shopId/apps'
+    | '/api/public/auth/lightspeed'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
     | '/api/public/price-alert/signup'
@@ -400,10 +422,12 @@ export interface FileRouteTypes {
     | '/_authenticated/apps/$appSlug'
     | '/_authenticated/shops/$shopId'
     | '/_authenticated/shops/new'
+    | '/api/auth/lightspeed'
     | '/api/public/age-verification.js'
     | '/api/public/shoplabel.js'
     | '/lovable/email/suppression'
     | '/_authenticated/shops/$shopId/apps'
+    | '/api/public/auth/lightspeed'
     | '/api/public/back-in-stock/signup'
     | '/api/public/back-in-stock/stock'
     | '/api/public/price-alert/signup'
@@ -426,9 +450,11 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   UnsubscribeRoute: typeof UnsubscribeRoute
   EmailUnsubscribeRoute: typeof EmailUnsubscribeRoute
+  ApiAuthLightspeedRoute: typeof ApiAuthLightspeedRoute
   ApiPublicAgeVerificationDotjsRoute: typeof ApiPublicAgeVerificationDotjsRoute
   ApiPublicShoplabelDotjsRoute: typeof ApiPublicShoplabelDotjsRoute
   LovableEmailSuppressionRoute: typeof LovableEmailSuppressionRoute
+  ApiPublicAuthLightspeedRoute: typeof ApiPublicAuthLightspeedRoute
   ApiPublicBackInStockSignupRoute: typeof ApiPublicBackInStockSignupRoute
   ApiPublicBackInStockStockRoute: typeof ApiPublicBackInStockStockRoute
   ApiPublicPriceAlertSignupRoute: typeof ApiPublicPriceAlertSignupRoute
@@ -546,6 +572,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAgeVerificationDotjsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/lightspeed': {
+      id: '/api/auth/lightspeed'
+      path: '/api/auth/lightspeed'
+      fullPath: '/api/auth/lightspeed'
+      preLoaderRoute: typeof ApiAuthLightspeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/shops/new': {
       id: '/_authenticated/shops/new'
       path: '/shops/new'
@@ -628,6 +661,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/back-in-stock/signup'
       fullPath: '/api/public/back-in-stock/signup'
       preLoaderRoute: typeof ApiPublicBackInStockSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/auth/lightspeed': {
+      id: '/api/public/auth/lightspeed'
+      path: '/api/public/auth/lightspeed'
+      fullPath: '/api/public/auth/lightspeed'
+      preLoaderRoute: typeof ApiPublicAuthLightspeedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/shops/$shopId/apps': {
@@ -752,9 +792,11 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   UnsubscribeRoute: UnsubscribeRoute,
   EmailUnsubscribeRoute: EmailUnsubscribeRoute,
+  ApiAuthLightspeedRoute: ApiAuthLightspeedRoute,
   ApiPublicAgeVerificationDotjsRoute: ApiPublicAgeVerificationDotjsRoute,
   ApiPublicShoplabelDotjsRoute: ApiPublicShoplabelDotjsRoute,
   LovableEmailSuppressionRoute: LovableEmailSuppressionRoute,
+  ApiPublicAuthLightspeedRoute: ApiPublicAuthLightspeedRoute,
   ApiPublicBackInStockSignupRoute: ApiPublicBackInStockSignupRoute,
   ApiPublicBackInStockStockRoute: ApiPublicBackInStockStockRoute,
   ApiPublicPriceAlertSignupRoute: ApiPublicPriceAlertSignupRoute,
