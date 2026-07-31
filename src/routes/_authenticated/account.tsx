@@ -17,25 +17,34 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { User, Bell, CreditCard, Receipt, CheckCircle2, Clock } from "lucide-react";
+import { User, Bell, CreditCard, Check, CheckCircle2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const searchSchema = z.object({
   tab: z
-    .enum(["profile", "notifications", "subscription", "billing"])
+    .enum(["profile", "notifications", "billing"])
     .catch("profile"),
 });
 
 export const Route = createFileRoute("/_authenticated/account")({
   validateSearch: (s) => searchSchema.parse(s),
+  head: () => ({
+    meta: [
+      { title: "Account instellingen — Frontlabel" },
+      { name: "description", content: "Beheer je profiel, notificatievoorkeuren en abonnement." },
+      { property: "og:title", content: "Account instellingen — Frontlabel" },
+      { property: "og:description", content: "Beheer je profiel, notificatievoorkeuren en abonnement." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AccountPage,
 });
 
 const TABS = [
-  { id: "profile", label: "Profiel", icon: User, href: "/account" as const },
-  { id: "notifications", label: "Notificaties", icon: Bell, href: "/account" as const },
-  { id: "subscription", label: "Abonnement", icon: CreditCard, href: "/account" as const },
-  { id: "billing", label: "Facturatie", icon: Receipt, href: "/pricing" as const },
+  { id: "profile", label: "Profiel", icon: User },
+  { id: "notifications", label: "Notificaties", icon: Bell },
+  { id: "billing", label: "Abonnement & Facturatie", icon: CreditCard },
 ] as const;
 
 function AccountPage() {
@@ -49,20 +58,21 @@ function AccountPage() {
       <div className="px-6 pb-12">
         <nav className="flex gap-8 border-b border-gray-200 mb-6">
           {TABS.map((t) => {
-            const active = t.href === "/pricing" ? false : tab === t.id;
-            const isExternal = t.href === "/pricing";
+            const active = tab === t.id;
+            const Icon = t.icon;
             return (
               <Link
                 key={t.id}
-                to={t.href}
-                search={isExternal ? undefined : { tab: t.id }}
+                to="/account"
+                search={{ tab: t.id }}
                 className={cn(
-                  "-mb-px border-b-2 pb-3 text-sm font-medium transition-colors",
+                  "-mb-px border-b-2 pb-3 text-sm font-medium transition-colors inline-flex items-center gap-2",
                   active
                     ? "border-indigo-600 text-indigo-600"
                     : "border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300",
                 )}
               >
+                <Icon className="size-4" />
                 {t.label}
               </Link>
             );
@@ -71,7 +81,6 @@ function AccountPage() {
         <div>
           {tab === "profile" && <ProfileSection />}
           {tab === "notifications" && <NotificationsSection />}
-          {tab === "subscription" && <SubscriptionSection />}
           {tab === "billing" && <BillingSection />}
         </div>
       </div>
@@ -296,7 +305,79 @@ function money(cents: number, currency: string) {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency }).format(cents / 100);
 }
 
-function SubscriptionSection() {
+function StatusBadge({ status, trialEnds }: { status: string; trialEnds: string | null }) {
+  if (status === "trialing") {
+    const days = trialEnds ? Math.max(0, Math.ceil((new Date(trialEnds).getTime() - Date.now()) / 86400000)) : null;
+    return (
+      <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-0 gap-1">
+        <Clock className="h-3 w-3" /> Proef{days !== null ? ` · ${days} dagen` : ""}
+      </Badge>
+    );
+  }
+  if (status === "active") {
+    return <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-0 gap-1"><CheckCircle2 className="h-3 w-3" /> Actief</Badge>;
+  }
+  return <Badge variant="secondary">{status}</Badge>;
+}
+
+type Interval = "monthly" | "yearly";
+
+const PLANS = [
+  {
+    id: "starter",
+    name: "Starter",
+    priceMonthly: 9,
+    priceYearly: 86.4,
+    description: "Perfect als je slechts 1 specifieke add-on nodig hebt.",
+    features: ["1 App naar keuze actief", "Basis statistieken", "Standaard support"],
+    cta: "Kies Starter",
+    variant: "secondary" as const,
+    highlighted: false,
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    priceMonthly: 24,
+    priceYearly: 230.4,
+    description: "Ideaal voor groeiende webshops die meer conversie willen.",
+    features: [
+      "Maximaal 3 Apps actief",
+      "Uitgebreide Analytics & Health Score",
+      "Eigen stijl presets instellen",
+      "Snelle e-mail support",
+    ],
+    cta: "Kies Pro",
+    variant: "default" as const,
+    highlighted: true,
+  },
+  {
+    id: "unlimited",
+    name: "Unlimited All-in",
+    priceMonthly: 39,
+    priceYearly: 374.4,
+    description: "Voor maximale omzet. Geen beperkingen.",
+    features: [
+      "Alle huidige én toekomstige Apps (Onbeperkt)",
+      "Priority Support & Custom styling",
+      "Realtime Activity Feed & Analytics",
+      "Geen frontlabel branding",
+    ],
+    cta: "Kies Unlimited",
+    variant: "dark" as const,
+    highlighted: false,
+  },
+];
+
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("nl-NL", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: price % 1 === 0 ? 0 : 2,
+  }).format(price);
+}
+
+function BillingSection() {
+  const [interval, setInterval] = useState<Interval>("monthly");
   const [loading, setLoading] = useState(true);
   const [plans, setPlans] = useState<PlanRow[]>([]);
   const [shops, setShops] = useState<ShopRow[]>([]);
@@ -322,98 +403,154 @@ function SubscriptionSection() {
     return m;
   }, [subs]);
 
-  if (loading) return <SectionCard className="p-6 text-sm text-muted-foreground">Laden…</SectionCard>;
-
   return (
-    <div className="space-y-6">
-      <SectionCard className="p-6 space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Abonnement per shop</h2>
-          <p className="text-sm text-muted-foreground">Elke shop heeft één actief pakket. Add-on apps kun je losbij nemen.</p>
+    <div className="space-y-8">
+      <SectionCard className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">Huidig plan</p>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold text-foreground">Testversie / Gratis proefperiode</h2>
+            <Badge className="bg-emerald-100 text-emerald-700 border-0 gap-1">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+              </span>
+              Actief
+            </Badge>
+          </div>
         </div>
-        {shops.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nog geen shops gekoppeld.</p>
-        )}
-        <ul className="divide-y divide-border">
-          {shops.map((shop) => {
-            const sub = subByShop.get(shop.id);
-            const plan = sub ? plans.find((p) => p.id === sub.plan_id) : null;
-            return (
-              <li key={shop.id} className="py-3 flex items-center justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="font-medium text-sm text-foreground truncate">{shop.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {plan
-                      ? `${plan.name} · ${money(sub!.billing_interval === "yearly" ? plan.price_cents_yearly : plan.price_cents_monthly, plan.currency)}/${sub!.billing_interval === "yearly" ? "jaar" : "mnd"}`
-                      : "Geen actief pakket"}
-                  </div>
-                </div>
-                {sub ? (
-                  <StatusBadge status={sub.status} trialEnds={sub.trial_ends_at} />
-                ) : (
-                  <Badge variant="secondary">Geen abonnement</Badge>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <div className="text-sm text-muted-foreground">
+          Volgende factuurdatum: <span className="font-medium text-foreground">Nog niet gepland</span>
+        </div>
       </SectionCard>
 
       <SectionCard className="p-6 space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Beschikbare pakketten</h2>
-          <p className="text-sm text-muted-foreground">Kies straks een pakket per shop bij het activeren van betalingen.</p>
+          <h2 className="text-lg font-semibold text-foreground">Jouw abonnementen</h2>
+          <p className="text-sm text-muted-foreground">Overzicht van je gekoppelde shops en hun pakket.</p>
         </div>
-        {plans.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nog geen pakketten geconfigureerd. Vraag een admin om pakketten aan te maken via Superadmin.</p>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Laden…</p>
+        ) : shops.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nog geen shops gekoppeld.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {plans.map((p) => (
-              <div key={p.id} className="border border-border rounded-md p-4 space-y-2">
-                <div className="font-semibold text-foreground">{p.name}</div>
-                {p.description && <p className="text-xs text-muted-foreground">{p.description}</p>}
-                <div className="text-2xl font-bold text-foreground">{money(p.price_cents_monthly, p.currency)}<span className="text-xs font-normal text-muted-foreground">/mnd</span></div>
-                <div className="text-xs text-muted-foreground">of {money(p.price_cents_yearly, p.currency)}/jaar</div>
-                {p.trial_days > 0 && (
-                  <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-0 gap-1">
-                    <Clock className="h-3 w-3" /> {p.trial_days} dagen proef
-                  </Badge>
-                )}
-              </div>
-            ))}
-          </div>
+          <ul className="divide-y divide-border">
+            {shops.map((shop) => {
+              const sub = subByShop.get(shop.id);
+              const plan = sub ? plans.find((p) => p.id === sub.plan_id) : null;
+              return (
+                <li key={shop.id} className="py-3 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm text-foreground truncate">{shop.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {plan
+                        ? `${plan.name} · ${money(sub!.billing_interval === "yearly" ? plan.price_cents_yearly : plan.price_cents_monthly, plan.currency)}/${sub!.billing_interval === "yearly" ? "jaar" : "mnd"}`
+                        : "Geen actief pakket"}
+                    </div>
+                  </div>
+                  {sub ? (
+                    <StatusBadge status={sub.status} trialEnds={sub.trial_ends_at} />
+                  ) : (
+                    <Badge variant="secondary">Geen abonnement</Badge>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         )}
       </SectionCard>
+
+      <div className="flex justify-center">
+        <div className="inline-flex items-center gap-2 p-1 rounded-lg bg-card border border-border shadow-sm">
+          <button
+            type="button"
+            onClick={() => setInterval("monthly")}
+            className={cn(
+              "px-4 py-2 rounded-md text-sm font-medium transition-colors",
+              interval === "monthly"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Maandelijks
+          </button>
+          <button
+            type="button"
+            onClick={() => setInterval("yearly")}
+            className={cn(
+              "px-4 py-2 rounded-md text-sm font-medium transition-colors",
+              interval === "yearly"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Jaarlijks <span className="text-xs opacity-80">(20% korting)</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+        {PLANS.map((plan) => (
+          <PricingCard key={plan.id} plan={plan} interval={interval} />
+        ))}
+      </div>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Afhandeling van betalingen verloopt veilig en automatisch via je maandelijkse Lightspeed eCom factuur.
+      </p>
     </div>
   );
 }
 
-function StatusBadge({ status, trialEnds }: { status: string; trialEnds: string | null }) {
-  if (status === "trialing") {
-    const days = trialEnds ? Math.max(0, Math.ceil((new Date(trialEnds).getTime() - Date.now()) / 86400000)) : null;
-    return (
-      <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-0 gap-1">
-        <Clock className="h-3 w-3" /> Proef{days !== null ? ` · ${days} dagen` : ""}
-      </Badge>
-    );
-  }
-  if (status === "active") {
-    return <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-0 gap-1"><CheckCircle2 className="h-3 w-3" /> Actief</Badge>;
-  }
-  return <Badge variant="secondary">{status}</Badge>;
-}
+function PricingCard({
+  plan,
+  interval,
+}: {
+  plan: (typeof PLANS)[number];
+  interval: Interval;
+}) {
+  const price = interval === "monthly" ? plan.priceMonthly : plan.priceYearly;
+  const period = interval === "monthly" ? "maand" : "jaar";
 
-function BillingSection() {
   return (
-    <SectionCard className="p-6 space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">Abonnement & Facturatie</h2>
-        <p className="text-sm text-muted-foreground">
-          Bekijk en wijzig je pakket, of bekijk je facturatiegeschiedenis.
-        </p>
+    <SectionCard
+      className={cn(
+        "relative flex flex-col p-6",
+        plan.highlighted && "ring-2 ring-primary shadow-md",
+      )}
+    >
+      {plan.highlighted && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <Badge className="bg-primary text-primary-foreground border-0 shadow-sm uppercase tracking-wide text-[0.65rem]">
+            Meest gekozen
+          </Badge>
+        </div>
+      )}
+
+      <div className="space-y-1.5">
+        <h3 className="text-lg font-semibold text-foreground">{plan.name}</h3>
+        <p className="text-sm text-muted-foreground">{plan.description}</p>
       </div>
-      <Button asChild>
-        <Link to="/pricing">Bekijk pakketten</Link>
+
+      <div className="mt-5">
+        <span className="text-4xl font-bold tracking-tight text-foreground">{formatPrice(price)}</span>
+        <span className="text-sm text-muted-foreground">/ {period}</span>
+      </div>
+
+      <ul className="mt-6 space-y-3 flex-1">
+        {plan.features.map((feature) => (
+          <li key={feature} className="flex items-start gap-3 text-sm text-foreground">
+            <Check className={cn("h-4 w-4 shrink-0 mt-0.5", plan.variant === "dark" ? "text-emerald-400" : "text-primary")} />
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+
+      <Button
+        className={cn("mt-8 w-full", plan.variant === "dark" && "bg-foreground text-background hover:bg-foreground/90")}
+        variant={plan.variant === "dark" ? "default" : plan.variant}
+      >
+        {plan.cta}
       </Button>
     </SectionCard>
   );
