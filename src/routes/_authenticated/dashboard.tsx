@@ -246,7 +246,7 @@ const activity = [
 
 function ActivityFeedCard() {
   return (
-    <SectionCard className="p-6 shadow-sm">
+    <SectionCard className="p-6">
       <h2 className="text-sm font-semibold text-foreground">Live Activiteiten Feed</h2>
       <p className="text-xs text-muted-foreground mt-1">Realtime actie op je webshop</p>
       <ul className="mt-5 space-y-4">
