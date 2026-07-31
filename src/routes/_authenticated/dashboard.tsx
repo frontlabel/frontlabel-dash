@@ -1,13 +1,39 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { PageHeader } from "@/components/page-header";
 import { SectionCard } from "@/components/section-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Store, ChevronRight, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Plus,
+  Store,
+  ChevronRight,
+  CheckCircle2,
+  AlertCircle,
+  TrendingUp,
+  Sparkles,
+  Mail,
+  UserPlus,
+  ShieldCheck,
+  BellRing,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
+  head: () => ({
+    meta: [
+      { title: "Dashboard — Shoplabel app admin" },
+      { name: "description", content: "Omzet, shop health score en live activiteit van je webshop add-ons." },
+      { property: "og:title", content: "Dashboard — Shoplabel app admin" },
+      { property: "og:description", content: "Omzet, shop health score en live activiteit van je webshop add-ons." },
+    ],
+  }),
   component: DashboardPage,
 });
 
@@ -22,6 +48,7 @@ interface Shop {
 function DashboardPage() {
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedShop, setSelectedShop] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     supabase
@@ -29,25 +56,59 @@ function DashboardPage() {
       .select("id,name,ecom_url,status,updated_at")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        setShops((data as Shop[]) ?? []);
+        const rows = (data as Shop[]) ?? [];
+        setShops(rows);
+        setSelectedShop((prev) => prev ?? rows[0]?.id);
         setLoading(false);
       });
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <PageHeader
-        title="Shops"
-        subtitle="Beheer je gekoppelde Lightspeed shops en de apps die erop draaien."
-        actions={
-          <Button asChild>
+    <div className="max-w-6xl mx-auto">
+      <div className="px-6 pt-8 pb-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Welkom terug, Webshop Eigenaar
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Dit is wat je add-ons vandaag voor je webshop doen.
+          </p>
+        </div>
+        <Select value={selectedShop} onValueChange={setSelectedShop}>
+          <SelectTrigger className="w-[220px] bg-card">
+            <SelectValue placeholder="Selecteer shop" />
+          </SelectTrigger>
+          <SelectContent>
+            {shops.length === 0 ? (
+              <SelectItem value="none" disabled>
+                Geen shops gekoppeld
+              </SelectItem>
+            ) : (
+              shops.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="px-6 pb-8 grid gap-5 lg:grid-cols-3">
+        <RevenueCard />
+        <HealthScoreCard />
+        <ActivityFeedCard />
+      </div>
+
+      <div className="px-6 pb-12">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-foreground">Jouw shops</h2>
+          <Button asChild size="sm" variant="outline">
             <Link to="/shops/new">
               <Plus className="h-4 w-4" /> Shop koppelen
             </Link>
           </Button>
-        }
-      />
-      <div className="px-6 pb-12">
+        </div>
         {loading ? (
           <SectionCard className="p-8 text-sm text-muted-foreground">Laden…</SectionCard>
         ) : shops.length === 0 ? (
