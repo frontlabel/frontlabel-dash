@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { SectionCard, SectionLabel } from "@/components/section-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   DEFAULT_AGE_VERIFICATION,
   FONT_OPTIONS,
@@ -24,7 +24,7 @@ import {
 } from "@/lib/apps-catalog";
 import type { Json } from "@/integrations/supabase/types";
 import { AgeVerificationPreview } from "@/components/age-verification-preview";
-import { Save, Palette, ChevronRight, LayoutGrid, X } from "lucide-react";
+import { Save, ChevronRight, LayoutGrid, X, Zap } from "lucide-react";
 import { useShellHeader } from "@/components/shell-header-context";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/apps/$appSlug")({
@@ -43,17 +43,49 @@ interface PresetRow {
   settings: Partial<AgeVerificationSettings>;
 }
 
+const TABS = [
+  { id: "algemeen", label: "Algemeen" },
+  { id: "inhoud", label: "Inhoud & Tekst" },
+  { id: "design", label: "Design & Stijl" },
+  { id: "regels", label: "Regels & Logica" },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
+const inputCls =
+  "rounded-lg border-gray-300 bg-white shadow-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:border-purple-500";
+
+function FormRow({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-x-8 gap-y-6 py-10 md:grid-cols-3">
+      <div>
+        <h2 className="text-base font-semibold text-foreground">{title}</h2>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">{description}</p>
+      </div>
+      <div className="md:col-span-2 space-y-6 max-w-2xl">{children}</div>
+    </div>
+  );
+}
+
 function AppSettingsPage() {
   const { shopId, appSlug } = Route.useParams();
   const app = useMemo(() => getApp(appSlug), [appSlug]);
   const { setContent } = useShellHeader();
 
+  const [tab, setTab] = useState<TabId>("algemeen");
   const [rowId, setRowId] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(true);
   const [settings, setSettings] = useState<AgeVerificationSettings>(DEFAULT_AGE_VERIFICATION);
   const [presets, setPresets] = useState<PresetRow[]>([]);
   const [saving, setSaving] = useState(false);
-  const [presetName, setPresetName] = useState("");
   const [savedAt, setSavedAt] = useState<number | null>(null);
 
   useEffect(() => {
@@ -74,17 +106,15 @@ function AppSettingsPage() {
         <div className="flex items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 text-sm">
             <Switch checked={enabled} onCheckedChange={setEnabled} id="enabled-header" />
-            <Label htmlFor="enabled-header" className="cursor-pointer">{enabled ? "Actief" : "Uit"}</Label>
+            <Label htmlFor="enabled-header" className="cursor-pointer">
+              {enabled ? "Actief" : "Uit"}
+            </Label>
           </div>
-          <Button onClick={save} disabled={saving} size="sm">
-            <Save className="h-4 w-4" />
-            {saving ? "Opslaan…" : "Opslaan"}
-          </Button>
         </div>
       </div>
     );
     return () => setContent(null);
-  }, [shopId, app?.name, enabled, saving, setContent]);
+  }, [shopId, app?.name, enabled, setContent]);
 
   useEffect(() => {
     supabase
@@ -136,36 +166,6 @@ function AppSettingsPage() {
     setSaving(false);
   }
 
-  async function savePreset() {
-    if (!presetName.trim()) {
-      toast.error("Geef je preset een naam");
-      return;
-    }
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    const visual = {
-      primaryColor: settings.primaryColor,
-      textColor: settings.textColor,
-      backgroundColor: settings.backgroundColor,
-      overlayColor: settings.overlayColor,
-      overlayOpacity: settings.overlayOpacity,
-      fontFamily: settings.fontFamily,
-      backgroundImageUrl: settings.backgroundImageUrl,
-      borderRadius: settings.borderRadius,
-    };
-    const { data, error } = await supabase
-      .from("style_presets")
-      .insert({ owner_id: u.user.id, name: presetName, settings: visual as unknown as Json })
-      .select("id,name,settings")
-      .single();
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Preset opgeslagen");
-      setPresets((p) => [data as PresetRow, ...p]);
-      setPresetName("");
-    }
-  }
-
   function applyPreset(id: string) {
     const p = presets.find((x) => x.id === id);
     if (!p) return;
@@ -178,7 +178,7 @@ function AppSettingsPage() {
   }
 
   return (
-    <div className="pb-16">
+    <div className="pb-20">
       {savedAt && (
         <div className="flex items-center justify-between px-6 py-2.5 bg-[hsl(120_60%_95%)] border-b border-[hsl(120_40%_80%)] text-[hsl(140_50%_30%)] text-sm">
           <span>Wijzigingen succesvol opgeslagen!</span>
@@ -192,61 +192,108 @@ function AppSettingsPage() {
         </div>
       )}
 
-      <div className="px-6 pt-8 mb-6">
-        <h1 className="text-2xl font-bold tracking-tight">{app.name}</h1>
-        <p className="text-sm text-muted-foreground mt-1">{app.tagline}</p>
+      <div className="px-8 pt-10">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">{app.name}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{app.tagline}</p>
+
+        <nav className="mt-6 flex gap-8 border-b border-gray-200">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "-mb-px border-b-2 pb-3 text-sm font-medium transition-colors",
+                tab === t.id
+                  ? "border-purple-600 text-purple-700"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:border-gray-300",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      <div className="px-6 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
-        <div className="space-y-6 min-w-0">
-          <div>
-            <SectionLabel>Gedrag</SectionLabel>
-            <SectionCard className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="minAge">Minimum leeftijd</Label>
-                  <Input id="minAge" type="number" min={1} max={99} value={settings.minAge}
-                    onChange={(e) => update("minAge", Number(e.target.value))} />
+      <div className="px-8 grid grid-cols-1 lg:grid-cols-5 gap-12 items-start">
+        <div className="lg:col-span-3 min-w-0 divide-y divide-gray-200">
+          {tab === "algemeen" && (
+            <>
+              <FormRow title="Basis instellingen" description="Beheer de basisfuncties van de pop-up.">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="minAge">Minimum leeftijd</Label>
+                    <Input id="minAge" type="number" min={1} max={99} className={inputCls}
+                      value={settings.minAge} onChange={(e) => update("minAge", Number(e.target.value))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="rememberDays">Onthoud bezoeker (dagen)</Label>
+                    <Input id="rememberDays" type="number" min={0} max={365} className={inputCls}
+                      value={settings.rememberDays} onChange={(e) => update("rememberDays", Number(e.target.value))} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="rememberDays">Onthoud bezoeker (dagen)</Label>
-                  <Input id="rememberDays" type="number" min={0} max={365} value={settings.rememberDays}
-                    onChange={(e) => update("rememberDays", Number(e.target.value))} />
+                <div className="flex items-start justify-between gap-6">
+                  <div>
+                    <Label htmlFor="enabledMain" className="cursor-pointer">App actief</Label>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Zet de leeftijdscheck aan of uit voor deze shop.
+                    </p>
+                  </div>
+                  <Switch id="enabledMain" checked={enabled} onCheckedChange={setEnabled} />
                 </div>
-              </div>
+              </FormRow>
+
+              <FormRow title="Omleiding" description="Waar sturen we bezoekers heen die te jong zijn?">
+                <div className="space-y-2">
+                  <Label htmlFor="declineRedirect">Redirect URL bij 'te jong'</Label>
+                  <Input id="declineRedirect" type="url" className={inputCls}
+                    value={settings.declineRedirect} onChange={(e) => update("declineRedirect", e.target.value)} />
+                </div>
+              </FormRow>
+            </>
+          )}
+
+          {tab === "inhoud" && (
+            <FormRow title="Tekstuele inhoud" description="Bepaal wat je bezoeker leest in de pop-up.">
               <div className="space-y-2">
                 <Label htmlFor="title">Titel</Label>
-                <Input id="title" value={settings.title} onChange={(e) => update("title", e.target.value)} />
+                <Input id="title" className={inputCls} value={settings.title}
+                  onChange={(e) => update("title", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Omschrijving</Label>
-                <Textarea id="description" value={settings.description}
-                  onChange={(e) => update("description", e.target.value)} rows={2} />
+                <Textarea id="description" rows={3} className={inputCls} value={settings.description}
+                  onChange={(e) => update("description", e.target.value)} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="buttonText">Knop: bevestigen</Label>
-                  <Input id="buttonText" value={settings.buttonText}
+                  <Label htmlFor="buttonText">Bevestig knop tekst</Label>
+                  <Input id="buttonText" className={inputCls} value={settings.buttonText}
                     onChange={(e) => update("buttonText", e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="declineText">Knop: te jong</Label>
-                  <Input id="declineText" value={settings.declineText}
+                  <Label htmlFor="declineText">Te jong knop tekst</Label>
+                  <Input id="declineText" className={inputCls} value={settings.declineText}
                     onChange={(e) => update("declineText", e.target.value)} />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="declineRedirect">Redirect bij te jong</Label>
-                <Input id="declineRedirect" type="url" value={settings.declineRedirect}
-                  onChange={(e) => update("declineRedirect", e.target.value)} />
-              </div>
-            </SectionCard>
-          </div>
+            </FormRow>
+          )}
 
-          <div>
-            <SectionLabel>Visuele stijl</SectionLabel>
-            <SectionCard className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+          {tab === "design" && (
+            <FormRow title="Huisstijl" description="Kleuren, typografie en vormgeving van de pop-up.">
+              {presets.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {presets.map((p) => (
+                    <button key={p.id} type="button" onClick={() => applyPreset(p.id)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 hover:bg-purple-100 transition-colors">
+                      <Zap className="h-3.5 w-3.5" />
+                      Neem kleuren over uit "{p.name}"
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-6">
                 <ColorField label="Knopkleur" value={settings.primaryColor} onChange={(v) => update("primaryColor", v)} />
                 <ColorField label="Tekstkleur" value={settings.textColor} onChange={(v) => update("textColor", v)} />
                 <ColorField label="Achtergrond modal" value={settings.backgroundColor} onChange={(v) => update("backgroundColor", v)} />
@@ -254,18 +301,13 @@ function AppSettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label>Overlay transparantie: {Math.round(settings.overlayOpacity * 100)}%</Label>
-                <Slider
-                  value={[Math.round(settings.overlayOpacity * 100)]}
-                  min={0}
-                  max={100}
-                  step={1}
-                  onValueChange={([v]) => update("overlayOpacity", v / 100)}
-                />
+                <Slider value={[Math.round(settings.overlayOpacity * 100)]} min={0} max={100} step={1}
+                  onValueChange={([v]) => update("overlayOpacity", v / 100)} />
               </div>
               <div className="space-y-2">
                 <Label>Lettertype</Label>
                 <Select value={settings.fontFamily} onValueChange={(v) => update("fontFamily", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className={inputCls}><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {FONT_OPTIONS.map((f) => (
                       <SelectItem key={f} value={f} style={{ fontFamily: f }}>{f}</SelectItem>
@@ -275,89 +317,64 @@ function AppSettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="bgImg">Achtergrond afbeelding (URL)</Label>
-                <Input id="bgImg" value={settings.backgroundImageUrl}
-                  onChange={(e) => update("backgroundImageUrl", e.target.value)} placeholder="https://..." />
+                <Input id="bgImg" className={inputCls} placeholder="https://..." value={settings.backgroundImageUrl}
+                  onChange={(e) => update("backgroundImageUrl", e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>Hoeken afronding: {settings.borderRadius}px</Label>
                 <Slider value={[settings.borderRadius]} min={0} max={32} step={1}
                   onValueChange={([v]) => update("borderRadius", v)} />
               </div>
-            </SectionCard>
-          </div>
+            </FormRow>
+          )}
 
-          <div>
-            <SectionLabel>Te jonge bezoekers blokkeren</SectionLabel>
-            <SectionCard className="p-5 space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="blockUnderage" className="cursor-pointer">Blokkeer toegang via cookie</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Wanneer een bezoeker een te jonge geboortedatum invult, wordt dit in een cookie onthouden.
-                    Zolang de cookie bestaat krijgt deze bezoeker de site niet meer te zien — tot de cookies worden gewist.
+          {tab === "regels" && (
+            <FormRow title="Cookie instellingen" description="Bepaal hoe lang we een keuze van de bezoeker onthouden.">
+              <div className="flex items-start justify-between gap-6">
+                <div>
+                  <Label htmlFor="blockUnderage" className="cursor-pointer">Onthoud bezoeker</Label>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Een te jonge geboortedatum wordt in een cookie onthouden. Zolang die cookie bestaat krijgt
+                    de bezoeker de shop niet meer te zien.
                   </p>
                 </div>
-                <Switch
-                  id="blockUnderage"
-                  checked={settings.blockUnderage}
-                  onCheckedChange={(v) => update("blockUnderage", v)}
-                />
+                <Switch id="blockUnderage" checked={settings.blockUnderage}
+                  onCheckedChange={(v) => update("blockUnderage", v)} />
               </div>
               {settings.blockUnderage && (
-                <div className="space-y-2">
+                <div className="space-y-2 max-w-xs">
                   <Label htmlFor="blockDays">Blokkeer voor (dagen)</Label>
-                  <Input
-                    id="blockDays"
-                    type="number"
-                    min={1}
-                    max={3650}
-                    value={settings.blockDays}
-                    onChange={(e) => update("blockDays", Number(e.target.value))}
-                  />
+                  <Input id="blockDays" type="number" min={1} max={3650} className={inputCls}
+                    value={settings.blockDays} onChange={(e) => update("blockDays", Number(e.target.value))} />
                 </div>
               )}
-            </SectionCard>
-          </div>
+            </FormRow>
+          )}
 
-          <div>
-            <SectionLabel>Stijl presets</SectionLabel>
-            <SectionCard className="p-5 space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Sla deze visuele instellingen op als preset. Pas hem later toe op andere apps voor consistente
-                branding tussen je shops.
-              </p>
-              <div className="flex gap-2">
-                <Input placeholder="Bijv. Shoplabel huisstijl" value={presetName}
-                  onChange={(e) => setPresetName(e.target.value)} />
-                <Button variant="outline" onClick={savePreset}>
-                  <Palette className="h-4 w-4" /> Bewaar
-                </Button>
-              </div>
-              {presets.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Toepassen vanuit bestaand preset</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {presets.map((p) => (
-                      <button key={p.id} onClick={() => applyPreset(p.id)}
-                        className="text-xs px-3 py-1.5 rounded border border-border bg-card hover:bg-accent transition-colors">
-                        {p.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </SectionCard>
+          <div className="pt-8">
+            <Button
+              onClick={save}
+              disabled={saving}
+              className="rounded-lg bg-purple-600 text-white hover:bg-purple-700"
+            >
+              <Save className="h-4 w-4" />
+              {saving ? "Opslaan…" : "Opslaan"}
+            </Button>
           </div>
         </div>
 
-        <div className="lg:sticky lg:top-6 self-start">
-          <SectionLabel>Live preview</SectionLabel>
-          <SectionCard className="p-4">
-            <AgeVerificationPreview s={settings} />
-            <p className="text-xs text-muted-foreground text-center mt-3">
+        <div className="lg:col-span-2 lg:sticky lg:top-8 self-start pt-10">
+          <div className="rounded-2xl bg-gray-900/5 p-6">
+            <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Live preview
+            </p>
+            <div className="mx-auto max-w-[340px]">
+              <AgeVerificationPreview s={settings} />
+            </div>
+            <p className="mt-4 text-center text-xs text-muted-foreground">
               Voorbeeld werkt live mee terwijl je instellingen wijzigt.
             </p>
-          </SectionCard>
+          </div>
         </div>
       </div>
     </div>
@@ -371,8 +388,8 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
       <div className="flex gap-2 items-center">
         <input type="color" value={value.startsWith("#") ? value : "#5187e0"}
           onChange={(e) => onChange(e.target.value)}
-          className="h-9 w-12 rounded border border-input cursor-pointer bg-card" />
-        <Input value={value} onChange={(e) => onChange(e.target.value)} className="font-mono text-sm" />
+          className="h-9 w-12 rounded-lg border border-gray-300 cursor-pointer bg-white" />
+        <Input value={value} onChange={(e) => onChange(e.target.value)} className={cn(inputCls, "font-mono text-sm")} />
       </div>
     </div>
   );
