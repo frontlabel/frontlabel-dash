@@ -32,10 +32,10 @@ export const Route = createFileRoute("/_authenticated/account")({
 });
 
 const TABS = [
-  { id: "profile", label: "Profiel", icon: User },
-  { id: "notifications", label: "Notificaties", icon: Bell },
-  { id: "subscription", label: "Abonnement", icon: CreditCard },
-  { id: "billing", label: "Facturatie", icon: Receipt },
+  { id: "profile", label: "Profiel", icon: User, href: "/account" as const },
+  { id: "notifications", label: "Notificaties", icon: Bell, href: "/account" as const },
+  { id: "subscription", label: "Abonnement", icon: CreditCard, href: "/account" as const },
+  { id: "billing", label: "Facturatie", icon: Receipt, href: "/pricing" as const },
 ] as const;
 
 function AccountPage() {
@@ -49,12 +49,13 @@ function AccountPage() {
       <div className="px-6 pb-12">
         <nav className="flex gap-8 border-b border-gray-200 mb-6">
           {TABS.map((t) => {
-            const active = tab === t.id;
+            const active = t.href === "/pricing" ? false : tab === t.id;
+            const isExternal = t.href === "/pricing";
             return (
               <Link
                 key={t.id}
-                to="/account"
-                search={{ tab: t.id }}
+                to={t.href}
+                search={isExternal ? undefined : { tab: t.id }}
                 className={cn(
                   "-mb-px border-b-2 pb-3 text-sm font-medium transition-colors",
                   active
@@ -404,12 +405,16 @@ function StatusBadge({ status, trialEnds }: { status: string; trialEnds: string 
 
 function BillingSection() {
   return (
-    <SectionCard className="p-6 space-y-3">
-      <h2 className="text-lg font-semibold text-foreground">Facturatie</h2>
-      <p className="text-sm text-muted-foreground">
-        Facturen en betaalgegevens worden zichtbaar zodra Stripe is geactiveerd. Zodra betalingen actief zijn, opent hier een klantportaal waar je facturen kunt downloaden en betaalmethodes kunt beheren.
-      </p>
-      <Button disabled variant="secondary">Klantportaal openen (binnenkort)</Button>
+    <SectionCard className="p-6 space-y-4">
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">Abonnement & Facturatie</h2>
+        <p className="text-sm text-muted-foreground">
+          Bekijk en wijzig je pakket, of bekijk je facturatiegeschiedenis.
+        </p>
+      </div>
+      <Button asChild>
+        <Link to="/pricing">Bekijk pakketten</Link>
+      </Button>
     </SectionCard>
   );
 }
