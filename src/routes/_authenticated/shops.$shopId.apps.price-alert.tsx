@@ -95,6 +95,12 @@ function PriceAlertPage() {
   const [rowId, setRowId] = useState<string | null>(null);
   const [settings, setSettings] = useState<PriceAlertSettings>(DEFAULTS);
   const [saving, setSaving] = useState(false);
+  const { requestToggle, dialog: disableDialog } = useDisableAppGuard({
+    appName: "Price alert",
+    appSlug: APP_SLUG,
+    active,
+    setActive,
+  });
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
   const [tab, setTab] = useState<"overview" | "widget" | "email" | "alerts">("overview");
 
