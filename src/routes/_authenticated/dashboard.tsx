@@ -195,7 +195,7 @@ function HealthScoreCard() {
 
   return (
     <SectionCard className="p-6 shadow-sm flex flex-col">
-      <h2 className="text-sm font-semibold text-foreground">Shop health score</h2>
+      <h2 className="text-sm font-semibold text-foreground">Shop Health Score</h2>
       <div className="mt-4 flex flex-col items-center">
         <div className="relative h-32 w-32">
           <svg viewBox="0 0 120 120" className="h-32 w-32 -rotate-90">
