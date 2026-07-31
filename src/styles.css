@@ -68,7 +68,7 @@
 :root {
   /* Tailwind defaults: gray scale + indigo accent */
   --radius: 0.375rem; /* rounded-md */
-  --background: oklch(0.985 0.002 247.839); /* gray-50 */
+  --background: oklch(0.965 0.002 247.858); /* gray-100 / #f3f4f6 */
   --foreground: oklch(0.21 0.034 264.665); /* gray-900 */
   --card: oklch(1 0 0); /* white */
   --card-foreground: oklch(0.21 0.034 264.665);
