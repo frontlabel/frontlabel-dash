@@ -49,12 +49,13 @@ function AccountPage() {
       <div className="px-6 pb-12">
         <nav className="flex gap-8 border-b border-gray-200 mb-6">
           {TABS.map((t) => {
-            const active = tab === t.id;
+            const active = t.href === "/pricing" ? false : tab === t.id;
+            const isExternal = t.href === "/pricing";
             return (
               <Link
                 key={t.id}
-                to="/account"
-                search={{ tab: t.id }}
+                to={t.href}
+                search={isExternal ? undefined : { tab: t.id }}
                 className={cn(
                   "-mb-px border-b-2 pb-3 text-sm font-medium transition-colors",
                   active
