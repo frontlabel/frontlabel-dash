@@ -63,7 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-sidebar-border bg-sidebar px-6 pb-4">
       <div className="flex h-16 shrink-0 items-center">
         <img
-          src="http://frontlabel.nl/wp-content/uploads/2025/10/frontlabel-logo-white@3x.png"
+          src="https://frontlabel.nl/wp-content/uploads/2025/10/frontlabel-logo-white@3x.png"
           alt="Frontlabel"
           className="h-7 w-auto object-contain brightness-0"
         />
