@@ -252,6 +252,73 @@ function ShopConnectionPage() {
           </div>
         </SectionCard>
       </div>
+
+      <div>
+        <SectionLabel>Shopbeheer</SectionLabel>
+        <SectionCard>
+          <div className="flex items-start justify-between gap-6 px-5 py-4 border-b border-border">
+            <div>
+              <div className="font-semibold text-sm">Shop ontkoppelen</div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Verbreekt de koppeling met Lightspeed. Je instellingen, apps en wachtlijsten blijven
+                bewaard — je kunt later opnieuw koppelen.
+              </p>
+            </div>
+            <Button variant="outline" className="py-3 h-auto shrink-0" onClick={disconnect} disabled={disconnecting}>
+              <Unplug className="h-4 w-4" /> {disconnecting ? "Bezig…" : "Ontkoppelen"}
+            </Button>
+          </div>
+          <div className="flex items-start justify-between gap-6 px-5 py-4">
+            <div>
+              <div className="font-semibold text-sm text-destructive">Shop verwijderen</div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Verwijdert deze shop definitief, inclusief app-instellingen, wachtlijsten,
+                prijsmeldingen en abonnementsgegevens. Dit kan niet ongedaan worden gemaakt.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              className="py-3 h-auto shrink-0"
+              onClick={() => {
+                setConfirmText("");
+                setConfirmDelete(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4" /> Verwijderen
+            </Button>
+          </div>
+        </SectionCard>
+      </div>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Shop definitief verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Alle gegevens van <strong>{shop.name}</strong> worden verwijderd: app-instellingen,
+              wachtlijsten, prijsmeldingen en abonnementsgegevens. Typ de shopnaam om te bevestigen.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder={shop.name}
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel className="py-3 h-auto">Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              className="py-3 h-auto bg-destructive text-white hover:bg-destructive/90"
+              disabled={confirmText.trim() !== shop.name || deleting}
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+            >
+              {deleting ? "Verwijderen…" : "Definitief verwijderen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
