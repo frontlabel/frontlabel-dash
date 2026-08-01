@@ -1,5 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteShop } from "@/lib/shops.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { SectionCard, SectionLabel } from "@/components/section-card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +10,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { Copy, ExternalLink, Eye, EyeOff, Trash2, Unplug } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/")({
   component: ShopConnectionPage,
@@ -28,12 +40,18 @@ interface Shop {
 
 function ShopConnectionPage() {
   const { shopId } = Route.useParams();
+  const navigate = useNavigate();
+  const removeShop = useServerFn(deleteShop);
   const [shop, setShop] = useState<Shop | null>(null);
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [active, setActive] = useState(true);
   const [showSecret, setShowSecret] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
 
   useEffect(() => {
     supabase
@@ -70,6 +88,32 @@ function ShopConnectionPage() {
   function copy(text: string, label: string) {
     navigator.clipboard.writeText(text);
     toast.success(`${label} gekopieerd`);
+  }
+
+  async function disconnect() {
+    setDisconnecting(true);
+    const { error } = await supabase
+      .from("shops")
+      .update({ status: "disconnected", access_token: null })
+      .eq("id", shopId);
+    setDisconnecting(false);
+    if (error) return toast.error(error.message);
+    setActive(false);
+    toast.success("Shop ontkoppeld. De koppeling met Lightspeed is verbroken.");
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await removeShop({ data: { shopId } });
+      toast.success("Shop verwijderd");
+      setConfirmDelete(false);
+      navigate({ to: "/dashboard" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Verwijderen mislukt");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   if (!shop) {
