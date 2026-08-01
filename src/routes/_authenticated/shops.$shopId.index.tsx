@@ -1,5 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteShop } from "@/lib/shops.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { SectionCard, SectionLabel } from "@/components/section-card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +10,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Copy, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { Copy, ExternalLink, Eye, EyeOff, Trash2, Unplug } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/")({
   component: ShopConnectionPage,
@@ -28,12 +40,18 @@ interface Shop {
 
 function ShopConnectionPage() {
   const { shopId } = Route.useParams();
+  const navigate = useNavigate();
+  const removeShop = useServerFn(deleteShop);
   const [shop, setShop] = useState<Shop | null>(null);
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [active, setActive] = useState(true);
   const [showSecret, setShowSecret] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
 
   useEffect(() => {
     supabase
@@ -70,6 +88,32 @@ function ShopConnectionPage() {
   function copy(text: string, label: string) {
     navigator.clipboard.writeText(text);
     toast.success(`${label} gekopieerd`);
+  }
+
+  async function disconnect() {
+    setDisconnecting(true);
+    const { error } = await supabase
+      .from("shops")
+      .update({ status: "disconnected", access_token: null })
+      .eq("id", shopId);
+    setDisconnecting(false);
+    if (error) return toast.error(error.message);
+    setActive(false);
+    toast.success("Shop ontkoppeld. De koppeling met Lightspeed is verbroken.");
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await removeShop({ data: { shopId } });
+      toast.success("Shop verwijderd");
+      setConfirmDelete(false);
+      navigate({ to: "/dashboard" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Verwijderen mislukt");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   if (!shop) {
@@ -208,6 +252,73 @@ function ShopConnectionPage() {
           </div>
         </SectionCard>
       </div>
+
+      <div>
+        <SectionLabel>Shopbeheer</SectionLabel>
+        <SectionCard>
+          <div className="flex items-start justify-between gap-6 px-5 py-4 border-b border-border">
+            <div>
+              <div className="font-semibold text-sm">Shop ontkoppelen</div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Verbreekt de koppeling met Lightspeed. Je instellingen, apps en wachtlijsten blijven
+                bewaard — je kunt later opnieuw koppelen.
+              </p>
+            </div>
+            <Button variant="outline" className="py-3 h-auto shrink-0" onClick={disconnect} disabled={disconnecting}>
+              <Unplug className="h-4 w-4" /> {disconnecting ? "Bezig…" : "Ontkoppelen"}
+            </Button>
+          </div>
+          <div className="flex items-start justify-between gap-6 px-5 py-4">
+            <div>
+              <div className="font-semibold text-sm text-destructive">Shop verwijderen</div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Verwijdert deze shop definitief, inclusief app-instellingen, wachtlijsten,
+                prijsmeldingen en abonnementsgegevens. Dit kan niet ongedaan worden gemaakt.
+              </p>
+            </div>
+            <Button
+              variant="destructive"
+              className="py-3 h-auto shrink-0"
+              onClick={() => {
+                setConfirmText("");
+                setConfirmDelete(true);
+              }}
+            >
+              <Trash2 className="h-4 w-4" /> Verwijderen
+            </Button>
+          </div>
+        </SectionCard>
+      </div>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Shop definitief verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Alle gegevens van <strong>{shop.name}</strong> worden verwijderd: app-instellingen,
+              wachtlijsten, prijsmeldingen en abonnementsgegevens. Typ de shopnaam om te bevestigen.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder={shop.name}
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel className="py-3 h-auto">Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              className="py-3 h-auto bg-destructive text-white hover:bg-destructive/90"
+              disabled={confirmText.trim() !== shop.name || deleting}
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+            >
+              {deleting ? "Verwijderen…" : "Definitief verwijderen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
