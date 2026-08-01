@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { APP_VERSION_LABEL } from "@/lib/app-version";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { ShellHeaderProvider, useShellHeaderContent } from "@/components/shell-header-context";
@@ -188,6 +189,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               <LogOut className="size-4 shrink-0 text-sidebar-foreground/60" />
               Uitloggen
             </button>
+            <p
+              className="px-6 pb-3 pt-1 text-[10px] leading-tight text-sidebar-foreground/40 tabular-nums"
+              title="App-versie en buildtijd"
+            >
+              {APP_VERSION_LABEL}
+            </p>
           </li>
         </ul>
       </nav>

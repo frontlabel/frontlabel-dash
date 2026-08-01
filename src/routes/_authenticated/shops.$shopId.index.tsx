@@ -65,7 +65,7 @@ function ShopConnectionPage() {
           setShop(s);
           setName(s.name);
           setUrl(s.ecom_url ?? "");
-          setActive(s.status === "connected");
+          setActive(s.status === "connected" || s.status === "active");
         }
       });
   }, [shopId]);

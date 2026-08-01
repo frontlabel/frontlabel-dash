@@ -1,11 +1,14 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { deleteShop } from "@/lib/shops.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { SectionCard } from "@/components/section-card";
 import { PageHeader } from "@/components/page-header";
 import { APPS_CATALOG } from "@/lib/apps-catalog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -13,6 +16,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 import {
   Plus,
   Store,
@@ -25,6 +46,9 @@ import {
   ShieldCheck,
   BellRing,
   TrendingUp,
+  MoreHorizontal,
+  Settings2,
+  Trash2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -48,22 +72,49 @@ interface Shop {
 }
 
 function DashboardPage() {
+  const navigate = useNavigate();
+  const removeShop = useServerFn(deleteShop);
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedShop, setSelectedShop] = useState<string | undefined>(undefined);
+  const [shopToDelete, setShopToDelete] = useState<Shop | null>(null);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    supabase
+  async function loadShops() {
+    const { data } = await supabase
       .from("shops")
       .select("id,name,ecom_url,status,updated_at")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        const rows = (data as Shop[]) ?? [];
-        setShops(rows);
-        setSelectedShop((prev) => prev ?? rows[0]?.id);
-        setLoading(false);
-      });
+      .order("created_at", { ascending: false });
+    const rows = (data as Shop[]) ?? [];
+    setShops(rows);
+    setSelectedShop((prev) => {
+      if (prev && rows.some((s) => s.id === prev)) return prev;
+      return rows[0]?.id;
+    });
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadShops();
   }, []);
+
+  async function handleDelete() {
+    if (!shopToDelete) return;
+    setDeleting(true);
+    try {
+      await removeShop({ data: { shopId: shopToDelete.id } });
+      toast.success("Shop verwijderd");
+      setShopToDelete(null);
+      setConfirmText("");
+      setLoading(true);
+      await loadShops();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Verwijderen mislukt");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -128,11 +179,11 @@ function DashboardPage() {
           <SectionCard>
             <ul className="divide-y divide-border">
               {shops.map((s) => (
-                <li key={s.id}>
+                <li key={s.id} className="flex items-center gap-2 px-5 py-4 hover:bg-muted/50 transition-colors">
                   <Link
                     to="/shops/$shopId"
                     params={{ shopId: s.id }}
-                    className="flex items-center gap-4 px-5 py-4 hover:bg-muted/50 transition-colors"
+                    className="flex min-w-0 flex-1 items-center gap-4"
                   >
                     <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
                       <Store className="h-5 w-5 text-primary" />
@@ -140,7 +191,7 @@ function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-foreground truncate">{s.name}</span>
-                        {s.status === "connected" ? (
+                        {s.status === "connected" || s.status === "active" ? (
                           <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-0 gap-1">
                             <CheckCircle2 className="h-3 w-3" /> Verbonden
                           </Badge>
@@ -154,14 +205,85 @@ function DashboardPage() {
                         <div className="text-xs text-muted-foreground truncate">{s.ecom_url}</div>
                       )}
                     </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                   </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        aria-label={`Beheer ${s.name}`}
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onSelect={() =>
+                          navigate({ to: "/shops/$shopId", params: { shopId: s.id } })
+                        }
+                      >
+                        <Settings2 className="h-4 w-4" /> Beheren
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onSelect={() => {
+                          setConfirmText("");
+                          setShopToDelete(s);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" /> Verwijderen
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </li>
               ))}
             </ul>
           </SectionCard>
         )}
       </div>
+
+      <AlertDialog
+        open={!!shopToDelete}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShopToDelete(null);
+            setConfirmText("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Shop definitief verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Alle gegevens van <strong>{shopToDelete?.name}</strong> worden verwijderd:
+              app-instellingen, wachtlijsten, prijsmeldingen en abonnementsgegevens. Typ de
+              shopnaam om te bevestigen.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder={shopToDelete?.name}
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel className="py-3 h-auto">Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              className="py-3 h-auto bg-destructive text-white hover:bg-destructive/90"
+              disabled={!shopToDelete || confirmText.trim() !== shopToDelete.name || deleting}
+              onClick={(e) => {
+                e.preventDefault();
+                handleDelete();
+              }}
+            >
+              {deleting ? "Verwijderen…" : "Definitief verwijderen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
