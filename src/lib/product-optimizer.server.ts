@@ -232,6 +232,8 @@ export async function fetchProduct(opts: {
   apiSecret: string;
   language?: string;
   productId: string;
+  /** Sla merken/prijzen over: veel sneller, gebruikt bij beeldgeneratie. */
+  skipEnrichment?: boolean;
 }): Promise<{ product: OptimizerProduct | null; images: OptimizerProductImage[] }> {
   const headers = { Authorization: auth(opts.apiKey, opts.apiSecret), Accept: "application/json" };
   const id = encodeURIComponent(opts.productId);
@@ -256,10 +258,9 @@ export async function fetchProduct(opts: {
     images = [];
   }
 
-  const [brands, prices] = await Promise.all([
-    fetchBrandMap(headers, opts.language),
-    fetchPriceMap(headers, opts.language),
-  ]);
+  const [brands, prices] = opts.skipEnrichment
+    ? [new Map<string, string>(), new Map<string, number>()]
+    : await Promise.all([fetchBrandMap(headers, opts.language), fetchPriceMap(headers, opts.language)]);
 
   const mapped = mapProduct(
     { ...data.product, imageCount: images.length || (data.product.image ? 1 : 0) },
@@ -479,7 +480,7 @@ export async function generateProductImageBytes(opts: {
     method: "POST",
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-pro-image",
+      model: "google/gemini-3.1-flash-image",
       messages: [{ role: "user", content: prompt }],
       modalities: ["image", "text"],
     }),
