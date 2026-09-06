@@ -379,7 +379,21 @@ function ProductOptimizerPage() {
             onSync={() => setConfirmSync(true)}
           />
         )}
-...
+        {tab === "images" && (
+          <ImagesTab
+            product={detail.product}
+            images={detail.images}
+            generated={detail.generated}
+            style={imageStyle}
+            setStyle={setImageStyle}
+            busy={generatingImage}
+            onGenerate={makeImage}
+            hasSelection={!!selectedId}
+          />
+        )}
+        {tab === "settings" && <SettingsTab settings={settings} update={update} />}
+      </div>
+
       <StickySaveBar onSave={save} saving={saving} />
       {disableDialog}
 
