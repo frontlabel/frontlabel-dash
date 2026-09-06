@@ -445,7 +445,9 @@ function ProductOptimizerPage() {
             <AlertDialogDescription>
               De huidige titel, SEO-titel, meta description en omschrijving van dit product in je
               webshop worden overschreven door het voorstel. Alt-teksten van bestaande afbeeldingen
-              worden ook bijgewerkt. Dit kun je niet ongedaan maken.
+              worden bijgewerkt en de gegenereerde afbeeldingen worden als extra productfoto's
+              toegevoegd. Dit kun je niet ongedaan maken.
+
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
