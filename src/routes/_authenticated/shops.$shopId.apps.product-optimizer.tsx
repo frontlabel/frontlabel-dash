@@ -311,20 +311,26 @@ function ProductOptimizerPage() {
           description: suggestions.description,
         },
         altTexts: suggestions.altTexts,
+        includeImages: true,
       },
     });
     if (res.ok) {
+      const parts: string[] = [];
+      if (res.altUpdated > 0) parts.push(`${res.altUpdated} alt-teksten`);
+      if (res.imagesUploaded > 0) parts.push(`${res.imagesUploaded} nieuwe afbeeldingen`);
       toast.success(
-        res.altUpdated > 0
-          ? `Gesynchroniseerd naar je shop (${res.altUpdated} alt-teksten bijgewerkt)`
+        parts.length
+          ? `Gesynchroniseerd naar je shop (${parts.join(", ")} bijgewerkt)`
           : "Gesynchroniseerd naar je shop",
       );
+      if (res.imageError) toast.error(res.imageError);
       await openProduct(selectedId);
     } else {
       toast.error(res.error);
     }
     setSyncing(false);
   }
+
 
   useEffect(() => {
     setContent(
