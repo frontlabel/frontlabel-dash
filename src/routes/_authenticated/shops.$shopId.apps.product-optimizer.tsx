@@ -668,10 +668,18 @@ function DetailTab({
           </div>
         </div>
         <ScoreBar score={product.score} />
-        <Button onClick={onGenerate} disabled={generating} className="py-3 h-auto">
-          {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {suggestions ? "Genereer opnieuw" : "Genereer voorstel"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={onGenerate} disabled={generating || syncing} variant={suggestions ? "outline" : "default"} className="py-3 h-auto">
+            {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {suggestions ? "Genereer opnieuw" : "Genereer voorstel"}
+          </Button>
+          {suggestions && (
+            <Button onClick={onSync} disabled={syncing || generating} className="py-3 h-auto">
+              {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
+              {syncing ? "Synchroniseren…" : "Synchroniseer naar shop"}
+            </Button>
+          )}
+        </div>
       </SectionCard>
 
       {product.missing.length > 0 && (
