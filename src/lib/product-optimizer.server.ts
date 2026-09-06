@@ -54,6 +54,8 @@ export function scoreProduct(p: {
   content: string;
   brand: string | null;
   imageCount: number;
+  /** True als het exacte aantal afbeeldingen bekend is (detailweergave). */
+  imagesKnown?: boolean;
 }): { score: number; missing: string[] } {
   const missing: string[] = [];
   let score = 0;
