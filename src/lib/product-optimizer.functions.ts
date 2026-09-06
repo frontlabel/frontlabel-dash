@@ -82,10 +82,88 @@ export const getOptimizableProduct = createServerFn({ method: "POST" })
             score: saved.score,
             updatedAt: saved.updated_at,
             imageUrls,
+            imagePaths: paths,
           }
         : null,
       reason: product ? ("ok" as const) : ("not-found" as const),
     };
+  });
+
+/** Verwijdert een gegenereerde afbeelding uit de opslag en bij het product. */
+export const deleteGeneratedImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({ shopId: z.string().uuid(), productId: z.string().min(1), path: z.string().min(1) }),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: existing } = await context.supabase
+      .from("product_optimizations")
+      .select("image_urls")
+      .eq("shop_id", data.shopId)
+      .eq("product_ref", data.productId)
+      .maybeSingle();
+    if (!existing) return { ok: false as const, error: "Afbeelding niet gevonden." };
+
+    const paths = (((existing.image_urls as string[] | null) ?? []) as string[]).filter(
+      (p) => p !== data.path,
+    );
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.storage.from("product-images").remove([data.path]);
+
+    await context.supabase
+      .from("product_optimizations")
+      .update({ image_urls: paths })
+      .eq("shop_id", data.shopId)
+      .eq("product_ref", data.productId);
+
+    return { ok: true as const };
+  });
+
+/** Zet één gegenereerde afbeelding bij de productafbeeldingen in de shop. */
+export const pushGeneratedImageToShop = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      shopId: z.string().uuid(),
+      productId: z.string().min(1),
+      path: z.string().min(1),
+      title: z.string().default(""),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    const creds = await getShopCredentials(context.supabase as never, data.shopId);
+    if (!creds) return { ok: false as const, error: "Geen actieve koppeling met je shop." };
+
+    const { data: existing } = await context.supabase
+      .from("product_optimizations")
+      .select("image_urls")
+      .eq("shop_id", data.shopId)
+      .eq("product_ref", data.productId)
+      .maybeSingle();
+    const paths = ((existing?.image_urls as string[] | null) ?? []) as string[];
+    if (!paths.includes(data.path)) return { ok: false as const, error: "Afbeelding niet gevonden." };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const dl = await supabaseAdmin.storage.from("product-images").download(data.path);
+    if (dl.error || !dl.data) return { ok: false as const, error: "Afbeelding kon niet gelezen worden." };
+
+    const buf = Buffer.from(await dl.data.arrayBuffer());
+    const { uploadProductImages } = await import("./product-optimizer.server");
+    const up = await uploadProductImages({
+      ...creds,
+      productId: data.productId,
+      images: [
+        {
+          filename: data.path.split("/").pop() || `${Date.now()}.png`,
+          base64: buf.toString("base64"),
+          ...(data.title ? { title: data.title } : {}),
+        },
+      ],
+    });
+
+    if (!up.uploaded) return { ok: false as const, error: up.error ?? "Toevoegen mislukt." };
+    return { ok: true as const };
   });
 
 /** Laat AI verbeterde teksten, SEO, specificaties en alt-teksten voorstellen. */
@@ -225,6 +303,7 @@ export const generateProductImage = createServerFn({ method: "POST" })
       shopId: z.string().uuid(),
       productId: z.string().min(1),
       style: z.enum(["studio", "sfeer", "lifestyle"]).default("studio"),
+      prompt: z.string().max(600).default(""),
     }),
   )
   .handler(async ({ data, context }) => {
@@ -236,7 +315,11 @@ export const generateProductImage = createServerFn({ method: "POST" })
     if (!product) return { ok: false as const, error: "Product niet gevonden." };
 
     try {
-      const bytes = await generateProductImageBytes({ product, style: data.style });
+      const bytes = await generateProductImageBytes({
+        product,
+        style: data.style,
+        extraPrompt: data.prompt,
+      });
       const path = `${data.shopId}/${data.productId}/${Date.now()}.png`;
 
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -265,7 +348,7 @@ export const generateProductImage = createServerFn({ method: "POST" })
       );
 
       const signed = await supabaseAdmin.storage.from("product-images").createSignedUrl(path, 3600);
-      return { ok: true as const, url: signed.data?.signedUrl ?? "" };
+      return { ok: true as const, url: signed.data?.signedUrl ?? "", path };
     } catch (e) {
       return { ok: false as const, error: e instanceof Error ? e.message : "Er ging iets mis." };
     }

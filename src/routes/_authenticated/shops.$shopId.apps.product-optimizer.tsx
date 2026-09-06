@@ -21,6 +21,8 @@ import {
   getOptimizableProduct,
   generateProductSuggestions,
   generateProductImage,
+  deleteGeneratedImage,
+  pushGeneratedImageToShop,
   syncProductToShop,
 } from "@/lib/product-optimizer.functions";
 import {
@@ -44,6 +46,7 @@ import {
   Save,
   Search,
   Sparkles,
+  Trash2,
   Wand2,
 } from "lucide-react";
 
@@ -147,12 +150,14 @@ function ProductOptimizerPage() {
   const [detail, setDetail] = useState<{
     product: ProductRow | null;
     images: { id: string; src: string; title: string }[];
-    generated: string[];
+    generated: { url: string; path: string }[];
   }>({ product: null, images: [], generated: [] });
   const [suggestions, setSuggestions] = useState<Suggestions | null>(null);
   const [generating, setGenerating] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [imageStyle, setImageStyle] = useState<"studio" | "sfeer" | "lifestyle">("studio");
+  const [imagePrompt, setImagePrompt] = useState("");
+  const [imageBusyPath, setImageBusyPath] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [confirmSync, setConfirmSync] = useState(false);
 
@@ -167,6 +172,8 @@ function ProductOptimizerPage() {
   const fetchDetail = useServerFn(getOptimizableProduct);
   const runSuggestions = useServerFn(generateProductSuggestions);
   const runImage = useServerFn(generateProductImage);
+  const runDeleteImage = useServerFn(deleteGeneratedImage);
+  const runPushImage = useServerFn(pushGeneratedImageToShop);
   const runSync = useServerFn(syncProductToShop);
 
   function update<K extends keyof OptimizerSettings>(k: K, v: OptimizerSettings[K]) {
@@ -239,7 +246,10 @@ function ProductOptimizerPage() {
         setDetail({
           product: (res.product as ProductRow | null) ?? null,
           images: Array.isArray(res.images) ? res.images : [],
-          generated: res.saved?.imageUrls ?? [],
+          generated: (res.saved?.imageUrls ?? []).map((url, i) => ({
+            url,
+            path: res.saved?.imagePaths?.[i] ?? "",
+          })),
         });
         setSuggestions(normalizeSuggestions(res.saved?.suggestions));
       } catch (e) {
@@ -282,9 +292,11 @@ function ProductOptimizerPage() {
     setGeneratingImage(true);
     const toastId = toast.loading("Afbeelding wordt gemaakt… dit duurt ongeveer een halve minuut.");
     try {
-      const res = await runImage({ data: { shopId, productId: selectedId, style: imageStyle } });
+      const res = await runImage({
+        data: { shopId, productId: selectedId, style: imageStyle, prompt: imagePrompt },
+      });
       if (res.ok && res.url) {
-        setDetail((d) => ({ ...d, generated: [...d.generated, res.url] }));
+        setDetail((d) => ({ ...d, generated: [...d.generated, { url: res.url, path: res.path }] }));
         toast.success("Afbeelding gemaakt", { id: toastId });
       } else {
         toast.error(res.ok ? "De afbeelding kon niet opgehaald worden." : res.error, { id: toastId });
@@ -293,6 +305,49 @@ function ProductOptimizerPage() {
       toast.error(e instanceof Error ? e.message : "Er ging iets mis.", { id: toastId });
     } finally {
       setGeneratingImage(false);
+    }
+  }
+
+  async function deleteImage(path: string) {
+    if (!selectedId || !path) return;
+    setImageBusyPath(path);
+    try {
+      const res = await runDeleteImage({ data: { shopId, productId: selectedId, path } });
+      if (res.ok) {
+        setDetail((d) => ({ ...d, generated: d.generated.filter((g) => g.path !== path) }));
+        toast.success("Afbeelding verwijderd");
+      } else {
+        toast.error(res.error);
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Er ging iets mis.");
+    } finally {
+      setImageBusyPath(null);
+    }
+  }
+
+  async function addImageToProduct(path: string) {
+    if (!selectedId || !path) return;
+    setImageBusyPath(path);
+    const toastId = toast.loading("Afbeelding wordt toegevoegd aan het product…");
+    try {
+      const res = await runPushImage({
+        data: {
+          shopId,
+          productId: selectedId,
+          path,
+          title: suggestions?.title || detail.product?.title || "",
+        },
+      });
+      if (res.ok) {
+        toast.success("Toegevoegd aan de productafbeeldingen", { id: toastId });
+      } else {
+        toast.error(res.error, { id: toastId });
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Er ging iets mis.", { id: toastId });
+    } finally {
+      setImageBusyPath(null);
     }
   }
 
@@ -427,8 +482,13 @@ function ProductOptimizerPage() {
             generated={detail.generated}
             style={imageStyle}
             setStyle={setImageStyle}
+            prompt={imagePrompt}
+            setPrompt={setImagePrompt}
             busy={generatingImage}
+            busyPath={imageBusyPath}
             onGenerate={makeImage}
+            onDelete={deleteImage}
+            onAddToProduct={addImageToProduct}
             hasSelection={!!selectedId}
           />
         )}
@@ -869,17 +929,27 @@ function ImagesTab({
   generated,
   style,
   setStyle,
+  prompt,
+  setPrompt,
   busy,
+  busyPath,
   onGenerate,
+  onDelete,
+  onAddToProduct,
   hasSelection,
 }: {
   product: ProductRow | null;
   images: { id: string; src: string; title: string }[];
-  generated: string[];
+  generated: { url: string; path: string }[];
   style: "studio" | "sfeer" | "lifestyle";
   setStyle: (v: "studio" | "sfeer" | "lifestyle") => void;
+  prompt: string;
+  setPrompt: (v: string) => void;
   busy: boolean;
+  busyPath: string | null;
   onGenerate: () => void;
+  onDelete: (path: string) => void;
+  onAddToProduct: (path: string) => void;
   hasSelection: boolean;
 }) {
   if (!hasSelection || !product) {
@@ -951,6 +1021,22 @@ function ImagesTab({
               </button>
             ))}
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="image-prompt">Extra wensen voor de afbeelding</Label>
+            <Textarea
+              id="image-prompt"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={3}
+              maxLength={600}
+              placeholder="Bijvoorbeeld: product schuin van voren, lichtgrijze achtergrond, houten vloer, geen rekwisieten."
+            />
+            <p className="text-xs text-muted-foreground">
+              Beschrijf hoe de afbeelding eruit moet zien. Laat leeg voor een standaard productfoto.
+            </p>
+          </div>
+
           <Button onClick={onGenerate} disabled={busy} className="py-3 h-auto">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
             {busy ? "Bezig…" : "Genereer afbeelding"}
@@ -958,23 +1044,53 @@ function ImagesTab({
 
           {generated.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {generated.map((url, i) => (
-                <div key={url}>
-                  <img
-                    src={url}
-                    alt={`Gegenereerde afbeelding ${i + 1} van ${product.title}`}
-                    className="aspect-square w-full rounded-md border border-border object-cover bg-white"
-                    loading="lazy"
-                  />
-                  <a
-                    href={url}
-                    download
-                    className="mt-1.5 inline-block text-xs text-primary hover:underline"
-                  >
-                    Downloaden
-                  </a>
-                </div>
-              ))}
+              {generated.map((img, i) => {
+                const rowBusy = busyPath === img.path;
+                return (
+                  <div key={img.path || img.url}>
+                    <img
+                      src={img.url}
+                      alt={`Gegenereerde afbeelding ${i + 1} van ${product.title}`}
+                      className="aspect-square w-full rounded-md border border-border object-cover bg-white"
+                      loading="lazy"
+                    />
+                    <div className="mt-2 space-y-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full py-2 h-auto"
+                        disabled={rowBusy || !img.path}
+                        onClick={() => onAddToProduct(img.path)}
+                      >
+                        {rowBusy ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CloudUpload className="h-4 w-4" />
+                        )}
+                        Toevoegen aan product
+                      </Button>
+                      <div className="flex items-center justify-between">
+                        <a
+                          href={img.url}
+                          download
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Downloaden
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => onDelete(img.path)}
+                          disabled={rowBusy || !img.path}
+                          className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Verwijderen
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </SectionCard>
