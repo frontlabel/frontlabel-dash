@@ -260,6 +260,36 @@ function ProductOptimizerPage() {
     setGeneratingImage(false);
   }
 
+  async function syncToShop() {
+    if (!selectedId || !suggestions) return;
+    setConfirmSync(false);
+    setSyncing(true);
+    const res = await runSync({
+      data: {
+        shopId,
+        productId: selectedId,
+        fields: {
+          title: suggestions.title,
+          seoTitle: suggestions.seoTitle,
+          metaDescription: suggestions.metaDescription,
+          description: suggestions.description,
+        },
+        altTexts: suggestions.altTexts,
+      },
+    });
+    if (res.ok) {
+      toast.success(
+        res.altUpdated > 0
+          ? `Gesynchroniseerd naar je shop (${res.altUpdated} alt-teksten bijgewerkt)`
+          : "Gesynchroniseerd naar je shop",
+      );
+      await openProduct(selectedId);
+    } else {
+      toast.error(res.error);
+    }
+    setSyncing(false);
+  }
+
   useEffect(() => {
     setContent(
       <div className="flex items-center justify-between w-full gap-3">
