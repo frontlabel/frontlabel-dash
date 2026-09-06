@@ -141,13 +141,14 @@ export const syncProductToShop = createServerFn({ method: "POST" })
         description: z.string().default(""),
       }),
       altTexts: z.array(z.string()).default([]),
+      includeImages: z.boolean().default(true),
     }),
   )
   .handler(async ({ data, context }) => {
     const creds = await getShopCredentials(context.supabase as never, data.shopId);
     if (!creds) return { ok: false as const, error: "Geen actieve koppeling met je shop." };
 
-    const { pushProductToShop } = await import("./product-optimizer.server");
+    const { pushProductToShop, uploadProductImages } = await import("./product-optimizer.server");
     const result = await pushProductToShop({
       ...creds,
       productId: data.productId,
@@ -155,6 +156,41 @@ export const syncProductToShop = createServerFn({ method: "POST" })
       altTexts: data.altTexts,
     });
     if (!result.ok) return { ok: false as const, error: result.error ?? "Synchroniseren mislukt." };
+
+    // Gegenereerde afbeeldingen meesturen naar de shop.
+    let imagesUploaded = 0;
+    let imageError: string | undefined;
+    const { data: saved } = await context.supabase
+      .from("product_optimizations")
+      .select("image_urls")
+      .eq("shop_id", data.shopId)
+      .eq("product_ref", data.productId)
+      .maybeSingle();
+    const paths = ((saved?.image_urls as string[] | null) ?? []).filter(Boolean);
+
+    if (data.includeImages && paths.length > 0) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const files: { filename: string; base64: string; title?: string }[] = [];
+      for (const path of paths) {
+        const dl = await supabaseAdmin.storage.from("product-images").download(path);
+        if (dl.error || !dl.data) continue;
+        const buf = Buffer.from(await dl.data.arrayBuffer());
+        files.push({
+          filename: path.split("/").pop() || `${Date.now()}.png`,
+          base64: buf.toString("base64"),
+          ...(data.fields.title ? { title: data.fields.title } : {}),
+        });
+      }
+      if (files.length > 0) {
+        const up = await uploadProductImages({
+          ...creds,
+          productId: data.productId,
+          images: files,
+        });
+        imagesUploaded = up.uploaded;
+        imageError = up.error;
+      }
+    }
 
     await context.supabase.from("product_optimizations").upsert(
       {
@@ -172,8 +208,14 @@ export const syncProductToShop = createServerFn({ method: "POST" })
       { onConflict: "shop_id,product_ref" },
     );
 
-    return { ok: true as const, altUpdated: result.altUpdated };
+    return {
+      ok: true as const,
+      altUpdated: result.altUpdated,
+      imagesUploaded,
+      imageError: imageError ?? null,
+    };
   });
+
 
 /** Genereert een nieuwe productafbeelding en bewaart die bij het product. */
 export const generateProductImage = createServerFn({ method: "POST" })
