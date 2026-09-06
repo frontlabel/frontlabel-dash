@@ -234,16 +234,23 @@ function ProductOptimizerPage() {
       setTab("detail");
       setSuggestions(null);
       setDetail({ product: null, images: [], generated: [] });
-      const res = await fetchDetail({ data: { shopId, productId } });
-      setDetail({
-        product: (res.product as ProductRow | null) ?? null,
-        images: res.images ?? [],
-        generated: res.saved?.imageUrls ?? [],
-      });
-      if (res.saved?.suggestions) setSuggestions(res.saved.suggestions as unknown as Suggestions);
+      try {
+        const res = await fetchDetail({ data: { shopId, productId } });
+        setDetail({
+          product: (res.product as ProductRow | null) ?? null,
+          images: Array.isArray(res.images) ? res.images : [],
+          generated: res.saved?.imageUrls ?? [],
+        });
+        setSuggestions(normalizeSuggestions(res.saved?.suggestions));
+      } catch (e) {
+        console.error("[product-optimizer] detail failed", e);
+        toast.error("Dit product kon niet geladen worden. Probeer het opnieuw.");
+        setDetail({ product: null, images: [], generated: [] });
+      }
     },
     [fetchDetail, shopId],
   );
+
 
   async function generate() {
     if (!selectedId) return;
