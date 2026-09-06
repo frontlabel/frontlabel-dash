@@ -256,7 +256,15 @@ export async function fetchProduct(opts: {
     images = [];
   }
 
-  const mapped = mapProduct({ ...data.product, imageCount: images.length || (data.product.image ? 1 : 0) });
+  const [brands, prices] = await Promise.all([
+    fetchBrandMap(headers, opts.language),
+    fetchPriceMap(headers, opts.language),
+  ]);
+
+  const mapped = mapProduct(
+    { ...data.product, imageCount: images.length || (data.product.image ? 1 : 0) },
+    { brands, prices, imagesKnown: true },
+  );
   return { product: mapped, images };
 }
 
