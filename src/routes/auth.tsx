@@ -23,20 +23,29 @@ function AuthPage() {
     });
   }, [navigate]);
 
+  // Gebruikersnaam zonder @ wordt omgezet naar een intern e-mailadres (bijv. admin)
+  function resolveEmail(value: string) {
+    const v = value.trim();
+    return v.includes("@") ? v : `${v.toLowerCase()}@shoplabel.local`;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email,
+          email: resolveEmail(email),
           password,
           options: { emailRedirectTo: `${window.location.origin}/dashboard` },
         });
         if (error) throw error;
         toast.success("Account aangemaakt. Je bent ingelogd.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({
+          email: resolveEmail(email),
+          password,
+        });
         if (error) throw error;
       }
       navigate({ to: "/dashboard" });
@@ -51,11 +60,11 @@ function AuthPage() {
   const isSignup = mode === "signup";
 
   async function handleForgotPassword() {
-    if (!email) {
+    if (!email || !email.includes("@")) {
       toast.error("Vul eerst je e-mailadres in.");
       return;
     }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     if (error) toast.error(error.message);
@@ -79,15 +88,15 @@ function AuthPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm/6 font-medium text-foreground">
-                  E-mailadres
+                  E-mailadres of gebruikersnaam
                 </label>
                 <div className="mt-2">
                   <input
                     id="email"
                     name="email"
-                    type="email"
+                    type="text"
                     required
-                    autoComplete="email"
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="block w-full rounded-md bg-background px-3 py-1.5 text-base text-foreground outline-1 -outline-offset-1 outline-border placeholder:text-muted-foreground focus:outline-2 focus:-outline-offset-2 focus:outline-primary sm:text-sm/6"
