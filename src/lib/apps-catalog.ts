@@ -4,6 +4,7 @@ import filterByStockAsset from "@/assets/squares-filterbystock.jpg.asset.json";
 import instagramFeedAsset from "@/assets/squares-instagramfeed.jpg.asset.json";
 import priceAlertAsset from "@/assets/squares-pricealert.jpg.asset.json";
 import priceDropAsset from "@/assets/squares-pricedrop.jpg.asset.json";
+import productOptimizerImg from "@/assets/squares-productoptimizer.jpg";
 import tileCalculatorImg from "@/assets/squares-tilecalculator.jpg";
 
 export interface AppDefinition {

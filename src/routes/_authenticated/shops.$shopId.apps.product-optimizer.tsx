@@ -1,0 +1,955 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
+import { toast } from "sonner";
+import { SectionCard, SectionLabel } from "@/components/section-card";
+import { StickySaveBar } from "@/components/sticky-save-bar";
+import { useDisableAppGuard } from "@/components/disable-app-dialog";
+import { useShellHeader } from "@/components/shell-header-context";
+import { cn } from "@/lib/utils";
+import {
+  listOptimizableProducts,
+  getOptimizableProduct,
+  generateProductSuggestions,
+  generateProductImage,
+} from "@/lib/product-optimizer.functions";
+import {
+  ChevronRight,
+  Copy,
+  Image as ImageIcon,
+  LayoutGrid,
+  Loader2,
+  RefreshCw,
+  Save,
+  Search,
+  Sparkles,
+  Wand2,
+} from "lucide-react";
+
+export const Route = createFileRoute("/_authenticated/shops/$shopId/apps/product-optimizer")({
+  component: ProductOptimizerPage,
+});
+
+const APP_SLUG = "product-optimizer";
+
+interface OptimizerSettings {
+  tone: string;
+  language: string;
+  audience: string;
+  brandName: string;
+  descriptionLength: string;
+  specsAsTable: boolean;
+}
+
+const DEFAULTS: OptimizerSettings = {
+  tone: "zakelijk",
+  language: "Nederlands",
+  audience: "",
+  brandName: "",
+  descriptionLength: "normaal",
+  specsAsTable: true,
+};
+
+interface ProductRow {
+  id: string;
+  title: string;
+  fulltitle: string;
+  description: string;
+  content: string;
+  brand: string | null;
+  price: number | null;
+  image: string | null;
+  imageCount: number;
+  url: string | null;
+  visible: boolean;
+  score: number;
+  missing: string[];
+}
+
+interface Suggestions {
+  title: string;
+  description: string;
+  seoTitle: string;
+  metaDescription: string;
+  specs: { label: string; value: string }[];
+  altTexts: string[];
+  tips: string[];
+}
+
+const money = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
+
+function scoreTone(score: number) {
+  if (score >= 80) return { text: "text-green-700", bg: "bg-green-500", label: "Compleet" };
+  if (score >= 50) return { text: "text-amber-700", bg: "bg-amber-500", label: "Kan beter" };
+  return { text: "text-red-700", bg: "bg-red-500", label: "Onvolledig" };
+}
+
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function ProductOptimizerPage() {
+  const { shopId } = Route.useParams();
+  const { setContent } = useShellHeader();
+  const [active, setActive] = useState(false);
+  const [rowId, setRowId] = useState<string | null>(null);
+  const [settings, setSettings] = useState<OptimizerSettings>(DEFAULTS);
+  const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState<"products" | "detail" | "images" | "settings">("products");
+
+  const [products, setProducts] = useState<ProductRow[]>([]);
+  const [loadingList, setLoadingList] = useState(false);
+  const [listReason, setListReason] = useState<string>("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<{
+    product: ProductRow | null;
+    images: { id: string; src: string; title: string }[];
+    generated: string[];
+  }>({ product: null, images: [], generated: [] });
+  const [suggestions, setSuggestions] = useState<Suggestions | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [imageStyle, setImageStyle] = useState<"studio" | "sfeer" | "lifestyle">("studio");
+
+  const { requestToggle, dialog: disableDialog } = useDisableAppGuard({
+    appName: "Product optimizer",
+    appSlug: APP_SLUG,
+    active,
+    setActive,
+  });
+
+  const fetchList = useServerFn(listOptimizableProducts);
+  const fetchDetail = useServerFn(getOptimizableProduct);
+  const runSuggestions = useServerFn(generateProductSuggestions);
+  const runImage = useServerFn(generateProductImage);
+
+  function update<K extends keyof OptimizerSettings>(k: K, v: OptimizerSettings[K]) {
+    setSettings((s) => ({ ...s, [k]: v }));
+  }
+
+  const save = useCallback(async () => {
+    setSaving(true);
+    if (rowId) {
+      const { error } = await supabase
+        .from("shop_apps")
+        .update({ enabled: active, settings: settings as unknown as Json })
+        .eq("id", rowId);
+      if (error) toast.error(error.message);
+      else toast.success("Opgeslagen");
+    } else {
+      const { data, error } = await supabase
+        .from("shop_apps")
+        .insert({ shop_id: shopId, app_slug: APP_SLUG, enabled: active, settings: settings as unknown as Json })
+        .select("id")
+        .single();
+      if (error) toast.error(error.message);
+      else {
+        setRowId(data!.id);
+        toast.success("Opgeslagen");
+      }
+    }
+    setSaving(false);
+  }, [active, rowId, settings, shopId]);
+
+  useEffect(() => {
+    supabase
+      .from("shop_apps")
+      .select("id,enabled,settings")
+      .eq("shop_id", shopId)
+      .eq("app_slug", APP_SLUG)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) return;
+        setRowId(data.id);
+        setActive(data.enabled);
+        setSettings({ ...DEFAULTS, ...((data.settings as Partial<OptimizerSettings>) ?? {}) });
+      });
+  }, [shopId]);
+
+  const loadProducts = useCallback(async () => {
+    setLoadingList(true);
+    try {
+      const res = await fetchList({ data: { shopId } });
+      setProducts(res.products as ProductRow[]);
+      setListReason(res.reason);
+    } catch {
+      setListReason("error");
+    }
+    setLoadingList(false);
+  }, [fetchList, shopId]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
+
+  const openProduct = useCallback(
+    async (productId: string) => {
+      setSelectedId(productId);
+      setTab("detail");
+      setSuggestions(null);
+      setDetail({ product: null, images: [], generated: [] });
+      const res = await fetchDetail({ data: { shopId, productId } });
+      setDetail({
+        product: (res.product as ProductRow | null) ?? null,
+        images: res.images ?? [],
+        generated: res.saved?.imageUrls ?? [],
+      });
+      if (res.saved?.suggestions) setSuggestions(res.saved.suggestions as unknown as Suggestions);
+    },
+    [fetchDetail, shopId],
+  );
+
+  async function generate() {
+    if (!selectedId) return;
+    setGenerating(true);
+    const res = await runSuggestions({
+      data: {
+        shopId,
+        productId: selectedId,
+        settings: {
+          tone: settings.tone,
+          language: settings.language,
+          audience: settings.audience,
+          brandName: settings.brandName,
+          descriptionLength: settings.descriptionLength,
+        },
+      },
+    });
+    if (res.ok) {
+      setSuggestions(res.suggestions as Suggestions);
+      toast.success("Voorstel klaar");
+    } else {
+      toast.error(res.error);
+    }
+    setGenerating(false);
+  }
+
+  async function makeImage() {
+    if (!selectedId) return;
+    setGeneratingImage(true);
+    const res = await runImage({ data: { shopId, productId: selectedId, style: imageStyle } });
+    if (res.ok && res.url) {
+      setDetail((d) => ({ ...d, generated: [...d.generated, res.url] }));
+      toast.success("Afbeelding gemaakt");
+    } else if (!res.ok) {
+      toast.error(res.error);
+    }
+    setGeneratingImage(false);
+  }
+
+  useEffect(() => {
+    setContent(
+      <div className="flex items-center justify-between w-full gap-3">
+        <nav className="flex items-center gap-2 text-sm min-w-0">
+          <LayoutGrid className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Link to="/shops/$shopId/apps" params={{ shopId }} className="text-foreground hover:underline truncate">
+            Apps
+          </Link>
+          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-foreground truncate">Product optimizer</span>
+        </nav>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 text-sm">
+            <Switch id="app-active" checked={active} onCheckedChange={requestToggle} />
+            <Label htmlFor="app-active" className="cursor-pointer">
+              {active ? "Actief" : "Uit"}
+            </Label>
+          </div>
+          <Button onClick={save} disabled={saving} size="sm" className="py-3 h-auto">
+            <Save className="h-4 w-4" />
+            {saving ? "Opslaan…" : "Opslaan"}
+          </Button>
+        </div>
+      </div>,
+    );
+    return () => setContent(null);
+  }, [shopId, active, saving, setContent, requestToggle, save]);
+
+  const tabs = [
+    { id: "products" as const, label: "Producten" },
+    { id: "detail" as const, label: "Product detail" },
+    { id: "images" as const, label: "Afbeeldingen" },
+    { id: "settings" as const, label: "Instellingen" },
+  ];
+
+  return (
+    <div className="max-w-6xl mx-auto pb-20">
+      <div className="px-6 pt-8">
+        <h1 className="text-2xl font-bold tracking-tight">Product optimizer</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Zie in één oogopslag hoe compleet je producten gevuld zijn en laat AI betere teksten, SEO,
+          specificaties en afbeeldingen voorstellen.
+        </p>
+      </div>
+
+      <div className="px-6 mt-4 border-b border-border">
+        <div className="flex gap-1 overflow-x-auto">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap",
+                tab === t.id
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="px-6 py-6">
+        {tab === "products" && (
+          <ProductsTab
+            products={products}
+            loading={loadingList}
+            reason={listReason}
+            shopId={shopId}
+            onRefresh={loadProducts}
+            onOpen={openProduct}
+          />
+        )}
+        {tab === "detail" && (
+          <DetailTab
+            product={detail.product}
+            images={detail.images}
+            suggestions={suggestions}
+            generating={generating}
+            onGenerate={generate}
+            hasSelection={!!selectedId}
+            specsAsTable={settings.specsAsTable}
+          />
+        )}
+        {tab === "images" && (
+          <ImagesTab
+            product={detail.product}
+            images={detail.images}
+            generated={detail.generated}
+            style={imageStyle}
+            setStyle={setImageStyle}
+            busy={generatingImage}
+            onGenerate={makeImage}
+            hasSelection={!!selectedId}
+          />
+        )}
+        {tab === "settings" && <SettingsTab settings={settings} update={update} />}
+      </div>
+
+      <StickySaveBar onSave={save} saving={saving} />
+      {disableDialog}
+    </div>
+  );
+}
+
+function ScoreBar({ score }: { score: number }) {
+  const tone = scoreTone(score);
+  return (
+    <div className="flex items-center gap-2">
+      <div className="h-1.5 w-20 rounded-full bg-gray-200 overflow-hidden">
+        <div className={cn("h-full rounded-full", tone.bg)} style={{ width: `${score}%` }} />
+      </div>
+      <span className={cn("text-sm font-semibold tabular-nums", tone.text)}>{score}</span>
+    </div>
+  );
+}
+
+function ProductsTab({
+  products,
+  loading,
+  reason,
+  shopId,
+  onRefresh,
+  onOpen,
+}: {
+  products: ProductRow[];
+  loading: boolean;
+  reason: string;
+  shopId: string;
+  onRefresh: () => void;
+  onOpen: (id: string) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [onlyIncomplete, setOnlyIncomplete] = useState(false);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return products
+      .filter((p) => (q ? p.title.toLowerCase().includes(q) || (p.brand ?? "").toLowerCase().includes(q) : true))
+      .filter((p) => (onlyIncomplete ? p.score < 80 : true))
+      .sort((a, b) => a.score - b.score);
+  }, [products, query, onlyIncomplete]);
+
+  const average = products.length
+    ? Math.round(products.reduce((sum, p) => sum + p.score, 0) / products.length)
+    : 0;
+  const needsWork = products.filter((p) => p.score < 80).length;
+
+  if (reason === "no-credentials") {
+    return (
+      <SectionCard className="p-6 text-sm">
+        <p className="font-medium">Nog geen actieve koppeling met je shop</p>
+        <p className="text-muted-foreground mt-1">
+          Koppel je shop opnieuw om je producten hier te kunnen inladen.
+        </p>
+        <Button asChild className="mt-4 py-3 h-auto">
+          <Link to="/shops/$shopId" params={{ shopId }}>Naar de shoppagina</Link>
+        </Button>
+      </SectionCard>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <SectionCard className="p-4">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Gemiddelde score</div>
+          <div className="mt-2 text-2xl font-semibold">{average}</div>
+        </SectionCard>
+        <SectionCard className="p-4">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Producten</div>
+          <div className="mt-2 text-2xl font-semibold">{products.length}</div>
+        </SectionCard>
+        <SectionCard className="p-4">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Aandacht nodig</div>
+          <div className="mt-2 text-2xl font-semibold">{needsWork}</div>
+        </SectionCard>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Zoek producten…"
+            className="pl-9"
+          />
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <Switch checked={onlyIncomplete} onCheckedChange={setOnlyIncomplete} />
+          Alleen onvolledig
+        </label>
+        <Button variant="outline" onClick={onRefresh} disabled={loading} className="py-3 h-auto">
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          Vernieuwen
+        </Button>
+      </div>
+
+      <SectionCard>
+        {loading && products.length === 0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">Producten laden…</div>
+        ) : filtered.length === 0 ? (
+          <div className="p-8 text-center text-sm text-muted-foreground">Geen producten gevonden.</div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <th className="px-5 py-3 font-medium">Product</th>
+                <th className="px-5 py-3 font-medium hidden md:table-cell">Merk</th>
+                <th className="px-5 py-3 font-medium hidden lg:table-cell">Wat ontbreekt</th>
+                <th className="px-5 py-3 font-medium hidden sm:table-cell">Prijs</th>
+                <th className="px-5 py-3 font-medium">Score</th>
+                <th className="px-5 py-3" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filtered.map((p) => (
+                <tr key={p.id} className="hover:bg-gray-50">
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {p.image ? (
+                        <img
+                          src={p.image}
+                          alt={p.title}
+                          className="h-10 w-10 rounded border border-border object-contain bg-white shrink-0"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded border border-border bg-muted flex items-center justify-center shrink-0">
+                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      )}
+                      <button
+                        onClick={() => onOpen(p.id)}
+                        className="font-medium text-primary hover:underline truncate text-left"
+                      >
+                        {p.title || "Zonder titel"}
+                      </button>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3 hidden md:table-cell text-muted-foreground">{p.brand ?? "—"}</td>
+                  <td className="px-5 py-3 hidden lg:table-cell">
+                    {p.missing.length ? (
+                      <span className="text-xs text-muted-foreground">
+                        {p.missing.slice(0, 2).join(" · ")}
+                        {p.missing.length > 2 ? ` +${p.missing.length - 2}` : ""}
+                      </span>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">Compleet</Badge>
+                    )}
+                  </td>
+                  <td className="px-5 py-3 hidden sm:table-cell tabular-nums">
+                    {p.price !== null ? money.format(p.price) : "—"}
+                  </td>
+                  <td className="px-5 py-3">
+                    <ScoreBar score={p.score} />
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    <Button size="sm" variant="outline" onClick={() => onOpen(p.id)} className="py-3 h-auto">
+                      Optimaliseer
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </SectionCard>
+    </div>
+  );
+}
+
+function CopyBlock({ label, value, html }: { label: string; value: string; html?: boolean }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-7 px-2"
+          onClick={() => {
+            navigator.clipboard.writeText(value);
+            toast.success("Gekopieerd");
+          }}
+        >
+          <Copy className="h-3.5 w-3.5" />
+          Kopieer
+        </Button>
+      </div>
+      {html ? (
+        <div
+          className="prose prose-sm max-w-none rounded-md border border-border bg-white p-3 text-sm"
+          dangerouslySetInnerHTML={{ __html: value }}
+        />
+      ) : (
+        <p className="rounded-md border border-border bg-white p-3 text-sm whitespace-pre-wrap">{value}</p>
+      )}
+    </div>
+  );
+}
+
+function DetailTab({
+  product,
+  images,
+  suggestions,
+  generating,
+  onGenerate,
+  hasSelection,
+  specsAsTable,
+}: {
+  product: ProductRow | null;
+  images: { id: string; src: string; title: string }[];
+  suggestions: Suggestions | null;
+  generating: boolean;
+  onGenerate: () => void;
+  hasSelection: boolean;
+  specsAsTable: boolean;
+}) {
+  if (!hasSelection) {
+    return (
+      <SectionCard className="p-8 text-center text-sm text-muted-foreground">
+        Kies eerst een product in het tabblad <span className="font-medium text-foreground">Producten</span>.
+      </SectionCard>
+    );
+  }
+  if (!product) {
+    return <SectionCard className="p-8 text-center text-sm text-muted-foreground">Product laden…</SectionCard>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <SectionCard className="p-5 flex flex-wrap items-center gap-4">
+        {product.image && (
+          <img
+            src={product.image}
+            alt={product.title}
+            className="h-16 w-16 rounded border border-border object-contain bg-white"
+            loading="lazy"
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold truncate">{product.title}</div>
+          <div className="text-xs text-muted-foreground">
+            {product.brand ?? "Geen merk"} · {images.length} afbeelding(en)
+          </div>
+        </div>
+        <ScoreBar score={product.score} />
+        <Button onClick={onGenerate} disabled={generating} className="py-3 h-auto">
+          {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+          {suggestions ? "Genereer opnieuw" : "Genereer voorstel"}
+        </Button>
+      </SectionCard>
+
+      {product.missing.length > 0 && (
+        <div>
+          <SectionLabel>Wat ontbreekt nog</SectionLabel>
+          <SectionCard className="p-5">
+            <ul className="space-y-1.5 text-sm text-muted-foreground">
+              {product.missing.map((m) => (
+                <li key={m} className="flex gap-2">
+                  <span className="text-amber-500">•</span>
+                  {m}
+                </li>
+              ))}
+            </ul>
+          </SectionCard>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+          <SectionLabel>Nu in je shop</SectionLabel>
+          <SectionCard className="p-5 space-y-4">
+            <Field label="Titel" value={product.title} />
+            <Field label="Lange titel" value={product.fulltitle} />
+            <Field label="Meta description" value={product.description} />
+            <Field label="Omschrijving" value={stripHtml(product.content).slice(0, 1200)} />
+          </SectionCard>
+        </div>
+
+        <div>
+          <SectionLabel>Voorstel</SectionLabel>
+          <SectionCard className="p-5 space-y-5">
+            {!suggestions ? (
+              <p className="text-sm text-muted-foreground">
+                Nog geen voorstel. Klik op <span className="font-medium text-foreground">Genereer voorstel</span>.
+              </p>
+            ) : (
+              <>
+                <CopyBlock label="Titel" value={suggestions.title} />
+                <CopyBlock label="SEO-titel" value={suggestions.seoTitle} />
+                <CopyBlock label="Meta description" value={suggestions.metaDescription} />
+                <CopyBlock label="Omschrijving" value={suggestions.description} html />
+                {suggestions.specs.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <Label className="text-xs uppercase tracking-wider text-muted-foreground">Specificaties</Label>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2"
+                        onClick={() => {
+                          const text = specsAsTable
+                            ? `<table>${suggestions.specs
+                                .map((s) => `<tr><td>${s.label}</td><td>${s.value}</td></tr>`)
+                                .join("")}</table>`
+                            : suggestions.specs.map((s) => `${s.label}: ${s.value}`).join("\n");
+                          navigator.clipboard.writeText(text);
+                          toast.success("Gekopieerd");
+                        }}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                        Kopieer
+                      </Button>
+                    </div>
+                    <div className="rounded-md border border-border bg-white divide-y divide-border text-sm">
+                      {suggestions.specs.map((s) => (
+                        <div key={s.label} className="flex gap-3 px-3 py-2">
+                          <span className="w-40 shrink-0 text-muted-foreground">{s.label}</span>
+                          <span>{s.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {suggestions.altTexts.length > 0 && (
+                  <div>
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Alt-teksten</Label>
+                    <div className="mt-1.5 space-y-2">
+                      {suggestions.altTexts.map((alt, i) => (
+                        <div key={`${alt}-${i}`} className="flex items-center gap-3">
+                          {images[i]?.src ? (
+                            <img
+                              src={images[i]!.src}
+                              alt=""
+                              className="h-10 w-10 rounded border border-border object-contain bg-white shrink-0"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded border border-border bg-muted shrink-0" />
+                          )}
+                          <p className="text-sm flex-1">{alt}</p>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2"
+                            onClick={() => {
+                              navigator.clipboard.writeText(alt);
+                              toast.success("Gekopieerd");
+                            }}
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {suggestions.tips.length > 0 && (
+                  <div>
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Tips</Label>
+                    <ul className="mt-1.5 space-y-1.5 text-sm text-muted-foreground">
+                      {suggestions.tips.map((t) => (
+                        <li key={t} className="flex gap-2">
+                          <span className="text-primary">•</span>
+                          {t}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </>
+            )}
+          </SectionCard>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <Label className="text-xs uppercase tracking-wider text-muted-foreground">{label}</Label>
+      <p className="mt-1 text-sm whitespace-pre-wrap">
+        {value ? value : <span className="text-muted-foreground italic">Niet ingevuld</span>}
+      </p>
+    </div>
+  );
+}
+
+function ImagesTab({
+  product,
+  images,
+  generated,
+  style,
+  setStyle,
+  busy,
+  onGenerate,
+  hasSelection,
+}: {
+  product: ProductRow | null;
+  images: { id: string; src: string; title: string }[];
+  generated: string[];
+  style: "studio" | "sfeer" | "lifestyle";
+  setStyle: (v: "studio" | "sfeer" | "lifestyle") => void;
+  busy: boolean;
+  onGenerate: () => void;
+  hasSelection: boolean;
+}) {
+  if (!hasSelection || !product) {
+    return (
+      <SectionCard className="p-8 text-center text-sm text-muted-foreground">
+        Kies eerst een product in het tabblad <span className="font-medium text-foreground">Producten</span>.
+      </SectionCard>
+    );
+  }
+
+  const styles: { id: "studio" | "sfeer" | "lifestyle"; label: string; description: string }[] = [
+    { id: "studio", label: "Witte achtergrond", description: "Strakke studiofoto op wit." },
+    { id: "sfeer", label: "Sfeerbeeld", description: "Natuurlijk licht en warme omgeving." },
+    { id: "lifestyle", label: "Lifestyle", description: "Product in gebruik in een interieur." },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {(images.length < 3 || images.some((i) => !i.title)) && (
+        <SectionCard className="p-5 text-sm">
+          <p className="font-medium">Aandachtspunten</p>
+          <ul className="mt-2 space-y-1.5 text-muted-foreground">
+            {images.length < 3 && <li>• Dit product heeft minder dan 3 afbeeldingen.</li>}
+            {images.some((i) => !i.title) && <li>• Eén of meer afbeeldingen missen een alt-tekst.</li>}
+          </ul>
+        </SectionCard>
+      )}
+
+      <div>
+        <SectionLabel>Huidige afbeeldingen</SectionLabel>
+        <SectionCard className="p-5">
+          {images.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Dit product heeft nog geen afbeeldingen.</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {images.map((img) => (
+                <div key={img.id}>
+                  <img
+                    src={img.src}
+                    alt={img.title || product.title}
+                    className="aspect-square w-full rounded-md border border-border object-contain bg-white"
+                    loading="lazy"
+                  />
+                  <p className="mt-1.5 text-xs text-muted-foreground truncate">
+                    {img.title || "Geen alt-tekst"}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+      </div>
+
+      <div>
+        <SectionLabel>Nieuwe afbeelding genereren</SectionLabel>
+        <SectionCard className="p-5 space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {styles.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setStyle(s.id)}
+                className={cn(
+                  "rounded-lg border p-4 text-left transition-colors",
+                  style === s.id ? "border-primary bg-primary/5" : "border-border hover:bg-gray-50",
+                )}
+              >
+                <div className="text-sm font-medium">{s.label}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{s.description}</div>
+              </button>
+            ))}
+          </div>
+          <Button onClick={onGenerate} disabled={busy} className="py-3 h-auto">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+            {busy ? "Bezig…" : "Genereer afbeelding"}
+          </Button>
+
+          {generated.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {generated.map((url, i) => (
+                <div key={url}>
+                  <img
+                    src={url}
+                    alt={`Gegenereerde afbeelding ${i + 1} van ${product.title}`}
+                    className="aspect-square w-full rounded-md border border-border object-cover bg-white"
+                    loading="lazy"
+                  />
+                  <a
+                    href={url}
+                    download
+                    className="mt-1.5 inline-block text-xs text-primary hover:underline"
+                  >
+                    Downloaden
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+      </div>
+    </div>
+  );
+}
+
+function SettingsTab({
+  settings,
+  update,
+}: {
+  settings: OptimizerSettings;
+  update: <K extends keyof OptimizerSettings>(k: K, v: OptimizerSettings[K]) => void;
+}) {
+  const tones = ["zakelijk", "enthousiast", "informatief"];
+  const lengths = ["kort", "normaal", "uitgebreid"];
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div>
+        <SectionLabel>Schrijfstijl</SectionLabel>
+        <SectionCard className="p-5 space-y-5">
+          <div className="space-y-2">
+            <Label>Tone of voice</Label>
+            <div className="flex flex-wrap gap-2">
+              {tones.map((t) => (
+                <button
+                  key={t}
+                  onClick={() => update("tone", t)}
+                  className={cn(
+                    "rounded-md border px-3 py-2 text-sm capitalize transition-colors",
+                    settings.tone === t ? "border-primary bg-primary/5" : "border-border hover:bg-gray-50",
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="language">Taal</Label>
+            <Input id="language" value={settings.language} onChange={(e) => update("language", e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="audience">Doelgroep</Label>
+            <Textarea
+              id="audience"
+              rows={3}
+              placeholder="Bijv. doe-het-zelvers die kwaliteit belangrijker vinden dan prijs"
+              value={settings.audience}
+              onChange={(e) => update("audience", e.target.value)}
+            />
+          </div>
+        </SectionCard>
+      </div>
+
+      <div>
+        <SectionLabel>Merk &amp; opmaak</SectionLabel>
+        <SectionCard className="p-5 space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="brandName">Merknaam</Label>
+            <Input id="brandName" value={settings.brandName} onChange={(e) => update("brandName", e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Lengte omschrijving</Label>
+            <div className="flex flex-wrap gap-2">
+              {lengths.map((l) => (
+                <button
+                  key={l}
+                  onClick={() => update("descriptionLength", l)}
+                  className={cn(
+                    "rounded-md border px-3 py-2 text-sm capitalize transition-colors",
+                    settings.descriptionLength === l
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-gray-50",
+                  )}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <Label htmlFor="specsAsTable">Specificaties als tabel kopiëren</Label>
+              <p className="text-xs text-muted-foreground mt-1">
+                Uit: specificaties worden als eenvoudige lijst gekopieerd.
+              </p>
+            </div>
+            <Switch
+              id="specsAsTable"
+              checked={settings.specsAsTable}
+              onCheckedChange={(v) => update("specsAsTable", v)}
+            />
+          </div>
+        </SectionCard>
+      </div>
+    </div>
+  );
+}
