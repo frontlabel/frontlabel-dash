@@ -626,6 +626,8 @@ function DetailTab({
   onGenerate,
   hasSelection,
   specsAsTable,
+  syncing,
+  onSync,
 }: {
   product: ProductRow | null;
   images: { id: string; src: string; title: string }[];
@@ -634,6 +636,8 @@ function DetailTab({
   onGenerate: () => void;
   hasSelection: boolean;
   specsAsTable: boolean;
+  syncing: boolean;
+  onSync: () => void;
 }) {
   if (!hasSelection) {
     return (
