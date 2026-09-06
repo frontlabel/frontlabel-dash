@@ -75,6 +75,16 @@ export const APPS_CATALOG: AppDefinition[] = [
     image: priceDropAsset.url,
   },
   {
+    slug: "product-optimizer",
+    name: "Product optimizer",
+    tagline: "Vul je producten compleet met AI-voorstellen",
+    description:
+      "Zie per product hoe compleet het gevuld is en laat AI betere teksten, SEO-titel, meta description, specificaties, alt-teksten en nieuwe productafbeeldingen voorstellen.",
+    category: "Content",
+    status: "available",
+    image: productOptimizerImg,
+  },
+  {
     slug: "tile-calculator",
     name: "Vloer & wand calculator",
     tagline: "Bereken benodigde hoeveelheid voor tegels, laminaat, tapijt, behang of verf",
