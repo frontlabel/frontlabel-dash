@@ -374,6 +374,53 @@ export type Database = {
           },
         ]
       }
+      product_optimizations: {
+        Row: {
+          created_at: string
+          id: string
+          image_urls: string[]
+          product_ref: string
+          product_title: string | null
+          score: number
+          shop_id: string
+          status: string
+          suggestions: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_urls?: string[]
+          product_ref: string
+          product_title?: string | null
+          score?: number
+          shop_id: string
+          status?: string
+          suggestions?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_urls?: string[]
+          product_ref?: string
+          product_title?: string | null
+          score?: number
+          shop_id?: string
+          status?: string
+          suggestions?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_optimizations_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

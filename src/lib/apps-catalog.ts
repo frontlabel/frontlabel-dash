@@ -4,6 +4,7 @@ import filterByStockAsset from "@/assets/squares-filterbystock.jpg.asset.json";
 import instagramFeedAsset from "@/assets/squares-instagramfeed.jpg.asset.json";
 import priceAlertAsset from "@/assets/squares-pricealert.jpg.asset.json";
 import priceDropAsset from "@/assets/squares-pricedrop.jpg.asset.json";
+import productOptimizerImg from "@/assets/squares-productoptimizer.jpg";
 import tileCalculatorImg from "@/assets/squares-tilecalculator.jpg";
 
 export interface AppDefinition {
@@ -72,6 +73,16 @@ export const APPS_CATALOG: AppDefinition[] = [
     category: "Marketing",
     status: "coming-soon",
     image: priceDropAsset.url,
+  },
+  {
+    slug: "product-optimizer",
+    name: "Product optimizer",
+    tagline: "Vul je producten compleet met AI-voorstellen",
+    description:
+      "Zie per product hoe compleet het gevuld is en laat AI betere teksten, SEO-titel, meta description, specificaties, alt-teksten en nieuwe productafbeeldingen voorstellen.",
+    category: "Content",
+    status: "available",
+    image: productOptimizerImg,
   },
   {
     slug: "tile-calculator",

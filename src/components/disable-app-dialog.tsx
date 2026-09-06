@@ -14,6 +14,7 @@ const MISSED_ACTION: Record<string, string> = {
   "back-in-stock": "op voorraad-meldingen ontvangen",
   "price-alert": "een prijsmelding instellen",
   "tile-calculator": "hun benodigde hoeveelheid berekenen",
+  "product-optimizer": "complete, goed vindbare productpagina's zien",
 };
 
 export function getMissedAction(slug: string) {
