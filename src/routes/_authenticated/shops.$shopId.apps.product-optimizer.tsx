@@ -269,7 +269,7 @@ function ProductOptimizerPage() {
       },
     });
     if (res.ok) {
-      setSuggestions(res.suggestions as Suggestions);
+      setSuggestions(normalizeSuggestions(res.suggestions));
       toast.success("Voorstel klaar");
     } else {
       toast.error(res.error);
