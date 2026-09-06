@@ -303,6 +303,7 @@ export const generateProductImage = createServerFn({ method: "POST" })
       shopId: z.string().uuid(),
       productId: z.string().min(1),
       style: z.enum(["studio", "sfeer", "lifestyle"]).default("studio"),
+      prompt: z.string().max(600).default(""),
     }),
   )
   .handler(async ({ data, context }) => {
