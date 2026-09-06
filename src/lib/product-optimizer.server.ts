@@ -511,16 +511,19 @@ const IMAGE_STYLES: Record<string, string> = {
 export async function generateProductImageBytes(opts: {
   product: OptimizerProduct;
   style: string;
+  extraPrompt?: string;
 }): Promise<Uint8Array> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is niet geconfigureerd.");
 
   const styleText = IMAGE_STYLES[opts.style] ?? IMAGE_STYLES["studio"];
+  const extra = (opts.extraPrompt ?? "").trim().slice(0, 600);
   const prompt = [
     `Productfoto van: ${opts.product.fulltitle || opts.product.title}.`,
     opts.product.brand ? `Merk: ${opts.product.brand}.` : "",
     stripHtml(opts.product.content).slice(0, 500),
     `Stijl: ${styleText}.`,
+    extra ? `Extra wensen (belangrijk, volg deze op): ${extra}.` : "",
     "Geen tekst, geen logo's, geen watermerk. Vierkante uitsnede, e-commerce kwaliteit.",
   ]
     .filter(Boolean)
