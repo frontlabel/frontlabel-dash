@@ -348,7 +348,7 @@ export const generateProductImage = createServerFn({ method: "POST" })
       );
 
       const signed = await supabaseAdmin.storage.from("product-images").createSignedUrl(path, 3600);
-      return { ok: true as const, url: signed.data?.signedUrl ?? "" };
+      return { ok: true as const, url: signed.data?.signedUrl ?? "", path };
     } catch (e) {
       return { ok: false as const, error: e instanceof Error ? e.message : "Er ging iets mis." };
     }
