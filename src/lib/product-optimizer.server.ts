@@ -106,8 +106,12 @@ export function scoreProduct(p: {
   // Afbeeldingen (10)
   if (p.imageCount >= 3) score += 10;
   else if (p.imageCount >= 1) {
-    score += 5;
-    missing.push("Minder dan 3 productafbeeldingen");
+    if (p.imagesKnown) {
+      score += 5;
+      missing.push("Minder dan 3 productafbeeldingen");
+    } else {
+      score += 10;
+    }
   } else missing.push("Geen productafbeelding");
 
   return { score: Math.max(0, Math.min(100, score)), missing };
