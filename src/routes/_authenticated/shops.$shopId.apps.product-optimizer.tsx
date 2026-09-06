@@ -144,6 +144,7 @@ function ProductOptimizerPage() {
   const fetchDetail = useServerFn(getOptimizableProduct);
   const runSuggestions = useServerFn(generateProductSuggestions);
   const runImage = useServerFn(generateProductImage);
+  const runSync = useServerFn(syncProductToShop);
 
   function update<K extends keyof OptimizerSettings>(k: K, v: OptimizerSettings[K]) {
     setSettings((s) => ({ ...s, [k]: v }));
