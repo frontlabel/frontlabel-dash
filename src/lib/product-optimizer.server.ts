@@ -268,6 +268,85 @@ export async function fetchProduct(opts: {
   return { product: mapped, images };
 }
 
+/** Schrijft goedgekeurde teksten terug naar het product in Lightspeed. */
+export async function pushProductToShop(opts: {
+  apiKey: string;
+  apiSecret: string;
+  language?: string;
+  productId: string;
+  fields: {
+    title: string;
+    seoTitle: string;
+    metaDescription: string;
+    description: string;
+  };
+  /** Alt-teksten per bestaande productafbeelding, op volgorde. */
+  altTexts?: string[];
+}): Promise<{ ok: boolean; altUpdated: number; error?: string }> {
+  const headers = {
+    Authorization: auth(opts.apiKey, opts.apiSecret),
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+  const id = encodeURIComponent(opts.productId);
+
+  const payload: Record<string, unknown> = {};
+  if (opts.fields.title) payload.title = opts.fields.title;
+  if (opts.fields.seoTitle) payload.fulltitle = opts.fields.seoTitle;
+  if (opts.fields.metaDescription) payload.description = opts.fields.metaDescription;
+  if (opts.fields.description) payload.content = opts.fields.description;
+
+  if (Object.keys(payload).length > 0) {
+    const res = await fetch(`${base(opts.language)}/products/${id}.json`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ product: payload }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      console.error(`[product-optimizer] push failed ${res.status}: ${body}`);
+      return {
+        ok: false,
+        altUpdated: 0,
+        error:
+          res.status === 403
+            ? "De API-sleutel heeft geen schrijfrechten op producten. Controleer de permissies in Lightspeed."
+            : "Het product kon niet bijgewerkt worden in je shop.",
+      };
+    }
+  }
+
+  // Alt-teksten op de afbeeldingen (titelveld van de productafbeelding).
+  let altUpdated = 0;
+  const altTexts = (opts.altTexts ?? []).filter((t) => t.trim().length > 0);
+  if (altTexts.length > 0) {
+    try {
+      const imgRes = await fetch(`${base(opts.language)}/products/${id}/images.json`, { headers });
+      if (imgRes.ok) {
+        const imgData = (await imgRes.json()) as { productImages?: Record<string, unknown>[] };
+        const images = imgData.productImages ?? [];
+        for (let i = 0; i < Math.min(images.length, altTexts.length); i++) {
+          const imgId = images[i]?.id;
+          if (typeof imgId !== "number" && typeof imgId !== "string") continue;
+          const put = await fetch(
+            `${base(opts.language)}/products/images/${encodeURIComponent(String(imgId))}.json`,
+            {
+              method: "PUT",
+              headers,
+              body: JSON.stringify({ productImage: { title: altTexts[i] } }),
+            },
+          );
+          if (put.ok) altUpdated++;
+        }
+      }
+    } catch {
+      /* alt-teksten zijn optioneel */
+    }
+  }
+
+  return { ok: true, altUpdated };
+}
+
 export interface OptimizerTone {
   tone: string;
   language: string;
