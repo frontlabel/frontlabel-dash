@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
@@ -20,9 +21,21 @@ import {
   getOptimizableProduct,
   generateProductSuggestions,
   generateProductImage,
+  syncProductToShop,
 } from "@/lib/product-optimizer.functions";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ChevronRight,
+  CloudUpload,
   Copy,
   Image as ImageIcon,
   LayoutGrid,
@@ -118,6 +131,8 @@ function ProductOptimizerPage() {
   const [generating, setGenerating] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [imageStyle, setImageStyle] = useState<"studio" | "sfeer" | "lifestyle">("studio");
+  const [syncing, setSyncing] = useState(false);
+  const [confirmSync, setConfirmSync] = useState(false);
 
   const { requestToggle, dialog: disableDialog } = useDisableAppGuard({
     appName: "Product optimizer",
@@ -130,6 +145,7 @@ function ProductOptimizerPage() {
   const fetchDetail = useServerFn(getOptimizableProduct);
   const runSuggestions = useServerFn(generateProductSuggestions);
   const runImage = useServerFn(generateProductImage);
+  const runSync = useServerFn(syncProductToShop);
 
   function update<K extends keyof OptimizerSettings>(k: K, v: OptimizerSettings[K]) {
     setSettings((s) => ({ ...s, [k]: v }));
@@ -245,6 +261,36 @@ function ProductOptimizerPage() {
     setGeneratingImage(false);
   }
 
+  async function syncToShop() {
+    if (!selectedId || !suggestions) return;
+    setConfirmSync(false);
+    setSyncing(true);
+    const res = await runSync({
+      data: {
+        shopId,
+        productId: selectedId,
+        fields: {
+          title: suggestions.title,
+          seoTitle: suggestions.seoTitle,
+          metaDescription: suggestions.metaDescription,
+          description: suggestions.description,
+        },
+        altTexts: suggestions.altTexts,
+      },
+    });
+    if (res.ok) {
+      toast.success(
+        res.altUpdated > 0
+          ? `Gesynchroniseerd naar je shop (${res.altUpdated} alt-teksten bijgewerkt)`
+          : "Gesynchroniseerd naar je shop",
+      );
+      await openProduct(selectedId);
+    } else {
+      toast.error(res.error);
+    }
+    setSyncing(false);
+  }
+
   useEffect(() => {
     setContent(
       <div className="flex items-center justify-between w-full gap-3">
@@ -329,6 +375,8 @@ function ProductOptimizerPage() {
             onGenerate={generate}
             hasSelection={!!selectedId}
             specsAsTable={settings.specsAsTable}
+            syncing={syncing}
+            onSync={() => setConfirmSync(true)}
           />
         )}
         {tab === "images" && (
@@ -348,6 +396,26 @@ function ProductOptimizerPage() {
 
       <StickySaveBar onSave={save} saving={saving} />
       {disableDialog}
+
+      <AlertDialog open={confirmSync} onOpenChange={setConfirmSync}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Voorstel naar je shop synchroniseren?</AlertDialogTitle>
+            <AlertDialogDescription>
+              De huidige titel, SEO-titel, meta description en omschrijving van dit product in je
+              webshop worden overschreven door het voorstel. Alt-teksten van bestaande afbeeldingen
+              worden ook bijgewerkt. Dit kun je niet ongedaan maken.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="py-3 h-auto">Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={syncToShop} className="py-3 h-auto">
+              <CloudUpload className="h-4 w-4" />
+              Synchroniseer naar shop
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -558,6 +626,8 @@ function DetailTab({
   onGenerate,
   hasSelection,
   specsAsTable,
+  syncing,
+  onSync,
 }: {
   product: ProductRow | null;
   images: { id: string; src: string; title: string }[];
@@ -566,6 +636,8 @@ function DetailTab({
   onGenerate: () => void;
   hasSelection: boolean;
   specsAsTable: boolean;
+  syncing: boolean;
+  onSync: () => void;
 }) {
   if (!hasSelection) {
     return (
@@ -596,10 +668,18 @@ function DetailTab({
           </div>
         </div>
         <ScoreBar score={product.score} />
-        <Button onClick={onGenerate} disabled={generating} className="py-3 h-auto">
-          {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-          {suggestions ? "Genereer opnieuw" : "Genereer voorstel"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={onGenerate} disabled={generating || syncing} variant={suggestions ? "outline" : "default"} className="py-3 h-auto">
+            {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {suggestions ? "Genereer opnieuw" : "Genereer voorstel"}
+          </Button>
+          {suggestions && (
+            <Button onClick={onSync} disabled={syncing || generating} className="py-3 h-auto">
+              {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
+              {syncing ? "Synchroniseren…" : "Synchroniseer naar shop"}
+            </Button>
+          )}
+        </div>
       </SectionCard>
 
       {product.missing.length > 0 && (
