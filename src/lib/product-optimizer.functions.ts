@@ -127,6 +127,54 @@ export const generateProductSuggestions = createServerFn({ method: "POST" })
     }
   });
 
+/** Schrijft het goedgekeurde voorstel terug naar het product in Lightspeed. */
+export const syncProductToShop = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      shopId: z.string().uuid(),
+      productId: z.string().min(1),
+      fields: z.object({
+        title: z.string().default(""),
+        seoTitle: z.string().default(""),
+        metaDescription: z.string().default(""),
+        description: z.string().default(""),
+      }),
+      altTexts: z.array(z.string()).default([]),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    const creds = await getShopCredentials(context.supabase as never, data.shopId);
+    if (!creds) return { ok: false as const, error: "Geen actieve koppeling met je shop." };
+
+    const { pushProductToShop } = await import("./product-optimizer.server");
+    const result = await pushProductToShop({
+      ...creds,
+      productId: data.productId,
+      fields: data.fields,
+      altTexts: data.altTexts,
+    });
+    if (!result.ok) return { ok: false as const, error: result.error ?? "Synchroniseren mislukt." };
+
+    await context.supabase.from("product_optimizations").upsert(
+      {
+        shop_id: data.shopId,
+        product_ref: data.productId,
+        status: "synced",
+        suggestions: {
+          title: data.fields.title,
+          seoTitle: data.fields.seoTitle,
+          metaDescription: data.fields.metaDescription,
+          description: data.fields.description,
+          altTexts: data.altTexts,
+        } as never,
+      },
+      { onConflict: "shop_id,product_ref" },
+    );
+
+    return { ok: true as const, altUpdated: result.altUpdated };
+  });
+
 /** Genereert een nieuwe productafbeelding en bewaart die bij het product. */
 export const generateProductImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
