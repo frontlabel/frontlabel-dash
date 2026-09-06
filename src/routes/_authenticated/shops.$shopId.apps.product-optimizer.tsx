@@ -1021,6 +1021,22 @@ function ImagesTab({
               </button>
             ))}
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="image-prompt">Extra wensen voor de afbeelding</Label>
+            <Textarea
+              id="image-prompt"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={3}
+              maxLength={600}
+              placeholder="Bijvoorbeeld: product schuin van voren, lichtgrijze achtergrond, houten vloer, geen rekwisieten."
+            />
+            <p className="text-xs text-muted-foreground">
+              Beschrijf hoe de afbeelding eruit moet zien. Laat leeg voor een standaard productfoto.
+            </p>
+          </div>
+
           <Button onClick={onGenerate} disabled={busy} className="py-3 h-auto">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
             {busy ? "Bezig…" : "Genereer afbeelding"}
@@ -1028,23 +1044,53 @@ function ImagesTab({
 
           {generated.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {generated.map((url, i) => (
-                <div key={url}>
-                  <img
-                    src={url}
-                    alt={`Gegenereerde afbeelding ${i + 1} van ${product.title}`}
-                    className="aspect-square w-full rounded-md border border-border object-cover bg-white"
-                    loading="lazy"
-                  />
-                  <a
-                    href={url}
-                    download
-                    className="mt-1.5 inline-block text-xs text-primary hover:underline"
-                  >
-                    Downloaden
-                  </a>
-                </div>
-              ))}
+              {generated.map((img, i) => {
+                const rowBusy = busyPath === img.path;
+                return (
+                  <div key={img.path || img.url}>
+                    <img
+                      src={img.url}
+                      alt={`Gegenereerde afbeelding ${i + 1} van ${product.title}`}
+                      className="aspect-square w-full rounded-md border border-border object-cover bg-white"
+                      loading="lazy"
+                    />
+                    <div className="mt-2 space-y-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full py-2 h-auto"
+                        disabled={rowBusy || !img.path}
+                        onClick={() => onAddToProduct(img.path)}
+                      >
+                        {rowBusy ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CloudUpload className="h-4 w-4" />
+                        )}
+                        Toevoegen aan product
+                      </Button>
+                      <div className="flex items-center justify-between">
+                        <a
+                          href={img.url}
+                          download
+                          className="text-xs text-primary hover:underline"
+                        >
+                          Downloaden
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => onDelete(img.path)}
+                          disabled={rowBusy || !img.path}
+                          className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Verwijderen
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </SectionCard>
