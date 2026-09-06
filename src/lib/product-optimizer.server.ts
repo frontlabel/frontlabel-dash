@@ -117,32 +117,89 @@ export function scoreProduct(p: {
   return { score: Math.max(0, Math.min(100, score)), missing };
 }
 
-function mapProduct(p: Record<string, unknown>): OptimizerProduct {
+/** Haalt het id uit een Lightspeed resource-verwijzing ({ resource: { id } }). */
+function resourceId(value: unknown): string | null {
+  const obj = value as { resource?: { id?: unknown } } | undefined;
+  const id = obj?.resource?.id;
+  return typeof id === "number" || typeof id === "string" ? String(id) : null;
+}
+
+function mapProduct(
+  p: Record<string, unknown>,
+  extra?: { brands?: Map<string, string>; prices?: Map<string, number>; imagesKnown?: boolean },
+): OptimizerProduct {
   const image = p.image as Record<string, unknown> | undefined;
-  const brandObj = p.brand as Record<string, unknown> | undefined;
+  const id = String(p.id ?? "");
+  const brandId = resourceId(p.brand);
+  const brandTitle =
+    (p.brand as Record<string, unknown> | undefined)?.title ??
+    (brandId ? extra?.brands?.get(brandId) : undefined);
+
   const priceObj = p.price as Record<string, unknown> | undefined;
-  const priceValue = Number(priceObj?.price ?? priceObj?.priceIncl);
-  const imageCount = Number(p.imageCount ?? (image ? 1 : 0));
+  const rawPrice = Number(priceObj?.priceIncl ?? priceObj?.price);
+  const price = Number.isFinite(rawPrice) ? rawPrice : (extra?.prices?.get(id) ?? null);
+
+  const rawCount = Number(p.imageCount);
+  const imageCount = Number.isFinite(rawCount) ? rawCount : image ? 1 : 0;
 
   const item = {
-    id: String(p.id ?? ""),
+    id,
     title: str(p.title),
     fulltitle: str(p.fulltitle),
     description: str(p.description),
     content: typeof p.content === "string" ? p.content : "",
-    brand: brandObj && typeof brandObj.title === "string" ? brandObj.title : null,
-    price: Number.isFinite(priceValue) ? priceValue : null,
+    brand: typeof brandTitle === "string" && brandTitle ? brandTitle : null,
+    price,
     image: image && typeof image.src === "string" ? image.src : null,
-    imageCount: Number.isFinite(imageCount) ? imageCount : 0,
+    imageCount,
     url: typeof p.url === "string" ? p.url : null,
     visible: p.isVisible !== false,
   };
 
-  const { score, missing } = scoreProduct(item);
+  const { score, missing } = scoreProduct({ ...item, imagesKnown: extra?.imagesKnown ?? false });
   return { ...item, score, missing };
 }
 
-/** Haalt (maximaal maxPages × 250) producten op uit de shop. */
+async function fetchBrandMap(headers: HeadersInit, language?: string): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  try {
+    const res = await fetch(`${base(language)}/brands.json?limit=250`, { headers });
+    if (!res.ok) return map;
+    const data = (await res.json()) as { brands?: Record<string, unknown>[] };
+    for (const b of data.brands ?? []) {
+      const id = b.id;
+      if ((typeof id === "number" || typeof id === "string") && typeof b.title === "string") {
+        map.set(String(id), b.title);
+      }
+    }
+  } catch {
+    /* merken zijn optioneel */
+  }
+  return map;
+}
+
+async function fetchPriceMap(headers: HeadersInit, language?: string): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  try {
+    for (let page = 1; page <= 4; page++) {
+      const res = await fetch(`${base(language)}/variants.json?limit=250&page=${page}`, { headers });
+      if (!res.ok) break;
+      const data = (await res.json()) as { variants?: Record<string, unknown>[] };
+      const rows = data.variants ?? [];
+      for (const v of rows) {
+        const productId = resourceId(v.product);
+        const value = Number(v.priceIncl ?? v.price);
+        if (productId && Number.isFinite(value) && !map.has(productId)) map.set(productId, value);
+      }
+      if (rows.length < 250) break;
+    }
+  } catch {
+    /* prijzen zijn optioneel */
+  }
+  return map;
+}
+
+/** Haalt (maximaal maxPages × 250) producten op uit de shop, met merk en prijs. */
 export async function fetchProducts(opts: {
   apiKey: string;
   apiSecret: string;
@@ -153,12 +210,17 @@ export async function fetchProducts(opts: {
   const products: OptimizerProduct[] = [];
   const maxPages = opts.maxPages ?? 4;
 
+  const [brands, prices] = await Promise.all([
+    fetchBrandMap(headers, opts.language),
+    fetchPriceMap(headers, opts.language),
+  ]);
+
   for (let page = 1; page <= maxPages; page++) {
     const res = await fetch(`${base(opts.language)}/products.json?limit=250&page=${page}`, { headers });
     if (!res.ok) break;
     const data = (await res.json()) as { products?: Record<string, unknown>[] };
     const rows = Array.isArray(data.products) ? data.products : [];
-    products.push(...rows.map(mapProduct));
+    products.push(...rows.map((p) => mapProduct(p, { brands, prices })));
     if (rows.length < 250) break;
   }
 
