@@ -348,6 +348,56 @@ export async function pushProductToShop(opts: {
   return { ok: true, altUpdated };
 }
 
+/** Uploadt gegenereerde afbeeldingen als productafbeelding naar Lightspeed. */
+export async function uploadProductImages(opts: {
+  apiKey: string;
+  apiSecret: string;
+  language?: string;
+  productId: string;
+  images: { filename: string; base64: string; title?: string }[];
+}): Promise<{ uploaded: number; error?: string }> {
+  const headers = {
+    Authorization: auth(opts.apiKey, opts.apiSecret),
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+  const id = encodeURIComponent(opts.productId);
+  let uploaded = 0;
+  let error: string | undefined;
+
+  for (const img of opts.images) {
+    try {
+      const res = await fetch(`${base(opts.language)}/products/${id}/images.json`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          productImage: {
+            attachment: img.base64,
+            filename: img.filename,
+            ...(img.title ? { title: img.title } : {}),
+          },
+        }),
+      });
+      if (res.ok) {
+        uploaded++;
+      } else {
+        const body = await res.text();
+        console.error(`[product-optimizer] image upload failed ${res.status}: ${body}`);
+        error =
+          res.status === 403
+            ? "De API-sleutel heeft geen schrijfrechten op productafbeeldingen."
+            : "Een gegenereerde afbeelding kon niet geüpload worden.";
+      }
+    } catch (e) {
+      console.error("[product-optimizer] image upload error", e);
+      error = "Een gegenereerde afbeelding kon niet geüpload worden.";
+    }
+  }
+
+  return { uploaded, ...(error ? { error } : {}) };
+}
+
+
 export interface OptimizerTone {
   tone: string;
   language: string;
