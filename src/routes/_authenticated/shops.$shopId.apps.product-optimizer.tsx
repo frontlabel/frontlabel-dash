@@ -106,8 +106,30 @@ function scoreTone(score: number) {
 }
 
 function stripHtml(html: string) {
-  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return String(html ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 }
+
+/** Maakt een bewaard voorstel veilig bruikbaar, ook als velden ontbreken. */
+function normalizeSuggestions(raw: unknown): Suggestions | null {
+  if (!raw || typeof raw !== "object") return null;
+  const s = raw as Partial<Suggestions>;
+  const text = (v: unknown) => (typeof v === "string" ? v : "");
+  return {
+    title: text(s.title),
+    description: text(s.description),
+    seoTitle: text(s.seoTitle),
+    metaDescription: text(s.metaDescription),
+    specs: Array.isArray(s.specs)
+      ? s.specs
+          .filter((x): x is { label: string; value: string } => !!x && typeof x === "object")
+          .map((x) => ({ label: text(x.label), value: text(x.value) }))
+          .filter((x) => x.label || x.value)
+      : [],
+    altTexts: Array.isArray(s.altTexts) ? s.altTexts.map(text).filter(Boolean) : [],
+    tips: Array.isArray(s.tips) ? s.tips.map(text).filter(Boolean) : [],
+  };
+}
+
 
 function ProductOptimizerPage() {
   const { shopId } = Route.useParams();
