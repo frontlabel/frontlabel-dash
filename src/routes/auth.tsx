@@ -23,20 +23,29 @@ function AuthPage() {
     });
   }, [navigate]);
 
+  // Gebruikersnaam zonder @ wordt omgezet naar een intern e-mailadres (bijv. admin)
+  function resolveEmail(value: string) {
+    const v = value.trim();
+    return v.includes("@") ? v : `${v.toLowerCase()}@shoplabel.local`;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email,
+          email: resolveEmail(email),
           password,
           options: { emailRedirectTo: `${window.location.origin}/dashboard` },
         });
         if (error) throw error;
         toast.success("Account aangemaakt. Je bent ingelogd.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({
+          email: resolveEmail(email),
+          password,
+        });
         if (error) throw error;
       }
       navigate({ to: "/dashboard" });
