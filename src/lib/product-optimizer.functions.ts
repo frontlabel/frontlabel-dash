@@ -68,7 +68,9 @@ export const getOptimizableProduct = createServerFn({ method: "POST" })
     if (paths.length) {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const signed = await supabaseAdmin.storage.from("product-images").createSignedUrls(paths, 3600);
-      imageUrls = (signed.data ?? []).map((s) => s.signedUrl).filter(Boolean);
+      imageUrls = (signed.data ?? [])
+        .map((s) => s.signedUrl)
+        .filter((u): u is string => typeof u === "string" && u.length > 0);
     }
 
     return {
