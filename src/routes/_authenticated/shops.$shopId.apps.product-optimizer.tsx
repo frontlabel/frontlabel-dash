@@ -251,14 +251,20 @@ function ProductOptimizerPage() {
   async function makeImage() {
     if (!selectedId) return;
     setGeneratingImage(true);
-    const res = await runImage({ data: { shopId, productId: selectedId, style: imageStyle } });
-    if (res.ok && res.url) {
-      setDetail((d) => ({ ...d, generated: [...d.generated, res.url] }));
-      toast.success("Afbeelding gemaakt");
-    } else if (!res.ok) {
-      toast.error(res.error);
+    const toastId = toast.loading("Afbeelding wordt gemaakt… dit duurt ongeveer een halve minuut.");
+    try {
+      const res = await runImage({ data: { shopId, productId: selectedId, style: imageStyle } });
+      if (res.ok && res.url) {
+        setDetail((d) => ({ ...d, generated: [...d.generated, res.url] }));
+        toast.success("Afbeelding gemaakt", { id: toastId });
+      } else {
+        toast.error(res.ok ? "De afbeelding kon niet opgehaald worden." : res.error, { id: toastId });
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Er ging iets mis.", { id: toastId });
+    } finally {
+      setGeneratingImage(false);
     }
-    setGeneratingImage(false);
   }
 
   async function syncToShop() {

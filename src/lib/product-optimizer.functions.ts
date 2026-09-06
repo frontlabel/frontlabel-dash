@@ -190,7 +190,7 @@ export const generateProductImage = createServerFn({ method: "POST" })
     if (!creds) return { ok: false as const, error: "Geen actieve koppeling met je shop." };
 
     const { fetchProduct, generateProductImageBytes } = await import("./product-optimizer.server");
-    const { product } = await fetchProduct({ ...creds, productId: data.productId });
+    const { product } = await fetchProduct({ ...creds, productId: data.productId, skipEnrichment: true });
     if (!product) return { ok: false as const, error: "Product niet gevonden." };
 
     try {
