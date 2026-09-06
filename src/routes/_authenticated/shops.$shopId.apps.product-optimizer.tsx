@@ -20,9 +20,21 @@ import {
   getOptimizableProduct,
   generateProductSuggestions,
   generateProductImage,
+  syncProductToShop,
 } from "@/lib/product-optimizer.functions";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   ChevronRight,
+  CloudUpload,
   Copy,
   Image as ImageIcon,
   LayoutGrid,
