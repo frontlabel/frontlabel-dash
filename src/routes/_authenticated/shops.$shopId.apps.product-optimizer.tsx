@@ -929,17 +929,27 @@ function ImagesTab({
   generated,
   style,
   setStyle,
+  prompt,
+  setPrompt,
   busy,
+  busyPath,
   onGenerate,
+  onDelete,
+  onAddToProduct,
   hasSelection,
 }: {
   product: ProductRow | null;
   images: { id: string; src: string; title: string }[];
-  generated: string[];
+  generated: { url: string; path: string }[];
   style: "studio" | "sfeer" | "lifestyle";
   setStyle: (v: "studio" | "sfeer" | "lifestyle") => void;
+  prompt: string;
+  setPrompt: (v: string) => void;
   busy: boolean;
+  busyPath: string | null;
   onGenerate: () => void;
+  onDelete: (path: string) => void;
+  onAddToProduct: (path: string) => void;
   hasSelection: boolean;
 }) {
   if (!hasSelection || !product) {
