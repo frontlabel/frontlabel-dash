@@ -375,25 +375,33 @@ function ProductOptimizerPage() {
             onGenerate={generate}
             hasSelection={!!selectedId}
             specsAsTable={settings.specsAsTable}
+            syncing={syncing}
+            onSync={() => setConfirmSync(true)}
           />
         )}
-        {tab === "images" && (
-          <ImagesTab
-            product={detail.product}
-            images={detail.images}
-            generated={detail.generated}
-            style={imageStyle}
-            setStyle={setImageStyle}
-            busy={generatingImage}
-            onGenerate={makeImage}
-            hasSelection={!!selectedId}
-          />
-        )}
-        {tab === "settings" && <SettingsTab settings={settings} update={update} />}
-      </div>
-
+...
       <StickySaveBar onSave={save} saving={saving} />
       {disableDialog}
+
+      <AlertDialog open={confirmSync} onOpenChange={setConfirmSync}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Voorstel naar je shop synchroniseren?</AlertDialogTitle>
+            <AlertDialogDescription>
+              De huidige titel, SEO-titel, meta description en omschrijving van dit product in je
+              webshop worden overschreven door het voorstel. Alt-teksten van bestaande afbeeldingen
+              worden ook bijgewerkt. Dit kun je niet ongedaan maken.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="py-3 h-auto">Annuleren</AlertDialogCancel>
+            <AlertDialogAction onClick={syncToShop} className="py-3 h-auto">
+              <CloudUpload className="h-4 w-4" />
+              Synchroniseer naar shop
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
