@@ -315,7 +315,11 @@ export const generateProductImage = createServerFn({ method: "POST" })
     if (!product) return { ok: false as const, error: "Product niet gevonden." };
 
     try {
-      const bytes = await generateProductImageBytes({ product, style: data.style });
+      const bytes = await generateProductImageBytes({
+        product,
+        style: data.style,
+        extraPrompt: data.prompt,
+      });
       const path = `${data.shopId}/${data.productId}/${Date.now()}.png`;
 
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
