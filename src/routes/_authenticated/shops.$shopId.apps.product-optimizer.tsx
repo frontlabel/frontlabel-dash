@@ -130,6 +130,8 @@ function ProductOptimizerPage() {
   const [generating, setGenerating] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [imageStyle, setImageStyle] = useState<"studio" | "sfeer" | "lifestyle">("studio");
+  const [syncing, setSyncing] = useState(false);
+  const [confirmSync, setConfirmSync] = useState(false);
 
   const { requestToggle, dialog: disableDialog } = useDisableAppGuard({
     appName: "Product optimizer",
