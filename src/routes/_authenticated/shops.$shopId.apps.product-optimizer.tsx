@@ -590,6 +590,10 @@ function ProductOptimizerPage() {
             onGenerate={generate}
             hasSelection={!!selectedId}
             specsAsTable={settings.specsAsTable}
+            onEdit={(patch) => {
+              setSuggestions((prev) => (prev ? { ...prev, ...patch } : prev));
+              setPushDirty(true);
+            }}
           />
         )}
         {tab === "specs" && (
@@ -851,7 +855,19 @@ function ProductsTab({
   );
 }
 
-function CopyBlock({ label, value, html }: { label: string; value: string; html?: boolean }) {
+function CopyBlock({
+  label,
+  value,
+  html,
+  onChange,
+  rows,
+}: {
+  label: string;
+  value: string;
+  html?: boolean;
+  onChange?: (v: string) => void;
+  rows?: number;
+}) {
   return (
     <div>
       <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -869,7 +885,22 @@ function CopyBlock({ label, value, html }: { label: string; value: string; html?
           Kopieer
         </Button>
       </div>
-      {html ? (
+      {onChange ? (
+        <>
+          <Textarea
+            value={value}
+            rows={rows ?? (html ? 10 : 2)}
+            onChange={(e) => onChange(e.target.value)}
+            className="bg-white text-sm"
+          />
+          {html && value.trim() !== "" && (
+            <div
+              className="prose prose-sm max-w-none mt-2 rounded-md border border-dashed border-border bg-muted/40 p-3 text-sm"
+              dangerouslySetInnerHTML={{ __html: value }}
+            />
+          )}
+        </>
+      ) : html ? (
         <div
           className="prose prose-sm max-w-none rounded-md border border-border bg-white p-3 text-sm"
           dangerouslySetInnerHTML={{ __html: value }}
@@ -881,6 +912,7 @@ function CopyBlock({ label, value, html }: { label: string; value: string; html?
   );
 }
 
+
 function DetailTab({
   product,
   images,
@@ -889,6 +921,7 @@ function DetailTab({
   onGenerate,
   hasSelection,
   specsAsTable,
+  onEdit,
 }: {
   product: ProductRow | null;
   images: { id: string; src: string; title: string }[];
@@ -897,6 +930,7 @@ function DetailTab({
   onGenerate: () => void;
   hasSelection: boolean;
   specsAsTable: boolean;
+  onEdit: (patch: Partial<Suggestions>) => void;
 }) {
   if (!hasSelection) {
     return (
@@ -971,10 +1005,31 @@ function DetailTab({
               </p>
             ) : (
               <>
-                <CopyBlock label="Titel" value={suggestions.title} />
-                <CopyBlock label="SEO-titel" value={suggestions.seoTitle} />
-                <CopyBlock label="Meta description" value={suggestions.metaDescription} />
-                <CopyBlock label="Omschrijving" value={suggestions.description} html />
+                <CopyBlock
+                  label="Titel"
+                  value={suggestions.title}
+                  onChange={(v) => onEdit({ title: v })}
+                  rows={2}
+                />
+                <CopyBlock
+                  label="SEO-titel"
+                  value={suggestions.seoTitle}
+                  onChange={(v) => onEdit({ seoTitle: v })}
+                  rows={2}
+                />
+                <CopyBlock
+                  label="Meta description"
+                  value={suggestions.metaDescription}
+                  onChange={(v) => onEdit({ metaDescription: v })}
+                  rows={3}
+                />
+                <CopyBlock
+                  label="Omschrijving"
+                  value={suggestions.description}
+                  html
+                  onChange={(v) => onEdit({ description: v })}
+                  rows={12}
+                />
                 {suggestions.specs.length > 0 && (
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -998,10 +1053,20 @@ function DetailTab({
                       </Button>
                     </div>
                     <div className="rounded-md border border-border bg-white divide-y divide-border text-sm">
-                      {suggestions.specs.map((s) => (
-                        <div key={s.label} className="flex gap-3 px-3 py-2">
+                      {suggestions.specs.map((s, i) => (
+                        <div key={`${s.label}-${i}`} className="flex items-center gap-3 px-3 py-2">
                           <span className="w-40 shrink-0 text-muted-foreground">{s.label}</span>
-                          <span>{s.value}</span>
+                          <Input
+                            value={s.value}
+                            onChange={(e) =>
+                              onEdit({
+                                specs: suggestions.specs.map((sp, j) =>
+                                  j === i ? { ...sp, value: e.target.value } : sp,
+                                ),
+                              })
+                            }
+                            className="h-8 flex-1 text-sm"
+                          />
                         </div>
                       ))}
                     </div>
@@ -1012,7 +1077,7 @@ function DetailTab({
                     <Label className="text-xs uppercase tracking-wider text-muted-foreground">Alt-teksten</Label>
                     <div className="mt-1.5 space-y-2">
                       {suggestions.altTexts.map((alt, i) => (
-                        <div key={`${alt}-${i}`} className="flex items-center gap-3">
+                        <div key={`alt-${i}`} className="flex items-center gap-3">
                           {images[i]?.src ? (
                             <img
                               src={images[i]!.src}
@@ -1023,7 +1088,15 @@ function DetailTab({
                           ) : (
                             <div className="h-10 w-10 rounded border border-border bg-muted shrink-0" />
                           )}
-                          <p className="text-sm flex-1">{alt}</p>
+                          <Input
+                            value={alt}
+                            onChange={(e) =>
+                              onEdit({
+                                altTexts: suggestions.altTexts.map((a, j) => (j === i ? e.target.value : a)),
+                              })
+                            }
+                            className="h-8 flex-1 text-sm"
+                          />
                           <Button
                             size="sm"
                             variant="ghost"
