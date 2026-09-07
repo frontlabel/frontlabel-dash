@@ -397,6 +397,50 @@ export async function uploadProductImages(opts: {
   return { uploaded, ...(error ? { error } : {}) };
 }
 
+/** Slaat de volgorde van productafbeeldingen op in Lightspeed (sortOrder per afbeelding). */
+export async function reorderProductImages(opts: {
+  apiKey: string;
+  apiSecret: string;
+  language?: string;
+  imageIds: string[];
+}): Promise<{ ok: boolean; updated: number; error?: string }> {
+  const headers = {
+    Authorization: auth(opts.apiKey, opts.apiSecret),
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+  let updated = 0;
+  for (let i = 0; i < opts.imageIds.length; i++) {
+    try {
+      const res = await fetch(
+        `${base(opts.language)}/products/images/${encodeURIComponent(opts.imageIds[i]!)}.json`,
+        {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({ productImage: { sortOrder: i + 1 } }),
+        },
+      );
+      if (res.ok) {
+        updated++;
+      } else {
+        const body = await res.text();
+        console.error(`[product-optimizer] image reorder failed ${res.status}: ${body}`);
+        return {
+          ok: false,
+          updated,
+          error:
+            res.status === 403
+              ? "De API-sleutel heeft geen schrijfrechten op productafbeeldingen."
+              : "De volgorde kon niet worden opgeslagen in je shop.",
+        };
+      }
+    } catch (e) {
+      console.error("[product-optimizer] image reorder error", e);
+      return { ok: false, updated, error: "De volgorde kon niet worden opgeslagen in je shop." };
+    }
+  }
+  return { ok: true, updated };
+}
 
 export interface OptimizerTone {
   tone: string;
