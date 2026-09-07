@@ -568,7 +568,7 @@ export async function generateProductImageBytes(opts: {
     stripHtml(opts.product.content).slice(0, 500),
     `Stijl: ${styleText}.`,
     extra ? `Extra wensen (belangrijk, volg deze op): ${extra}.` : "",
-    "Geen tekst, geen logo's, geen watermerk. Vierkante uitsnede, e-commerce kwaliteit.",
+    "Geen tekst, geen logo's, geen watermerk. Exact vierkant 1024x1024 pixels, e-commerce kwaliteit.",
   ]
     .filter(Boolean)
     .join(" ");
@@ -580,6 +580,7 @@ export async function generateProductImageBytes(opts: {
       model: "google/gemini-3.1-flash-image",
       messages: [{ role: "user", content: prompt }],
       modalities: ["image", "text"],
+      size: "1024x1024",
     }),
   });
 
