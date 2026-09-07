@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import {
   generateProductImage,
   deleteGeneratedImage,
   pushGeneratedImageToShop,
+  reorderShopImages,
   syncProductToShop,
 } from "@/lib/product-optimizer.functions";
 import {
@@ -39,6 +40,7 @@ import {
   ChevronRight,
   CloudUpload,
   Copy,
+  GripVertical,
   Image as ImageIcon,
   LayoutGrid,
   Loader2,
