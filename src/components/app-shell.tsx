@@ -12,6 +12,8 @@ import {
   ChevronsUpDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { APPS_CATALOG, APP_TABS, type AppDefinition } from "@/lib/apps-catalog";
+
 import { APP_VERSION_LABEL } from "@/lib/app-version";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
