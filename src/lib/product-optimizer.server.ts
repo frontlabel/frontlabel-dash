@@ -468,6 +468,10 @@ export async function generateSuggestions(opts: {
   product: OptimizerProduct;
   images: OptimizerProductImage[];
   settings: OptimizerTone;
+  /** Bestaande specificatienamen in de shop; de AI mag alleen hieruit kiezen. */
+  knownSpecLabels?: string[];
+  /** Specificaties die nu al op het product staan. */
+  currentSpecs?: { label: string; value: string }[];
 }): Promise<ProductSuggestions> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is niet geconfigureerd.");
@@ -488,6 +492,17 @@ export async function generateSuggestions(opts: {
     `- Meta description: ${product.description || "(leeg)"}`,
     `- Omschrijving: ${stripHtml(product.content).slice(0, 4000) || "(leeg)"}`,
     `- Aantal afbeeldingen: ${opts.images.length}`,
+    opts.currentSpecs && opts.currentSpecs.length > 0
+      ? `- Huidige specificaties: ${opts.currentSpecs.map((s) => `${s.label}: ${s.value}`).join("; ")}`
+      : "",
+    "",
+    opts.knownSpecLabels && opts.knownSpecLabels.length > 0
+      ? [
+          "Bestaande specificatienamen in deze shop (gebruik UITSLUITEND deze namen, exact overgenomen, inclusief hoofdletters):",
+          opts.knownSpecLabels.slice(0, 300).join(" | "),
+          "Gebruik geen synoniemen, meervoud/enkelvoud-varianten of eigen schrijfwijzen. Past er geen enkele naam bij een feit? Laat die specificatie dan weg.",
+        ].join("\n")
+      : "Geef alleen specificaties die je zeker uit de gegevens kunt afleiden.",
     "",
     "Geef JSON met exact deze sleutels:",
     '{"title": string, "description": string (HTML met <p> en eventueel <ul><li>), "seoTitle": string (max 60 tekens), "metaDescription": string (max 155 tekens), "specs": [{"label": string, "value": string}], "altTexts": string[], "tips": string[]}',
@@ -568,7 +583,7 @@ export async function generateProductImageBytes(opts: {
     stripHtml(opts.product.content).slice(0, 500),
     `Stijl: ${styleText}.`,
     extra ? `Extra wensen (belangrijk, volg deze op): ${extra}.` : "",
-    "Geen tekst, geen logo's, geen watermerk. Vierkante uitsnede, e-commerce kwaliteit.",
+    "Geen tekst, geen logo's, geen watermerk. Exact vierkant 1024x1024 pixels, e-commerce kwaliteit.",
   ]
     .filter(Boolean)
     .join(" ");
@@ -580,6 +595,7 @@ export async function generateProductImageBytes(opts: {
       model: "google/gemini-3.1-flash-image",
       messages: [{ role: "user", content: prompt }],
       modalities: ["image", "text"],
+      size: "1024x1024",
     }),
   });
 
@@ -609,4 +625,314 @@ export async function generateProductImageBytes(opts: {
 
   const binary = Buffer.from(b64, "base64");
   return new Uint8Array(binary);
+}
+
+/* ------------------------------------------------------------------ */
+/* Specificaties (Lightspeed attributes + types)                       */
+/* ------------------------------------------------------------------ */
+
+export interface SpecAttribute {
+  id: string;
+  title: string;
+  defaultValue: string;
+  typeIds: string[];
+}
+
+export interface SpecType {
+  id: string;
+  title: string;
+}
+
+export interface SpecLibrary {
+  attributes: SpecAttribute[];
+  types: SpecType[];
+}
+
+function specHeaders(apiKey: string, apiSecret: string) {
+  return {
+    Authorization: auth(apiKey, apiSecret),
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+}
+
+/** Normaliseert een label/waarde voor duplicaat-detectie. */
+export function normalizeSpecKey(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "")
+    .trim();
+}
+
+/** Haalt de volledige specificatie-bibliotheek van de shop op. */
+export async function fetchSpecLibrary(opts: {
+  apiKey: string;
+  apiSecret: string;
+  language?: string;
+}): Promise<SpecLibrary> {
+  const headers = specHeaders(opts.apiKey, opts.apiSecret);
+  const b = base(opts.language);
+
+  const attributes: SpecAttribute[] = [];
+  for (let page = 1; page <= 10; page++) {
+    const res = await fetch(`${b}/attributes.json?limit=250&page=${page}`, { headers });
+    if (!res.ok) break;
+    const data = (await res.json()) as { attributes?: Record<string, unknown>[] };
+    const list = data.attributes ?? [];
+    for (const a of list) {
+      attributes.push({
+        id: String(a.id ?? ""),
+        title: str(a.title),
+        defaultValue: str(a.defaultValue),
+        typeIds: [],
+      });
+    }
+    if (list.length < 250) break;
+  }
+
+  const types: SpecType[] = [];
+  for (let page = 1; page <= 10; page++) {
+    const res = await fetch(`${b}/types.json?limit=250&page=${page}`, { headers });
+    if (!res.ok) break;
+    const data = (await res.json()) as { types?: Record<string, unknown>[] };
+    const list = data.types ?? [];
+    for (const t of list) types.push({ id: String(t.id ?? ""), title: str(t.title) });
+    if (list.length < 250) break;
+  }
+
+  // Koppelingen tussen types en attributen.
+  const byId = new Map(attributes.map((a) => [a.id, a]));
+  for (let page = 1; page <= 20; page++) {
+    const res = await fetch(`${b}/types/attributes.json?limit=250&page=${page}`, { headers });
+    if (!res.ok) break;
+    const data = (await res.json()) as { typesAttributes?: Record<string, unknown>[] };
+    const list = data.typesAttributes ?? [];
+    for (const ta of list) {
+      const attr = ta.attribute as { resource?: { id?: unknown }; id?: unknown } | undefined;
+      const type = ta.type as { resource?: { id?: unknown }; id?: unknown } | undefined;
+      const attrId = String(attr?.resource?.id ?? attr?.id ?? "");
+      const typeId = String(type?.resource?.id ?? type?.id ?? "");
+      const target = byId.get(attrId);
+      if (target && typeId && !target.typeIds.includes(typeId)) target.typeIds.push(typeId);
+    }
+    if (list.length < 250) break;
+  }
+
+  return { attributes, types };
+}
+
+/** Hernoemt een specificatie in de bibliotheek (voor typo's / dubbelingen). */
+export async function renameSpecAttribute(opts: {
+  apiKey: string;
+  apiSecret: string;
+  language?: string;
+  attributeId: string;
+  title: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(
+    `${base(opts.language)}/attributes/${encodeURIComponent(opts.attributeId)}.json`,
+    {
+      method: "PUT",
+      headers: specHeaders(opts.apiKey, opts.apiSecret),
+      body: JSON.stringify({ attribute: { title: opts.title } }),
+    },
+  );
+  if (res.ok) return { ok: true };
+  const body = await res.text();
+  console.error(`[product-optimizer] rename attribute failed ${res.status}: ${body}`);
+  return {
+    ok: false,
+    error:
+      res.status === 403
+        ? "De API-sleutel heeft geen schrijfrechten op specificaties."
+        : "De specificatie kon niet hernoemd worden.",
+  };
+}
+
+/** Verwijdert een specificatie uit de bibliotheek. */
+export async function deleteSpecAttribute(opts: {
+  apiKey: string;
+  apiSecret: string;
+  language?: string;
+  attributeId: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  const res = await fetch(
+    `${base(opts.language)}/attributes/${encodeURIComponent(opts.attributeId)}.json`,
+    { method: "DELETE", headers: specHeaders(opts.apiKey, opts.apiSecret) },
+  );
+  if (res.ok) return { ok: true };
+  const body = await res.text();
+  console.error(`[product-optimizer] delete attribute failed ${res.status}: ${body}`);
+  return {
+    ok: false,
+    error:
+      res.status === 403
+        ? "De API-sleutel heeft geen schrijfrechten op specificaties."
+        : "De specificatie kon niet verwijderd worden.",
+  };
+}
+
+export interface ProductSpec {
+  /** id van de koppeling product ↔ specificatie */
+  id: string;
+  attributeId: string;
+  label: string;
+  value: string;
+}
+
+/** Specificaties zoals ze nu op het product staan. */
+export async function fetchProductSpecs(opts: {
+  apiKey: string;
+  apiSecret: string;
+  language?: string;
+  productId: string;
+}): Promise<{ specs: ProductSpec[]; typeId: string | null }> {
+  const headers = specHeaders(opts.apiKey, opts.apiSecret);
+  const b = base(opts.language);
+  const id = encodeURIComponent(opts.productId);
+
+  let typeId: string | null = null;
+  try {
+    const pRes = await fetch(`${b}/products/${id}.json`, { headers });
+    if (pRes.ok) {
+      const pData = (await pRes.json()) as { product?: Record<string, unknown> };
+      const type = pData.product?.type as { resource?: { id?: unknown }; id?: unknown } | undefined;
+      const raw = String(type?.resource?.id ?? type?.id ?? "");
+      typeId = raw && raw !== "undefined" && raw !== "null" ? raw : null;
+    }
+  } catch {
+    /* type is optioneel */
+  }
+
+  const specs: ProductSpec[] = [];
+  try {
+    const res = await fetch(`${b}/products/${id}/attributes.json`, { headers });
+    if (res.ok) {
+      const data = (await res.json()) as { productAttributes?: Record<string, unknown>[] };
+      for (const pa of data.productAttributes ?? []) {
+        const attr = pa.attribute as
+          | { resource?: { id?: unknown }; id?: unknown; title?: unknown }
+          | undefined;
+        specs.push({
+          id: String(pa.id ?? ""),
+          attributeId: String(attr?.resource?.id ?? attr?.id ?? ""),
+          label: str(attr?.title),
+          value: str(pa.value),
+        });
+      }
+    }
+  } catch (e) {
+    console.error("[product-optimizer] product specs failed", e);
+  }
+
+  return { specs, typeId };
+}
+
+/**
+ * Schrijft specificaties naar het product. Gebruikt uitsluitend bestaande
+ * specificaties uit de bibliotheek, tenzij `allowNew` aanstaat.
+ */
+export async function pushProductSpecs(opts: {
+  apiKey: string;
+  apiSecret: string;
+  language?: string;
+  productId: string;
+  specs: { attributeId: string | null; label: string; value: string }[];
+  allowNew?: boolean;
+}): Promise<{ updated: number; skipped: string[]; error?: string }> {
+  const headers = specHeaders(opts.apiKey, opts.apiSecret);
+  const b = base(opts.language);
+  const id = encodeURIComponent(opts.productId);
+  const skipped: string[] = [];
+  let updated = 0;
+
+  const library = await fetchSpecLibrary(opts);
+  const byKey = new Map(library.attributes.map((a) => [normalizeSpecKey(a.title), a]));
+  let { specs: current, typeId } = await fetchProductSpecs({ ...opts });
+
+  for (const spec of opts.specs) {
+    const value = spec.value.trim();
+    if (!value) continue;
+
+    const key = normalizeSpecKey(spec.label);
+    let attribute = spec.attributeId
+      ? library.attributes.find((a) => a.id === spec.attributeId)
+      : byKey.get(key);
+
+    // Nieuwe specificatie alleen aanmaken wanneer dat expliciet is goedgekeurd.
+    if (!attribute) {
+      if (!opts.allowNew) {
+        skipped.push(spec.label);
+        continue;
+      }
+      const create = await fetch(`${b}/attributes.json`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ attribute: { title: spec.label } }),
+      });
+      if (!create.ok) {
+        const body = await create.text();
+        console.error(`[product-optimizer] create attribute failed ${create.status}: ${body}`);
+        skipped.push(spec.label);
+        continue;
+      }
+      const created = (await create.json()) as { attribute?: { id?: unknown } };
+      attribute = {
+        id: String(created.attribute?.id ?? ""),
+        title: spec.label,
+        defaultValue: "",
+        typeIds: [],
+      };
+      library.attributes.push(attribute);
+      byKey.set(key, attribute);
+    }
+
+    let existing = current.find((c) => c.attributeId === attribute!.id);
+
+    // Nog niet aan het product gekoppeld: via het producttype koppelen.
+    if (!existing) {
+      if (!typeId) {
+        skipped.push(attribute.title);
+        continue;
+      }
+      const link = await fetch(`${b}/types/attributes.json`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ typesAttribute: { type: typeId, attribute: attribute.id } }),
+      });
+      if (!link.ok) {
+        const body = await link.text();
+        console.error(`[product-optimizer] link attribute failed ${link.status}: ${body}`);
+        skipped.push(attribute.title);
+        continue;
+      }
+      const refreshed = await fetchProductSpecs({ ...opts });
+      current = refreshed.specs;
+      typeId = refreshed.typeId ?? typeId;
+      existing = current.find((c) => c.attributeId === attribute!.id);
+      if (!existing) {
+        skipped.push(attribute.title);
+        continue;
+      }
+    }
+
+    const put = await fetch(
+      `${b}/products/${id}/attributes/${encodeURIComponent(existing.id)}.json`,
+      {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ productAttribute: { value } }),
+      },
+    );
+    if (put.ok) updated++;
+    else {
+      const body = await put.text();
+      console.error(`[product-optimizer] spec value failed ${put.status}: ${body}`);
+      skipped.push(attribute.title);
+    }
+  }
+
+  return { updated, skipped };
 }

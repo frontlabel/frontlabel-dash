@@ -25,6 +25,10 @@ import {
   pushGeneratedImageToShop,
   reorderShopImages,
   syncProductToShop,
+  getSpecLibrary,
+  getProductSpecs,
+  renameSpecification,
+  deleteSpecification,
 } from "@/lib/product-optimizer.functions";
 import {
   AlertDialog,
@@ -45,11 +49,12 @@ import {
   LayoutGrid,
   Loader2,
   RefreshCw,
-  Save,
   Search,
   Sparkles,
   Trash2,
   Wand2,
+  ListChecks,
+  Pencil,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/apps/product-optimizer")({
@@ -102,6 +107,22 @@ interface Suggestions {
   tips: string[];
 }
 
+interface SpecAttr {
+  id: string;
+  title: string;
+  defaultValue: string;
+  typeIds: string[];
+}
+
+/** Vergelijkingssleutel voor specificatienamen (hoofdletters/spaties negeren). */
+function normalizeKey(value: string): string {
+  return String(value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
 const money = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
 
 function scoreTone(score: number) {
@@ -143,7 +164,7 @@ function ProductOptimizerPage() {
   const [rowId, setRowId] = useState<string | null>(null);
   const [settings, setSettings] = useState<OptimizerSettings>(DEFAULTS);
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<"products" | "detail" | "images" | "settings">("products");
+  const [tab, setTab] = useState<"products" | "detail" | "specs" | "images" | "settings">("products");
 
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loadingList, setLoadingList] = useState(false);
@@ -164,6 +185,11 @@ function ProductOptimizerPage() {
   const [confirmSync, setConfirmSync] = useState(false);
   const [pushDirty, setPushDirty] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
+  const [library, setLibrary] = useState<SpecAttr[]>([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
+  const [libraryError, setLibraryError] = useState("");
+  const [productSpecs, setProductSpecs] = useState<{ label: string; value: string }[]>([]);
+  const [allowNewSpecs, setAllowNewSpecs] = useState(false);
 
   const { requestToggle, dialog: disableDialog } = useDisableAppGuard({
     appName: "Product optimizer",
@@ -180,6 +206,28 @@ function ProductOptimizerPage() {
   const runPushImage = useServerFn(pushGeneratedImageToShop);
   const runReorder = useServerFn(reorderShopImages);
   const runSync = useServerFn(syncProductToShop);
+  const runLibrary = useServerFn(getSpecLibrary);
+  const runProductSpecs = useServerFn(getProductSpecs);
+  const runRenameSpec = useServerFn(renameSpecification);
+  const runDeleteSpec = useServerFn(deleteSpecification);
+
+  const loadLibrary = useCallback(async () => {
+    setLibraryLoading(true);
+    setLibraryError("");
+    try {
+      const res = await runLibrary({ data: { shopId } });
+      if (res.ok) setLibrary(res.attributes as SpecAttr[]);
+      else setLibraryError(res.error);
+    } catch {
+      setLibraryError("De specificaties konden niet opgehaald worden.");
+    } finally {
+      setLibraryLoading(false);
+    }
+  }, [runLibrary, shopId]);
+
+  useEffect(() => {
+    loadLibrary();
+  }, [loadLibrary]);
 
   function update<K extends keyof OptimizerSettings>(k: K, v: OptimizerSettings[K]) {
     setSettings((s) => ({ ...s, [k]: v }));
@@ -258,13 +306,23 @@ function ProductOptimizerPage() {
           })),
         });
         setSuggestions(normalizeSuggestions(res.saved?.suggestions));
+        try {
+          const own = await runProductSpecs({ data: { shopId, productId } });
+          setProductSpecs(
+            own.ok
+              ? own.specs.map((sp) => ({ label: sp.label, value: sp.value })).filter((sp) => sp.label)
+              : [],
+          );
+        } catch {
+          setProductSpecs([]);
+        }
       } catch (e) {
         console.error("[product-optimizer] detail failed", e);
         toast.error("Dit product kon niet geladen worden. Probeer het opnieuw.");
         setDetail({ product: null, images: [], generated: [] });
       }
     },
-    [fetchDetail, shopId],
+    [fetchDetail, runProductSpecs, shopId],
   );
 
 
@@ -409,12 +467,27 @@ function ProductOptimizerPage() {
         },
         altTexts: suggestions.altTexts,
         includeImages: true,
+        specs: suggestions.specs
+          .filter((sp) => sp.label && sp.value)
+          .map((sp) => ({
+            attributeId:
+              library.find((a) => normalizeKey(a.title) === normalizeKey(sp.label))?.id ?? null,
+            label: sp.label,
+            value: sp.value,
+          })),
+        allowNewSpecs,
       },
     });
     if (res.ok) {
       const parts: string[] = [];
       if (res.altUpdated > 0) parts.push(`${res.altUpdated} alt-teksten`);
       if (res.imagesUploaded > 0) parts.push(`${res.imagesUploaded} nieuwe afbeeldingen`);
+      if (res.specsUpdated > 0) parts.push(`${res.specsUpdated} specificaties`);
+      if (res.specsSkipped.length > 0) {
+        toast.warning(
+          `Niet doorgezet: ${res.specsSkipped.join(", ")}. Deze specificaties bestaan nog niet in je shop of het product heeft geen specificatiegroep.`,
+        );
+      }
       toast.success(
         parts.length
           ? `Gesynchroniseerd naar je shop (${parts.join(", ")} bijgewerkt)`
@@ -449,7 +522,6 @@ function ProductOptimizerPage() {
             </Label>
           </div>
           <Button onClick={save} disabled={saving} size="sm" className="py-3 h-auto">
-            <Save className="h-4 w-4" />
             {saving ? "Opslaan…" : "Opslaan"}
           </Button>
         </div>
@@ -461,6 +533,7 @@ function ProductOptimizerPage() {
   const tabs = [
     { id: "products" as const, label: "Producten" },
     { id: "detail" as const, label: "Product detail" },
+    { id: "specs" as const, label: "Specificaties" },
     { id: "images" as const, label: "Afbeeldingen" },
     { id: "settings" as const, label: "Instellingen" },
   ];
@@ -516,6 +589,33 @@ function ProductOptimizerPage() {
             specsAsTable={settings.specsAsTable}
           />
         )}
+        {tab === "specs" && (
+          <SpecsTab
+            library={library}
+            loading={libraryLoading}
+            error={libraryError}
+            onRefresh={loadLibrary}
+            onRename={async (attributeId, title) => {
+              const res = await runRenameSpec({ data: { shopId, attributeId, title } });
+              if (res.ok) {
+                toast.success("Specificatie hernoemd");
+                loadLibrary();
+              } else toast.error(res.error);
+            }}
+            onDelete={async (attributeId) => {
+              const res = await runDeleteSpec({ data: { shopId, attributeId } });
+              if (res.ok) {
+                toast.success("Specificatie verwijderd");
+                loadLibrary();
+              } else toast.error(res.error);
+            }}
+            suggested={suggestions?.specs ?? []}
+            productSpecs={productSpecs}
+            allowNew={allowNewSpecs}
+            setAllowNew={setAllowNewSpecs}
+            productTitle={detail.product?.title ?? ""}
+          />
+        )}
         {tab === "images" && (
           <ImagesTab
             product={detail.product}
@@ -551,7 +651,6 @@ function ProductOptimizerPage() {
             {syncing ? "Pushen…" : "Push naar shop"}
           </Button>
           <Button onClick={save} disabled={saving} className="rounded-lg py-3 h-auto">
-            <Save className="h-4 w-4" />
             {saving ? "Opslaan…" : "Opslaan"}
           </Button>
         </div>
@@ -1112,7 +1211,7 @@ function ImagesTab({
                     disabled={savingOrder}
                     className="py-3 h-auto"
                   >
-                    {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                     {savingOrder ? "Opslaan…" : "Volgorde opslaan"}
                   </Button>
                 </div>
@@ -1332,6 +1431,250 @@ function SettingsTab({
               onCheckedChange={(v) => update("specsAsTable", v)}
             />
           </div>
+        </SectionCard>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Specificaties                                                       */
+/* ------------------------------------------------------------------ */
+
+function SpecsTab({
+  library,
+  loading,
+  error,
+  onRefresh,
+  onRename,
+  onDelete,
+  suggested,
+  productSpecs,
+  allowNew,
+  setAllowNew,
+  productTitle,
+}: {
+  library: SpecAttr[];
+  loading: boolean;
+  error: string;
+  onRefresh: () => void;
+  onRename: (attributeId: string, title: string) => void;
+  onDelete: (attributeId: string) => void;
+  suggested: { label: string; value: string }[];
+  productSpecs: { label: string; value: string }[];
+  allowNew: boolean;
+  setAllowNew: (v: boolean) => void;
+  productTitle: string;
+}) {
+  const [query, setQuery] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return [...library]
+      .sort((a, b) => a.title.localeCompare(b.title, "nl"))
+      .filter((a) => !q || a.title.toLowerCase().includes(q));
+  }, [library, query]);
+
+  // Bijna-identieke namen groeperen zodat dubbelingen en typo's opvallen.
+  const duplicates = useMemo(() => {
+    const groups = new Map<string, SpecAttr[]>();
+    for (const a of library) {
+      const key = normalizeKey(a.title);
+      if (!key) continue;
+      groups.set(key, [...(groups.get(key) ?? []), a]);
+    }
+    return [...groups.values()].filter((g) => g.length > 1);
+  }, [library]);
+
+  const known = useMemo(() => new Set(library.map((a) => normalizeKey(a.title))), [library]);
+  const newOnes = suggested.filter((s) => s.label && !known.has(normalizeKey(s.label)));
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+      <div>
+        <SectionLabel>Specificaties in je shop</SectionLabel>
+        <SectionCard className="p-5 space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Dit is de vaste lijst met specificatienamen van je shop. Voorstellen kiezen alleen uit
+            deze lijst, zodat er geen dubbele of verkeerd gespelde specificaties bijkomen.
+          </p>
+
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Zoek specificatie"
+                className="pl-9"
+              />
+            </div>
+            <Button variant="outline" onClick={onRefresh} disabled={loading} className="py-3 h-auto">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              Vernieuwen
+            </Button>
+          </div>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          {duplicates.length > 0 && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm">
+              <p className="font-medium text-amber-900">
+                {duplicates.length} mogelijke dubbele specificatie
+                {duplicates.length === 1 ? "" : "s"} gevonden
+              </p>
+              <ul className="mt-1 list-disc pl-5 text-amber-900/80">
+                {duplicates.slice(0, 6).map((g) => (
+                  <li key={g[0]!.id}>{g.map((a) => a.title).join(" / ")}</li>
+                ))}
+              </ul>
+              <p className="mt-1 text-amber-900/70">
+                Hernoem de juiste schrijfwijze en verwijder de rest.
+              </p>
+            </div>
+          )}
+
+          {!loading && filtered.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nog geen specificaties gevonden.</p>
+          ) : (
+            <ul className="divide-y divide-border rounded-md border border-border bg-white text-sm">
+              {filtered.map((a) => (
+                <li key={a.id} className="flex items-center gap-3 px-3 py-2">
+                  {editing === a.id ? (
+                    <>
+                      <Input
+                        value={draft}
+                        onChange={(e) => setDraft(e.target.value)}
+                        className="h-9 flex-1"
+                      />
+                      <Button
+                        size="sm"
+                        className="py-2 h-auto"
+                        onClick={() => {
+                          onRename(a.id, draft.trim() || a.title);
+                          setEditing(null);
+                        }}
+                      >
+                        Bewaren
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
+                        Annuleer
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <ListChecks className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <span className="flex-1 truncate">{a.title}</span>
+                      {a.defaultValue && (
+                        <span className="truncate text-xs text-muted-foreground">
+                          standaard: {a.defaultValue}
+                        </span>
+                      )}
+                      <Badge variant="secondary" className="text-xs">
+                        {a.typeIds.length} groep{a.typeIds.length === 1 ? "" : "en"}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2"
+                        onClick={() => {
+                          setEditing(a.id);
+                          setDraft(a.title);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2 text-red-600"
+                        onClick={() => onDelete(a.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionCard>
+      </div>
+
+      <div>
+        <SectionLabel>Voor dit product</SectionLabel>
+        <SectionCard className="p-5 space-y-4">
+          {productTitle ? (
+            <p className="text-sm font-medium">{productTitle}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Kies eerst een product bij <span className="font-medium text-foreground">Producten</span>.
+            </p>
+          )}
+
+          <div>
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+              Nu in je shop
+            </Label>
+            {productSpecs.length === 0 ? (
+              <p className="mt-1 text-sm text-muted-foreground">Nog geen specificaties gevuld.</p>
+            ) : (
+              <div className="mt-1.5 divide-y divide-border rounded-md border border-border bg-white text-sm">
+                {productSpecs.map((sp) => (
+                  <div key={sp.label} className="flex gap-3 px-3 py-2">
+                    <span className="w-36 shrink-0 text-muted-foreground">{sp.label}</span>
+                    <span className="truncate">{sp.value || "—"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+              Voorstel
+            </Label>
+            {suggested.length === 0 ? (
+              <p className="mt-1 text-sm text-muted-foreground">Nog geen voorstel gemaakt.</p>
+            ) : (
+              <div className="mt-1.5 divide-y divide-border rounded-md border border-border bg-white text-sm">
+                {suggested.map((sp) => {
+                  const isNew = !known.has(normalizeKey(sp.label));
+                  return (
+                    <div key={sp.label} className="flex items-center gap-2 px-3 py-2">
+                      <span className="w-32 shrink-0 text-muted-foreground truncate">{sp.label}</span>
+                      <span className="flex-1 truncate">{sp.value}</span>
+                      {isNew && (
+                        <Badge variant="outline" className="text-xs text-amber-700 border-amber-300">
+                          nieuw
+                        </Badge>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {newOnes.length > 0 && (
+            <div className="flex items-start gap-3 rounded-md border border-border p-3">
+              <Switch id="allow-new-specs" checked={allowNew} onCheckedChange={setAllowNew} />
+              <div>
+                <Label htmlFor="allow-new-specs">Nieuwe specificaties toestaan</Label>
+                <p className="text-xs text-muted-foreground">
+                  Uit: {newOnes.length} onbekende specificatie
+                  {newOnes.length === 1 ? "" : "s"} worden overgeslagen bij Push naar shop.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <p className="text-xs text-muted-foreground">
+            Bij <span className="font-medium text-foreground">Push naar shop</span> worden deze
+            waarden in de echte specificatievelden van je shop gezet, niet in de omschrijving.
+          </p>
         </SectionCard>
       </div>
     </div>

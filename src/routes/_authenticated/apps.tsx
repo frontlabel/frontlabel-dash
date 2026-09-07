@@ -32,7 +32,7 @@ function AppsCatalogPage() {
         const map: Record<string, boolean> = {};
         (data ?? []).forEach((r) => {
           const row = r as { app_slug: string; enabled: boolean };
-          map[row.app_slug] = map[row.app_slug] || row.enabled;
+          map[row.app_slug] = true;
         });
         setInstalled(map);
       });
@@ -45,9 +45,11 @@ function AppsCatalogPage() {
         <SectionLabel>Beschikbaar</SectionLabel>
         <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[...APPS_CATALOG]
-            .sort((a, b) =>
-              (a.status === "coming-soon" ? 1 : 0) - (b.status === "coming-soon" ? 1 : 0),
-            )
+            .sort((a, b) => {
+              const rank = (x: (typeof APPS_CATALOG)[number]) =>
+                installed[x.slug] ? 0 : x.status === "coming-soon" ? 2 : 1;
+              return rank(a) - rank(b);
+            })
             .map((app) => {
             const Icon = ICONS[app.slug] ?? ShieldCheck;
             const soon = app.status === "coming-soon";
