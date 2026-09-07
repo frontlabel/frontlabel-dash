@@ -154,9 +154,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <ul role="list" className="-mx-2 space-y-1.5">
               {nav.map((item) => {
                 const active =
-                  pathname === item.to ||
-                  pathname.startsWith(item.to + "/") ||
-                  (item.to === "/dashboard" && pathname.startsWith("/shops"));
+                  pathname === item.to || pathname.startsWith(item.to + "/");
                 const Icon = item.icon;
                 return (
                   <li key={item.to}>
@@ -255,7 +253,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
               <ul role="list" className="-mx-2 mt-1.5 space-y-1.5">
                 {shops.map((s) => {
-                  const active = activeShopId === s.id;
+                  const active = pathname === `/shops/${s.id}`;
                   return (
                     <li key={s.id}>
                       <Link
