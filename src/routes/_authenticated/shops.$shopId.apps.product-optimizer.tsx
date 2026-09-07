@@ -590,6 +590,10 @@ function ProductOptimizerPage() {
             onGenerate={generate}
             hasSelection={!!selectedId}
             specsAsTable={settings.specsAsTable}
+            onEdit={(patch) => {
+              setSuggestions((prev) => (prev ? { ...prev, ...patch } : prev));
+              setPushDirty(true);
+            }}
           />
         )}
         {tab === "specs" && (
