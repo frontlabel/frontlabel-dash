@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link , useNavigate} from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,9 @@ import { Save, ChevronRight, LayoutGrid, X, Zap } from "lucide-react";
 import { useShellHeader } from "@/components/shell-header-context";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/apps/$appSlug")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined,
+  }),
   component: AppSettingsPage,
 });
 
@@ -82,7 +85,11 @@ function AppSettingsPage() {
   const app = useMemo(() => getApp(appSlug), [appSlug]);
   const { setContent } = useShellHeader();
 
-  const [tab, setTab] = useState<TabId>("algemeen");
+  const search = Route.useSearch();
+  const tabNav = useNavigate();
+  const tab = (search.tab ?? "algemeen") as TabId;
+  const setTab = (t: TabId) =>
+    tabNav({ to: ".", search: { tab: t }, replace: true });
   const [rowId, setRowId] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(true);
   const [settings, setSettings] = useState<AgeVerificationSettings>(DEFAULT_AGE_VERIFICATION);

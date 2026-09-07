@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link , useNavigate} from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,9 @@ import {
 export const Route = createFileRoute(
   "/_authenticated/shops/$shopId/apps/price-alert",
 )({
+  validateSearch: (s: Record<string, unknown>) => ({
+    tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined,
+  }),
   component: PriceAlertPage,
 });
 
@@ -102,7 +105,11 @@ function PriceAlertPage() {
     setActive,
   });
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
-  const [tab, setTab] = useState<"overview" | "widget" | "email" | "alerts">("overview");
+  const search = Route.useSearch();
+  const tabNav = useNavigate();
+  const tab = (search.tab ?? "overview") as "overview" | "widget" | "email" | "alerts";
+  const setTab = (t: "overview" | "widget" | "email" | "alerts") =>
+    tabNav({ to: ".", search: { tab: t }, replace: true });
 
   function update<K extends keyof PriceAlertSettings>(k: K, v: PriceAlertSettings[K]) {
     setSettings((s) => ({ ...s, [k]: v }));

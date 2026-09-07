@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link , useNavigate} from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -49,6 +49,9 @@ import {
 export const Route = createFileRoute(
   "/_authenticated/shops/$shopId/apps/back-in-stock",
 )({
+  validateSearch: (s: Record<string, unknown>) => ({
+    tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined,
+  }),
   component: BackInStockPage,
 });
 
@@ -94,7 +97,11 @@ function BackInStockPage() {
   const [settings, setSettings] = useState<BackInStockSettings>(DEFAULTS);
   const [saving, setSaving] = useState(false);
   const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
-  const [tab, setTab] = useState<"overview" | "widget" | "email" | "waitlist">("overview");
+  const search = Route.useSearch();
+  const tabNav = useNavigate();
+  const tab = (search.tab ?? "overview") as "overview" | "widget" | "email" | "waitlist";
+  const setTab = (t: "overview" | "widget" | "email" | "waitlist") =>
+    tabNav({ to: ".", search: { tab: t }, replace: true });
 
   const { requestToggle, dialog: disableDialog } = useDisableAppGuard({
     appName: "Back in Stock Alerts",
