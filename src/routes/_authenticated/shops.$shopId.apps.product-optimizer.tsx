@@ -471,7 +471,9 @@ function ProductOptimizerPage() {
           description: suggestions.description,
         },
         altTexts: suggestions.altTexts,
-        includeImages: true,
+        imageOrder: imagesDirty
+          ? detail.images.map((i) => (i.stagedPath ? `staged:${i.stagedPath}` : i.id))
+          : [],
         specs: suggestions.specs
           .filter((sp) => sp.label && sp.value)
           .map((sp) => ({
@@ -636,9 +638,9 @@ function ProductOptimizerPage() {
             onGenerate={makeImage}
             onDelete={deleteImage}
             onAddToProduct={addImageToProduct}
+            onUnstage={unstageImage}
+            onMoveImage={moveShopImage}
             onReorderGenerated={reorderGenerated}
-            onSaveOrder={saveImageOrder}
-            savingOrder={savingOrder}
             hasSelection={!!selectedId}
           />
         )}
