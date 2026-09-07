@@ -9,13 +9,41 @@ import {
   Menu,
   User,
   ShieldCheck,
+  ChevronsUpDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { APP_VERSION_LABEL } from "@/lib/app-version";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ShellHeaderProvider, useShellHeaderContent } from "@/components/shell-header-context";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+
+const AVATAR_COLORS = [
+  "#e11d48",
+  "#db2777",
+  "#9333ea",
+  "#4f46e5",
+  "#2563eb",
+  "#0891b2",
+  "#059669",
+  "#65a30d",
+  "#d97706",
+  "#ea580c",
+];
+
+function colorForId(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length]!;
+}
+
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -31,6 +59,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [shops, setShops] = useState<Array<{ id: string; name: string }>>([]);
   const isAdmin = useIsAdmin();
   const [email, setEmail] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarColor, setAvatarColor] = useState<string>(AVATAR_COLORS[0]!);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -45,8 +75,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    supabase.auth.getUser().then(async ({ data }) => {
+      const user = data.user;
+      setEmail(user?.email ?? null);
+      if (!user) return;
+      setAvatarColor(colorForId(user.id));
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+      setAvatarUrl((profile as { avatar_url: string | null } | null)?.avatar_url ?? null);
+    });
   }, []);
+
 
   const activeShopId = pathname.match(/^\/shops\/([^/]+)/)?.[1] ?? null;
 
@@ -139,63 +181,56 @@ export function AppShell({ children }: { children: ReactNode }) {
             </li>
           )}
 
-          <li className="mt-auto">
-            <ul role="list" className="-mx-2 space-y-1 border-t border-sidebar-border pt-4">
-              <li>
-                <Link
-                  to="/account"
-                  search={{ tab: "profile" }}
-                  onClick={() => setMobileOpen(false)}
-                  className={navLinkClass(pathname.startsWith("/account"))}
-                >
-                  <User className={iconClass(pathname.startsWith("/account"))} />
-                  Account
-                </Link>
-              </li>
-              {isAdmin && (
-                <li>
-                  <Link
-                    to="/admin"
-                    onClick={() => setMobileOpen(false)}
-                    className={navLinkClass(pathname.startsWith("/admin"))}
+          <li className="mt-auto -mx-6 border-t border-sidebar-border">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex w-full items-center gap-x-3 px-6 py-3 text-base/6 font-semibold text-sidebar-foreground hover:bg-sidebar-hover focus:outline-none">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt=""
+                    className="size-8 shrink-0 rounded-full object-cover"
+                  />
+                ) : (
+                  <span
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
+                    style={{ backgroundColor: avatarColor }}
                   >
-                    <ShieldCheck className={iconClass(pathname.startsWith("/admin"))} />
-                    Superadmin
+                    {(email ?? "?").charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span className="truncate">{email ?? "Account"}</span>
+                <ChevronsUpDown className="ml-auto size-4 shrink-0 text-sidebar-foreground/60" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent side="top" align="start" className="w-56">
+                <DropdownMenuItem asChild>
+                  <Link to="/account" search={{ tab: "profile" }} onClick={() => setMobileOpen(false)}>
+                    <User className="size-4" />
+                    Account
                   </Link>
-                </li>
-              )}
-            </ul>
-          </li>
-
-          <li className="-mx-6 border-t border-sidebar-border">
-            <Link
-              to="/account"
-              search={{ tab: "profile" }}
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-x-4 px-6 py-3 text-base/6 font-semibold text-sidebar-foreground hover:bg-sidebar-hover"
-            >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-active text-xs font-semibold text-sidebar-active-foreground">
-                {(email ?? "?").charAt(0).toUpperCase()}
-              </span>
-              <span className="sr-only">Jouw profiel</span>
-              <span aria-hidden="true" className="truncate">
-                {email ?? "Account"}
-              </span>
-            </Link>
-            <button
-              onClick={signOut}
-              className="flex w-full items-center gap-x-4 px-6 py-3 text-base/6 font-semibold text-sidebar-foreground hover:bg-sidebar-hover"
-            >
-              <LogOut className="size-4 shrink-0 text-sidebar-foreground/60" />
-              Uitloggen
-            </button>
+                </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin" onClick={() => setMobileOpen(false)}>
+                      <ShieldCheck className="size-4" />
+                      Superadmin
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut}>
+                  <LogOut className="size-4" />
+                  Uitloggen
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <p
-              className="px-6 pb-3 pt-1 text-[10px] leading-tight text-sidebar-foreground/40 tabular-nums"
+              className="px-6 pb-3 text-[10px] leading-tight text-sidebar-foreground/40 tabular-nums"
               title="App-versie en buildtijd"
             >
               {APP_VERSION_LABEL}
             </p>
           </li>
+
         </ul>
       </nav>
     </div>
