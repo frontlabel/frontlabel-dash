@@ -57,6 +57,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [shops, setShops] = useState<Array<{ id: string; name: string }>>([]);
+  const [installed, setInstalled] = useState<Record<string, boolean>>({});
+
   const isAdmin = useIsAdmin();
   const [email, setEmail] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
