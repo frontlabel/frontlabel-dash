@@ -790,7 +790,7 @@ function ProductsTab({
               <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted-foreground">
                 <th className="px-5 py-3 font-medium">Product</th>
                 <th className="px-5 py-3 font-medium hidden md:table-cell">Merk</th>
-                <th className="px-5 py-3 font-medium hidden lg:table-cell">Wat ontbreekt</th>
+                
                 <th className="px-5 py-3 font-medium hidden sm:table-cell">Prijs</th>
                 <th className="px-5 py-3 font-medium">Score</th>
                 <th className="px-5 py-3" />
@@ -822,21 +822,19 @@ function ProductsTab({
                     </div>
                   </td>
                   <td className="px-5 py-3 hidden md:table-cell text-muted-foreground">{p.brand ?? "—"}</td>
-                  <td className="px-5 py-3 hidden lg:table-cell">
-                    {p.missing.length ? (
-                      <span className="text-xs text-muted-foreground">
-                        {p.missing.slice(0, 2).join(" · ")}
-                        {p.missing.length > 2 ? ` +${p.missing.length - 2}` : ""}
-                      </span>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs">Compleet</Badge>
-                    )}
-                  </td>
                   <td className="px-5 py-3 hidden sm:table-cell tabular-nums">
                     {p.price !== null ? money.format(p.price) : "—"}
                   </td>
                   <td className="px-5 py-3">
-                    <ScoreBar score={p.score} />
+                    <div className="group relative">
+                      <ScoreBar score={p.score} />
+                      {p.missing.length > 0 && (
+                        <div className="pointer-events-none absolute bottom-full left-0 mb-2 hidden w-max max-w-xs rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg group-hover:block z-20">
+                          <p className="font-semibold mb-1 text-gray-100">Wat ontbreekt</p>
+                          <p className="text-gray-200">{p.missing.join(" · ")}</p>
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-5 py-3 text-right">
                     <Button size="sm" variant="outline" onClick={() => onOpen(p.id)} className="py-3 h-auto">
