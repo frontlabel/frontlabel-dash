@@ -161,3 +161,36 @@ export function hexToRgba(hex: string, alpha: number): string {
   const b = parseInt(h.slice(4, 6), 16);
   return `rgba(${r},${g},${b},${a})`;
 }
+/** Sub-tabbladen per app, gebruikt voor snelle navigatie in de zijbalk. */
+export const APP_TABS: Record<string, { id: string; label: string }[]> = {
+  "age-verification": [
+    { id: "algemeen", label: "Algemeen" },
+    { id: "inhoud", label: "Inhoud" },
+    { id: "design", label: "Design" },
+    { id: "regels", label: "Regels" },
+  ],
+  "back-in-stock": [
+    { id: "overview", label: "Overzicht & analyses" },
+    { id: "widget", label: "Widget-ontwerp" },
+    { id: "email", label: "E-mail configuratie" },
+    { id: "waitlist", label: "Wachtlijst" },
+  ],
+  "price-alert": [
+    { id: "overview", label: "Overzicht & analyses" },
+    { id: "widget", label: "Widget-ontwerp" },
+    { id: "email", label: "E-mail configuratie" },
+    { id: "alerts", label: "Aanmeldingen" },
+  ],
+  "product-optimizer": [
+    { id: "products", label: "Producten" },
+    { id: "detail", label: "Product detail" },
+    { id: "specs", label: "Specificaties" },
+    { id: "images", label: "Afbeeldingen" },
+    { id: "settings", label: "Instellingen" },
+  ],
+  "tile-calculator": [
+    { id: "overview", label: "Overzicht" },
+    { id: "widget", label: "Instellingen" },
+    { id: "preview", label: "Live voorbeeld" },
+  ],
+};
