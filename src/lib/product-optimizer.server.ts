@@ -468,6 +468,10 @@ export async function generateSuggestions(opts: {
   product: OptimizerProduct;
   images: OptimizerProductImage[];
   settings: OptimizerTone;
+  /** Bestaande specificatienamen in de shop; de AI mag alleen hieruit kiezen. */
+  knownSpecLabels?: string[];
+  /** Specificaties die nu al op het product staan. */
+  currentSpecs?: { label: string; value: string }[];
 }): Promise<ProductSuggestions> {
   const key = process.env["LOVABLE_API_KEY"];
   if (!key) throw new Error("AI is niet geconfigureerd.");
@@ -488,6 +492,17 @@ export async function generateSuggestions(opts: {
     `- Meta description: ${product.description || "(leeg)"}`,
     `- Omschrijving: ${stripHtml(product.content).slice(0, 4000) || "(leeg)"}`,
     `- Aantal afbeeldingen: ${opts.images.length}`,
+    opts.currentSpecs && opts.currentSpecs.length > 0
+      ? `- Huidige specificaties: ${opts.currentSpecs.map((s) => `${s.label}: ${s.value}`).join("; ")}`
+      : "",
+    "",
+    opts.knownSpecLabels && opts.knownSpecLabels.length > 0
+      ? [
+          "Bestaande specificatienamen in deze shop (gebruik UITSLUITEND deze namen, exact overgenomen, inclusief hoofdletters):",
+          opts.knownSpecLabels.slice(0, 300).join(" | "),
+          "Gebruik geen synoniemen, meervoud/enkelvoud-varianten of eigen schrijfwijzen. Past er geen enkele naam bij een feit? Laat die specificatie dan weg.",
+        ].join("\n")
+      : "Geef alleen specificaties die je zeker uit de gegevens kunt afleiden.",
     "",
     "Geef JSON met exact deze sleutels:",
     '{"title": string, "description": string (HTML met <p> en eventueel <ul><li>), "seoTitle": string (max 60 tekens), "metaDescription": string (max 155 tekens), "specs": [{"label": string, "value": string}], "altTexts": string[], "tips": string[]}',
