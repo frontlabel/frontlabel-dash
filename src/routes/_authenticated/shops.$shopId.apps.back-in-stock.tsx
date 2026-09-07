@@ -175,10 +175,6 @@ function BackInStockPage() {
               {active ? "Actief" : "Uit"}
             </Label>
           </div>
-          <Button onClick={save} disabled={saving} size="sm" className="py-3 h-auto">
-            <Save className="h-4 w-4" />
-            {saving ? "Opslaan…" : "Opslaan"}
-          </Button>
         </div>
       </div>,
     );

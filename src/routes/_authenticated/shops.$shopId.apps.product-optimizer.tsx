@@ -527,9 +527,6 @@ function ProductOptimizerPage() {
               {active ? "Actief" : "Uit"}
             </Label>
           </div>
-          <Button onClick={save} disabled={saving} size="sm" className="py-3 h-auto">
-            {saving ? "Opslaan…" : "Opslaan"}
-          </Button>
         </div>
       </div>,
     );
