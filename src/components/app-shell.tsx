@@ -47,10 +47,10 @@ function colorForId(id: string) {
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/apps", label: "Apps", icon: Package },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/presets", label: "Stijl presets", icon: Palette },
 ];
+
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
