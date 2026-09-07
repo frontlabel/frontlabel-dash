@@ -851,7 +851,19 @@ function ProductsTab({
   );
 }
 
-function CopyBlock({ label, value, html }: { label: string; value: string; html?: boolean }) {
+function CopyBlock({
+  label,
+  value,
+  html,
+  onChange,
+  rows,
+}: {
+  label: string;
+  value: string;
+  html?: boolean;
+  onChange?: (v: string) => void;
+  rows?: number;
+}) {
   return (
     <div>
       <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -869,7 +881,22 @@ function CopyBlock({ label, value, html }: { label: string; value: string; html?
           Kopieer
         </Button>
       </div>
-      {html ? (
+      {onChange ? (
+        <>
+          <Textarea
+            value={value}
+            rows={rows ?? (html ? 10 : 2)}
+            onChange={(e) => onChange(e.target.value)}
+            className="bg-white text-sm"
+          />
+          {html && value.trim() !== "" && (
+            <div
+              className="prose prose-sm max-w-none mt-2 rounded-md border border-dashed border-border bg-muted/40 p-3 text-sm"
+              dangerouslySetInnerHTML={{ __html: value }}
+            />
+          )}
+        </>
+      ) : html ? (
         <div
           className="prose prose-sm max-w-none rounded-md border border-border bg-white p-3 text-sm"
           dangerouslySetInnerHTML={{ __html: value }}
@@ -880,6 +907,7 @@ function CopyBlock({ label, value, html }: { label: string; value: string; html?
     </div>
   );
 }
+
 
 function DetailTab({
   product,
