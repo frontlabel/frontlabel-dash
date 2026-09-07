@@ -359,6 +359,40 @@ function ProductOptimizerPage() {
     }
   }
 
+  function reorderGenerated(from: number, to: number) {
+    if (from === to) return;
+    setDetail((d) => {
+      const next = [...d.generated];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved!);
+      return { ...d, generated: next };
+    });
+    setPushDirty(true);
+  }
+
+  async function saveImageOrder(orderedIds: string[]) {
+    if (!selectedId) return;
+    setSavingOrder(true);
+    try {
+      const res = await runReorder({ data: { shopId, imageIds: orderedIds } });
+      if (res.ok) {
+        toast.success("Volgorde opgeslagen in je shop");
+        setDetail((d) => ({
+          ...d,
+          images: [...d.images].sort(
+            (a, b) => orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id),
+          ),
+        }));
+      } else {
+        toast.error(res.error ?? "De volgorde kon niet worden opgeslagen.");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Er ging iets mis.");
+    } finally {
+      setSavingOrder(false);
+    }
+  }
+
   async function syncToShop() {
     if (!selectedId || !suggestions) return;
     setConfirmSync(false);
