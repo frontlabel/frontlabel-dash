@@ -401,7 +401,7 @@ export async function uploadProductImages(opts: {
     }
   }
 
-  return { uploaded, ...(error ? { error } : {}) };
+  return { uploaded, ids, ...(error ? { error } : {}) };
 }
 
 /** Slaat de volgorde van productafbeeldingen op in Lightspeed (sortOrder per afbeelding). */
