@@ -172,6 +172,80 @@ export function AppShell({ children }: { children: ReactNode }) {
             </ul>
           </li>
 
+          {appShopId && (
+            <li>
+              <div className="text-xs/6 font-semibold text-sidebar-foreground/60">Apps</div>
+              <ul role="list" className="-mx-2 mt-1.5 space-y-1.5">
+                {[...APPS_CATALOG]
+                  .sort((a, b) => {
+                    const rank = (x: AppDefinition) =>
+                      installed[x.slug] !== undefined ? 0 : x.status === "coming-soon" ? 2 : 1;
+                    return rank(a) - rank(b);
+                  })
+                  .map((app) => {
+                    const isInstalled = installed[app.slug] !== undefined;
+                    const isEnabled = installed[app.slug] === true;
+                    const active = activeAppSlug === app.slug;
+                    const tabs = APP_TABS[app.slug] ?? [];
+                    return (
+                      <li key={app.slug}>
+                        <Link
+                          to="/shops/$shopId/apps/$appSlug"
+                          params={{ shopId: appShopId, appSlug: app.slug }}
+                          search={{}}
+                          onClick={() => setMobileOpen(false)}
+                          className={navLinkClass(active)}
+                        >
+                          <Package className={iconClass(active)} />
+                          <span className="truncate">{app.name}</span>
+                          {isInstalled ? (
+                            <span
+                              title={isEnabled ? "Actief" : "Geïnstalleerd, uit"}
+                              className={cn(
+                                "ml-auto size-2 shrink-0 rounded-full",
+                                isEnabled ? "bg-emerald-400" : "bg-sidebar-foreground/40",
+                              )}
+                            />
+                          ) : app.status === "coming-soon" ? (
+                            <span className="ml-auto text-[10px] font-medium text-sidebar-foreground/40">
+                              binnenkort
+                            </span>
+                          ) : null}
+                        </Link>
+                        {active && tabs.length > 0 && (
+                          <ul role="list" className="mt-1 space-y-0.5 border-l border-sidebar-border pl-3 ml-4">
+                            {tabs.map((t) => {
+                              const tabActive = (currentTab ?? tabs[0]!.id) === t.id;
+                              return (
+                                <li key={t.id}>
+                                  <Link
+                                    to="/shops/$shopId/apps/$appSlug"
+                                    params={{ shopId: appShopId, appSlug: app.slug }}
+                                    search={{ tab: t.id }}
+                                    onClick={() => setMobileOpen(false)}
+                                    className={cn(
+                                      "block rounded-md px-2 py-1 text-sm transition-colors",
+                                      tabActive
+                                        ? "text-sidebar-active-foreground font-semibold"
+                                        : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:text-sidebar-foreground",
+                                    )}
+                                  >
+                                    {t.label}
+                                  </Link>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                      </li>
+                    );
+                  })}
+              </ul>
+            </li>
+          )}
+
+
+
           {shops.length > 0 && (
             <li>
               <div className="text-xs/6 font-semibold text-sidebar-foreground/60">
