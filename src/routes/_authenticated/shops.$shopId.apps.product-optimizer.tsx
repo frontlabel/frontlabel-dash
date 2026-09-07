@@ -22,8 +22,6 @@ import {
   generateProductSuggestions,
   generateProductImage,
   deleteGeneratedImage,
-  pushGeneratedImageToShop,
-  reorderShopImages,
   syncProductToShop,
   getSpecLibrary,
   getProductSpecs,

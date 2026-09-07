@@ -404,6 +404,7 @@ export const syncProductToShop = createServerFn({ method: "POST" })
       specsUpdated,
       specsSkipped,
       imagesUploaded,
+      orderUpdated,
       imageError: imageError ?? null,
     };
   });
