@@ -1160,13 +1160,13 @@ function ImagesTab({
   onGenerate,
   onDelete,
   onAddToProduct,
+  onUnstage,
+  onMoveImage,
   onReorderGenerated,
-  onSaveOrder,
-  savingOrder,
   hasSelection,
 }: {
   product: ProductRow | null;
-  images: { id: string; src: string; title: string }[];
+  images: { id: string; src: string; title: string; stagedPath?: string }[];
   generated: { url: string; path: string }[];
   style: "studio" | "sfeer" | "lifestyle";
   setStyle: (v: "studio" | "sfeer" | "lifestyle") => void;
@@ -1177,33 +1177,13 @@ function ImagesTab({
   onGenerate: () => void;
   onDelete: (path: string) => void;
   onAddToProduct: (path: string) => void;
+  onUnstage: (path: string) => void;
+  onMoveImage: (from: number, to: number) => void;
   onReorderGenerated: (from: number, to: number) => void;
-  onSaveOrder: (orderedIds: string[]) => void;
-  savingOrder: boolean;
   hasSelection: boolean;
 }) {
-  const [ordered, setOrdered] = useState(images);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const dragGenIdx = useRef<number | null>(null);
-
-  useEffect(() => {
-    setOrdered(images);
-  }, [images]);
-
-  const orderDirty = useMemo(
-    () => ordered.length === images.length && ordered.some((img, i) => img.id !== images[i]?.id),
-    [ordered, images],
-  );
-
-  function moveImage(from: number, to: number) {
-    if (from === to) return;
-    setOrdered((list) => {
-      const next = [...list];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved!);
-      return next;
-    });
-  }
 
   if (!hasSelection || !product) {
     return (
