@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SectionCard, SectionLabel } from "@/components/section-card";
-import { StickySaveBar } from "@/components/sticky-save-bar";
+
 import { useDisableAppGuard } from "@/components/disable-app-dialog";
 import { useShellHeader } from "@/components/shell-header-context";
 import { cn } from "@/lib/utils";
