@@ -91,6 +91,30 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 
   const activeShopId = pathname.match(/^\/shops\/([^/]+)/)?.[1] ?? null;
+  const appShopId = activeShopId ?? shops[0]?.id ?? null;
+  const activeAppSlug = pathname.match(/^\/shops\/[^/]+\/apps\/([^/]+)/)?.[1] ?? null;
+  const currentTab = useRouterState({
+    select: (s) => (s.location.search as { tab?: string }).tab,
+  });
+
+  useEffect(() => {
+    if (!appShopId) {
+      setInstalled({});
+      return;
+    }
+    supabase
+      .from("shop_apps")
+      .select("app_slug,enabled")
+      .eq("shop_id", appShopId)
+      .then(({ data }) => {
+        const map: Record<string, boolean> = {};
+        for (const row of (data as Array<{ app_slug: string; enabled: boolean }> | null) ?? []) {
+          map[row.app_slug] = row.enabled;
+        }
+        setInstalled(map);
+      });
+  }, [appShopId]);
+
 
   async function signOut() {
     await supabase.auth.signOut();
