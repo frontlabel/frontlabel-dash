@@ -25,6 +25,10 @@ import {
   pushGeneratedImageToShop,
   reorderShopImages,
   syncProductToShop,
+  getSpecLibrary,
+  getProductSpecs,
+  renameSpecification,
+  deleteSpecification,
 } from "@/lib/product-optimizer.functions";
 import {
   AlertDialog,
@@ -49,6 +53,8 @@ import {
   Sparkles,
   Trash2,
   Wand2,
+  ListChecks,
+  Pencil,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/apps/product-optimizer")({
@@ -142,7 +148,7 @@ function ProductOptimizerPage() {
   const [rowId, setRowId] = useState<string | null>(null);
   const [settings, setSettings] = useState<OptimizerSettings>(DEFAULTS);
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<"products" | "detail" | "images" | "settings">("products");
+  const [tab, setTab] = useState<"products" | "detail" | "specs" | "images" | "settings">("products");
 
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [loadingList, setLoadingList] = useState(false);
@@ -163,6 +169,11 @@ function ProductOptimizerPage() {
   const [confirmSync, setConfirmSync] = useState(false);
   const [pushDirty, setPushDirty] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
+  const [library, setLibrary] = useState<SpecAttr[]>([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
+  const [libraryError, setLibraryError] = useState("");
+  const [productSpecs, setProductSpecs] = useState<{ label: string; value: string }[]>([]);
+  const [allowNewSpecs, setAllowNewSpecs] = useState(false);
 
   const { requestToggle, dialog: disableDialog } = useDisableAppGuard({
     appName: "Product optimizer",
@@ -179,6 +190,24 @@ function ProductOptimizerPage() {
   const runPushImage = useServerFn(pushGeneratedImageToShop);
   const runReorder = useServerFn(reorderShopImages);
   const runSync = useServerFn(syncProductToShop);
+  const runLibrary = useServerFn(getSpecLibrary);
+  const runProductSpecs = useServerFn(getProductSpecs);
+  const runRenameSpec = useServerFn(renameSpecification);
+  const runDeleteSpec = useServerFn(deleteSpecification);
+
+  const loadLibrary = useCallback(async () => {
+    setLibraryLoading(true);
+    setLibraryError("");
+    try {
+      const res = await runLibrary({ data: { shopId } });
+      if (res.ok) setLibrary(res.attributes as SpecAttr[]);
+      else setLibraryError(res.error);
+    } catch {
+      setLibraryError("De specificaties konden niet opgehaald worden.");
+    } finally {
+      setLibraryLoading(false);
+    }
+  }, [runLibrary, shopId]);
 
   function update<K extends keyof OptimizerSettings>(k: K, v: OptimizerSettings[K]) {
     setSettings((s) => ({ ...s, [k]: v }));
@@ -257,13 +286,23 @@ function ProductOptimizerPage() {
           })),
         });
         setSuggestions(normalizeSuggestions(res.saved?.suggestions));
+        try {
+          const own = await runProductSpecs({ data: { shopId, productId } });
+          setProductSpecs(
+            own.ok
+              ? own.specs.map((sp) => ({ label: sp.label, value: sp.value })).filter((sp) => sp.label)
+              : [],
+          );
+        } catch {
+          setProductSpecs([]);
+        }
       } catch (e) {
         console.error("[product-optimizer] detail failed", e);
         toast.error("Dit product kon niet geladen worden. Probeer het opnieuw.");
         setDetail({ product: null, images: [], generated: [] });
       }
     },
-    [fetchDetail, shopId],
+    [fetchDetail, runProductSpecs, shopId],
   );
 
 
@@ -408,12 +447,27 @@ function ProductOptimizerPage() {
         },
         altTexts: suggestions.altTexts,
         includeImages: true,
+        specs: suggestions.specs
+          .filter((sp) => sp.label && sp.value)
+          .map((sp) => ({
+            attributeId:
+              library.find((a) => normalizeKey(a.title) === normalizeKey(sp.label))?.id ?? null,
+            label: sp.label,
+            value: sp.value,
+          })),
+        allowNewSpecs,
       },
     });
     if (res.ok) {
       const parts: string[] = [];
       if (res.altUpdated > 0) parts.push(`${res.altUpdated} alt-teksten`);
       if (res.imagesUploaded > 0) parts.push(`${res.imagesUploaded} nieuwe afbeeldingen`);
+      if (res.specsUpdated > 0) parts.push(`${res.specsUpdated} specificaties`);
+      if (res.specsSkipped.length > 0) {
+        toast.warning(
+          `Niet doorgezet: ${res.specsSkipped.join(", ")}. Deze specificaties bestaan nog niet in je shop of het product heeft geen specificatiegroep.`,
+        );
+      }
       toast.success(
         parts.length
           ? `Gesynchroniseerd naar je shop (${parts.join(", ")} bijgewerkt)`
@@ -459,6 +513,7 @@ function ProductOptimizerPage() {
   const tabs = [
     { id: "products" as const, label: "Producten" },
     { id: "detail" as const, label: "Product detail" },
+    { id: "specs" as const, label: "Specificaties" },
     { id: "images" as const, label: "Afbeeldingen" },
     { id: "settings" as const, label: "Instellingen" },
   ];
@@ -512,6 +567,33 @@ function ProductOptimizerPage() {
             onGenerate={generate}
             hasSelection={!!selectedId}
             specsAsTable={settings.specsAsTable}
+          />
+        )}
+        {tab === "specs" && (
+          <SpecsTab
+            library={library}
+            loading={libraryLoading}
+            error={libraryError}
+            onRefresh={loadLibrary}
+            onRename={async (attributeId, title) => {
+              const res = await runRenameSpec({ data: { shopId, attributeId, title } });
+              if (res.ok) {
+                toast.success("Specificatie hernoemd");
+                loadLibrary();
+              } else toast.error(res.error);
+            }}
+            onDelete={async (attributeId) => {
+              const res = await runDeleteSpec({ data: { shopId, attributeId } });
+              if (res.ok) {
+                toast.success("Specificatie verwijderd");
+                loadLibrary();
+              } else toast.error(res.error);
+            }}
+            suggested={suggestions?.specs ?? []}
+            productSpecs={productSpecs}
+            allowNew={allowNewSpecs}
+            setAllowNew={setAllowNewSpecs}
+            productTitle={detail.product?.title ?? ""}
           />
         )}
         {tab === "images" && (
