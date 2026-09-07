@@ -176,7 +176,7 @@ function ProductOptimizerPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<{
     product: ProductRow | null;
-    images: { id: string; src: string; title: string }[];
+    images: { id: string; src: string; title: string; stagedPath?: string }[];
     generated: { url: string; path: string }[];
   }>({ product: null, images: [], generated: [] });
   const [suggestions, setSuggestions] = useState<Suggestions | null>(null);
@@ -188,7 +188,7 @@ function ProductOptimizerPage() {
   const [syncing, setSyncing] = useState(false);
   const [confirmSync, setConfirmSync] = useState(false);
   const [pushDirty, setPushDirty] = useState(false);
-  const [savingOrder, setSavingOrder] = useState(false);
+  const [imagesDirty, setImagesDirty] = useState(false);
   const [library, setLibrary] = useState<SpecAttr[]>([]);
   const [libraryLoading, setLibraryLoading] = useState(false);
   const [libraryError, setLibraryError] = useState("");
@@ -207,8 +207,6 @@ function ProductOptimizerPage() {
   const runSuggestions = useServerFn(generateProductSuggestions);
   const runImage = useServerFn(generateProductImage);
   const runDeleteImage = useServerFn(deleteGeneratedImage);
-  const runPushImage = useServerFn(pushGeneratedImageToShop);
-  const runReorder = useServerFn(reorderShopImages);
   const runSync = useServerFn(syncProductToShop);
   const runLibrary = useServerFn(getSpecLibrary);
   const runProductSpecs = useServerFn(getProductSpecs);
@@ -298,6 +296,7 @@ function ProductOptimizerPage() {
       setTab("detail");
       setSuggestions(null);
       setPushDirty(false);
+      setImagesDirty(false);
       setDetail({ product: null, images: [], generated: [] });
       try {
         const res = await fetchDetail({ data: { shopId, productId } });
