@@ -1005,10 +1005,31 @@ function DetailTab({
               </p>
             ) : (
               <>
-                <CopyBlock label="Titel" value={suggestions.title} />
-                <CopyBlock label="SEO-titel" value={suggestions.seoTitle} />
-                <CopyBlock label="Meta description" value={suggestions.metaDescription} />
-                <CopyBlock label="Omschrijving" value={suggestions.description} html />
+                <CopyBlock
+                  label="Titel"
+                  value={suggestions.title}
+                  onChange={(v) => onEdit({ title: v })}
+                  rows={2}
+                />
+                <CopyBlock
+                  label="SEO-titel"
+                  value={suggestions.seoTitle}
+                  onChange={(v) => onEdit({ seoTitle: v })}
+                  rows={2}
+                />
+                <CopyBlock
+                  label="Meta description"
+                  value={suggestions.metaDescription}
+                  onChange={(v) => onEdit({ metaDescription: v })}
+                  rows={3}
+                />
+                <CopyBlock
+                  label="Omschrijving"
+                  value={suggestions.description}
+                  html
+                  onChange={(v) => onEdit({ description: v })}
+                  rows={12}
+                />
                 {suggestions.specs.length > 0 && (
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-1.5">
