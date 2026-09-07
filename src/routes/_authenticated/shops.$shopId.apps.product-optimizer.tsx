@@ -514,8 +514,6 @@ function ProductOptimizerPage() {
             onGenerate={generate}
             hasSelection={!!selectedId}
             specsAsTable={settings.specsAsTable}
-            syncing={syncing}
-            onSync={() => setConfirmSync(true)}
           />
         )}
         {tab === "images" && (
@@ -532,13 +530,32 @@ function ProductOptimizerPage() {
             onGenerate={makeImage}
             onDelete={deleteImage}
             onAddToProduct={addImageToProduct}
+            onReorderGenerated={reorderGenerated}
+            onSaveOrder={saveImageOrder}
+            savingOrder={savingOrder}
             hasSelection={!!selectedId}
           />
         )}
         {tab === "settings" && <SettingsTab settings={settings} update={update} />}
       </div>
 
-      <StickySaveBar onSave={save} saving={saving} />
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/90 px-6 py-3 backdrop-blur lg:left-72">
+        <div className="mx-auto flex max-w-6xl justify-end gap-2">
+          <Button
+            onClick={() => setConfirmSync(true)}
+            disabled={!pushDirty || !suggestions || !selectedId || syncing || generating}
+            variant="outline"
+            className="rounded-lg py-3 h-auto"
+          >
+            {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
+            {syncing ? "Pushen…" : "Push naar shop"}
+          </Button>
+          <Button onClick={save} disabled={saving} className="rounded-lg py-3 h-auto">
+            <Save className="h-4 w-4" />
+            {saving ? "Opslaan…" : "Opslaan"}
+          </Button>
+        </div>
+      </div>
       {disableDialog}
 
       <AlertDialog open={confirmSync} onOpenChange={setConfirmSync}>
