@@ -789,8 +789,6 @@ function DetailTab({
   onGenerate,
   hasSelection,
   specsAsTable,
-  syncing,
-  onSync,
 }: {
   product: ProductRow | null;
   images: { id: string; src: string; title: string }[];
@@ -799,8 +797,6 @@ function DetailTab({
   onGenerate: () => void;
   hasSelection: boolean;
   specsAsTable: boolean;
-  syncing: boolean;
-  onSync: () => void;
 }) {
   if (!hasSelection) {
     return (
@@ -832,16 +828,10 @@ function DetailTab({
         </div>
         <ScoreBar score={product.score} />
         <div className="flex flex-wrap gap-2">
-          <Button onClick={onGenerate} disabled={generating || syncing} variant={suggestions ? "outline" : "default"} className="py-3 h-auto">
+          <Button onClick={onGenerate} disabled={generating} variant={suggestions ? "outline" : "default"} className="py-3 h-auto">
             {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {suggestions ? "Genereer opnieuw" : "Genereer voorstel"}
           </Button>
-          {suggestions && (
-            <Button onClick={onSync} disabled={syncing || generating} className="py-3 h-auto">
-              {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
-              {syncing ? "Synchroniseren…" : "Synchroniseer naar shop"}
-            </Button>
-          )}
         </div>
       </SectionCard>
 
