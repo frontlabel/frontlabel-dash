@@ -1053,10 +1053,20 @@ function DetailTab({
                       </Button>
                     </div>
                     <div className="rounded-md border border-border bg-white divide-y divide-border text-sm">
-                      {suggestions.specs.map((s) => (
-                        <div key={s.label} className="flex gap-3 px-3 py-2">
+                      {suggestions.specs.map((s, i) => (
+                        <div key={`${s.label}-${i}`} className="flex items-center gap-3 px-3 py-2">
                           <span className="w-40 shrink-0 text-muted-foreground">{s.label}</span>
-                          <span>{s.value}</span>
+                          <Input
+                            value={s.value}
+                            onChange={(e) =>
+                              onEdit({
+                                specs: suggestions.specs.map((sp, j) =>
+                                  j === i ? { ...sp, value: e.target.value } : sp,
+                                ),
+                              })
+                            }
+                            className="h-8 flex-1 text-sm"
+                          />
                         </div>
                       ))}
                     </div>
