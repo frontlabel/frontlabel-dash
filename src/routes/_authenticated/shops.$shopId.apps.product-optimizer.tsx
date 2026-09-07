@@ -51,6 +51,7 @@ import {
   Sparkles,
   Trash2,
   Wand2,
+  X,
   ListChecks,
   Pencil,
 } from "lucide-react";
@@ -365,7 +366,6 @@ function ProductOptimizerPage() {
       });
       if (res.ok && res.url) {
         setDetail((d) => ({ ...d, generated: [...d.generated, { url: res.url, path: res.path }] }));
-        setPushDirty(true);
         toast.success("Afbeelding gemaakt", { id: toastId });
       } else {
         toast.error(res.ok ? "De afbeelding kon niet opgehaald worden." : res.error, { id: toastId });
@@ -489,6 +489,7 @@ function ProductOptimizerPage() {
       const parts: string[] = [];
       if (res.altUpdated > 0) parts.push(`${res.altUpdated} alt-teksten`);
       if (res.imagesUploaded > 0) parts.push(`${res.imagesUploaded} nieuwe afbeeldingen`);
+      if (res.orderUpdated > 0) parts.push("afbeeldingsvolgorde");
       if (res.specsUpdated > 0) parts.push(`${res.specsUpdated} specificaties`);
       if (res.specsSkipped.length > 0) {
         toast.warning(
@@ -502,6 +503,7 @@ function ProductOptimizerPage() {
       );
       if (res.imageError) toast.error(res.imageError);
       setPushDirty(false);
+      setImagesDirty(false);
       await openProduct(selectedId);
     } else {
       toast.error(res.error);
