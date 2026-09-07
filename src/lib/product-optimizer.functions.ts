@@ -261,7 +261,8 @@ export const syncProductToShop = createServerFn({ method: "POST" })
         description: z.string().default(""),
       }),
       altTexts: z.array(z.string()).default([]),
-      includeImages: z.boolean().default(true),
+      // Gewenste eindvolgorde van productafbeeldingen; "staged:<path>" = nog te uploaden gegenereerde afbeelding.
+      imageOrder: z.array(z.string().min(1)).max(150).default([]),
       specs: z
         .array(
           z.object({
