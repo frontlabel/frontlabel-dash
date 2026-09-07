@@ -59,6 +59,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [shops, setShops] = useState<Array<{ id: string; name: string }>>([]);
   const isAdmin = useIsAdmin();
   const [email, setEmail] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarColor, setAvatarColor] = useState<string>(AVATAR_COLORS[0]!);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -73,8 +75,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null));
+    supabase.auth.getUser().then(async ({ data }) => {
+      const user = data.user;
+      setEmail(user?.email ?? null);
+      if (!user) return;
+      setAvatarColor(colorForId(user.id));
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+      setAvatarUrl((profile as { avatar_url: string | null } | null)?.avatar_url ?? null);
+    });
   }, []);
+
 
   const activeShopId = pathname.match(/^\/shops\/([^/]+)/)?.[1] ?? null;
 
