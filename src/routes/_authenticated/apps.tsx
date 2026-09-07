@@ -32,7 +32,7 @@ function AppsCatalogPage() {
         const map: Record<string, boolean> = {};
         (data ?? []).forEach((r) => {
           const row = r as { app_slug: string; enabled: boolean };
-          map[row.app_slug] = map[row.app_slug] || row.enabled;
+          map[row.app_slug] = true;
         });
         setInstalled(map);
       });
