@@ -1077,7 +1077,7 @@ function DetailTab({
                     <Label className="text-xs uppercase tracking-wider text-muted-foreground">Alt-teksten</Label>
                     <div className="mt-1.5 space-y-2">
                       {suggestions.altTexts.map((alt, i) => (
-                        <div key={`${alt}-${i}`} className="flex items-center gap-3">
+                        <div key={`alt-${i}`} className="flex items-center gap-3">
                           {images[i]?.src ? (
                             <img
                               src={images[i]!.src}
@@ -1088,7 +1088,15 @@ function DetailTab({
                           ) : (
                             <div className="h-10 w-10 rounded border border-border bg-muted shrink-0" />
                           )}
-                          <p className="text-sm flex-1">{alt}</p>
+                          <Input
+                            value={alt}
+                            onChange={(e) =>
+                              onEdit({
+                                altTexts: suggestions.altTexts.map((a, j) => (j === i ? e.target.value : a)),
+                              })
+                            }
+                            className="h-8 flex-1 text-sm"
+                          />
                           <Button
                             size="sm"
                             variant="ghost"
