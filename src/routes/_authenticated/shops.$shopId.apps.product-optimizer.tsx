@@ -286,6 +286,7 @@ function ProductOptimizerPage() {
     });
     if (res.ok) {
       setSuggestions(normalizeSuggestions(res.suggestions));
+      setPushDirty(true);
       toast.success("Voorstel klaar");
     } else {
       toast.error(res.error);
@@ -303,6 +304,7 @@ function ProductOptimizerPage() {
       });
       if (res.ok && res.url) {
         setDetail((d) => ({ ...d, generated: [...d.generated, { url: res.url, path: res.path }] }));
+        setPushDirty(true);
         toast.success("Afbeelding gemaakt", { id: toastId });
       } else {
         toast.error(res.ok ? "De afbeelding kon niet opgehaald worden." : res.error, { id: toastId });
@@ -385,6 +387,7 @@ function ProductOptimizerPage() {
           : "Gesynchroniseerd naar je shop",
       );
       if (res.imageError) toast.error(res.imageError);
+      setPushDirty(false);
       await openProduct(selectedId);
     } else {
       toast.error(res.error);
