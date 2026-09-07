@@ -395,29 +395,55 @@ function ProductOptimizerPage() {
     }
   }
 
-  async function addImageToProduct(path: string) {
+  /** Zet een gegenereerde afbeelding lokaal in de volgorde; upload gebeurt bij "Push naar shop". */
+  function addImageToProduct(path: string) {
     if (!selectedId || !path) return;
-    setImageBusyPath(path);
-    const toastId = toast.loading("Afbeelding wordt toegevoegd aan het product…");
-    try {
-      const res = await runPushImage({
-        data: {
-          shopId,
-          productId: selectedId,
-          path,
-          title: suggestions?.title || detail.product?.title || "",
-        },
-      });
-      if (res.ok) {
-        toast.success("Toegevoegd aan de productafbeeldingen", { id: toastId });
-      } else {
-        toast.error(res.error, { id: toastId });
-      }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Er ging iets mis.", { id: toastId });
-    } finally {
-      setImageBusyPath(null);
-    }
+    setDetail((d) => {
+      const gen = d.generated.find((g) => g.path === path);
+      if (!gen) return d;
+      return {
+        ...d,
+        generated: d.generated.filter((g) => g.path !== path),
+        images: [
+          ...d.images,
+          {
+            id: `staged:${path}`,
+            src: gen.url,
+            title: suggestions?.title || d.product?.title || "",
+            stagedPath: path,
+          },
+        ],
+      };
+    });
+    setPushDirty(true);
+    setImagesDirty(true);
+    toast.success("Toegevoegd aan de afbeeldingen — klik op “Push naar shop” om hem naar je shop te sturen.");
+  }
+
+  /** Haalt een gestagete afbeelding terug naar de gegenereerde lijst. */
+  function unstageImage(path: string) {
+    setDetail((d) => {
+      const img = d.images.find((i) => i.stagedPath === path);
+      if (!img) return d;
+      return {
+        ...d,
+        images: d.images.filter((i) => i.stagedPath !== path),
+        generated: [...d.generated, { url: img.src, path }],
+      };
+    });
+  }
+
+  /** Wijzigt lokaal de volgorde van de productafbeeldingen; push gebeurt bij "Push naar shop". */
+  function moveShopImage(from: number, to: number) {
+    if (from === to) return;
+    setDetail((d) => {
+      const next = [...d.images];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved!);
+      return { ...d, images: next };
+    });
+    setPushDirty(true);
+    setImagesDirty(true);
   }
 
   function reorderGenerated(from: number, to: number) {
@@ -428,30 +454,6 @@ function ProductOptimizerPage() {
       next.splice(to, 0, moved!);
       return { ...d, generated: next };
     });
-    setPushDirty(true);
-  }
-
-  async function saveImageOrder(orderedIds: string[]) {
-    if (!selectedId) return;
-    setSavingOrder(true);
-    try {
-      const res = await runReorder({ data: { shopId, imageIds: orderedIds } });
-      if (res.ok) {
-        toast.success("Volgorde opgeslagen in je shop");
-        setDetail((d) => ({
-          ...d,
-          images: [...d.images].sort(
-            (a, b) => orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id),
-          ),
-        }));
-      } else {
-        toast.error(res.error ?? "De volgorde kon niet worden opgeslagen.");
-      }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Er ging iets mis.");
-    } finally {
-      setSavingOrder(false);
-    }
   }
 
   async function syncToShop() {
