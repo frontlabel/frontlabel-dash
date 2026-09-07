@@ -926,6 +926,7 @@ function DetailTab({
   onGenerate: () => void;
   hasSelection: boolean;
   specsAsTable: boolean;
+  onEdit: (patch: Partial<Suggestions>) => void;
 }) {
   if (!hasSelection) {
     return (
