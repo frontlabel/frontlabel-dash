@@ -197,12 +197,37 @@ export const generateProductSuggestions = createServerFn({ method: "POST" })
     const creds = await getShopCredentials(context.supabase as never, data.shopId);
     if (!creds) return { ok: false as const, error: "Geen actieve koppeling met je shop." };
 
-    const { fetchProduct, generateSuggestions } = await import("./product-optimizer.server");
+    const { fetchProduct, generateSuggestions, fetchSpecLibrary, fetchProductSpecs } = await import(
+      "./product-optimizer.server"
+    );
     const { product, images } = await fetchProduct({ ...creds, productId: data.productId });
     if (!product) return { ok: false as const, error: "Product niet gevonden." };
 
+    // Bestaande specificaties als vaste woordenlijst meegeven, zodat de AI geen
+    // dubbele of verkeerd gespelde specificatienamen verzint.
+    let knownSpecLabels: string[] = [];
+    let currentSpecs: { label: string; value: string }[] = [];
     try {
-      const suggestions = await generateSuggestions({ product, images, settings: data.settings });
+      const [library, own] = await Promise.all([
+        fetchSpecLibrary(creds),
+        fetchProductSpecs({ ...creds, productId: data.productId }),
+      ]);
+      knownSpecLabels = library.attributes.map((a) => a.title).filter(Boolean);
+      currentSpecs = own.specs
+        .filter((sp) => sp.label)
+        .map((sp) => ({ label: sp.label, value: sp.value }));
+    } catch (e) {
+      console.error("[product-optimizer] spec library failed", e);
+    }
+
+    try {
+      const suggestions = await generateSuggestions({
+        product,
+        images,
+        settings: data.settings,
+        knownSpecLabels,
+        currentSpecs,
+      });
 
       await context.supabase.from("product_optimizations").upsert(
         {
@@ -237,13 +262,25 @@ export const syncProductToShop = createServerFn({ method: "POST" })
       }),
       altTexts: z.array(z.string()).default([]),
       includeImages: z.boolean().default(true),
+      specs: z
+        .array(
+          z.object({
+            attributeId: z.string().nullable().default(null),
+            label: z.string().min(1),
+            value: z.string().default(""),
+          }),
+        )
+        .default([]),
+      allowNewSpecs: z.boolean().default(false),
     }),
   )
   .handler(async ({ data, context }) => {
     const creds = await getShopCredentials(context.supabase as never, data.shopId);
     if (!creds) return { ok: false as const, error: "Geen actieve koppeling met je shop." };
 
-    const { pushProductToShop, uploadProductImages } = await import("./product-optimizer.server");
+    const { pushProductToShop, uploadProductImages, pushProductSpecs } = await import(
+      "./product-optimizer.server"
+    );
     const result = await pushProductToShop({
       ...creds,
       productId: data.productId,
@@ -251,6 +288,24 @@ export const syncProductToShop = createServerFn({ method: "POST" })
       altTexts: data.altTexts,
     });
     if (!result.ok) return { ok: false as const, error: result.error ?? "Synchroniseren mislukt." };
+
+    // Specificaties naar de echte specificatievelden van de shop schrijven.
+    let specsUpdated = 0;
+    let specsSkipped: string[] = [];
+    if (data.specs.length > 0) {
+      try {
+        const specResult = await pushProductSpecs({
+          ...creds,
+          productId: data.productId,
+          specs: data.specs,
+          allowNew: data.allowNewSpecs,
+        });
+        specsUpdated = specResult.updated;
+        specsSkipped = specResult.skipped;
+      } catch (e) {
+        console.error("[product-optimizer] spec push failed", e);
+      }
+    }
 
     // Gegenereerde afbeeldingen meesturen naar de shop.
     let imagesUploaded = 0;
@@ -306,6 +361,8 @@ export const syncProductToShop = createServerFn({ method: "POST" })
     return {
       ok: true as const,
       altUpdated: result.altUpdated,
+      specsUpdated,
+      specsSkipped,
       imagesUploaded,
       imageError: imageError ?? null,
     };
@@ -369,4 +426,80 @@ export const generateProductImage = createServerFn({ method: "POST" })
     } catch (e) {
       return { ok: false as const, error: e instanceof Error ? e.message : "Er ging iets mis." };
     }
+  });
+
+/** De specificatie-bibliotheek van de shop (alle specificatienamen + groepen). */
+export const getSpecLibrary = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ shopId: z.string().uuid() }))
+  .handler(async ({ data, context }) => {
+    const creds = await getShopCredentials(context.supabase as never, data.shopId);
+    if (!creds) return { ok: false as const, error: "Geen actieve koppeling met je shop." };
+
+    const { fetchSpecLibrary } = await import("./product-optimizer.server");
+    try {
+      const library = await fetchSpecLibrary(creds);
+      return { ok: true as const, ...library };
+    } catch (e) {
+      console.error("[product-optimizer] spec library failed", e);
+      return { ok: false as const, error: "De specificaties konden niet opgehaald worden." };
+    }
+  });
+
+/** Specificaties zoals ze nu op één product staan. */
+export const getProductSpecs = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ shopId: z.string().uuid(), productId: z.string().min(1) }))
+  .handler(async ({ data, context }) => {
+    const creds = await getShopCredentials(context.supabase as never, data.shopId);
+    if (!creds) return { ok: false as const, error: "Geen actieve koppeling met je shop." };
+
+    const { fetchProductSpecs } = await import("./product-optimizer.server");
+    try {
+      const res = await fetchProductSpecs({ ...creds, productId: data.productId });
+      return { ok: true as const, specs: res.specs, typeId: res.typeId };
+    } catch (e) {
+      console.error("[product-optimizer] product specs failed", e);
+      return { ok: false as const, error: "De specificaties konden niet opgehaald worden." };
+    }
+  });
+
+/** Hernoemt een specificatie in de bibliotheek (typo's rechtzetten). */
+export const renameSpecification = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      shopId: z.string().uuid(),
+      attributeId: z.string().min(1),
+      title: z.string().min(1).max(120),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    const creds = await getShopCredentials(context.supabase as never, data.shopId);
+    if (!creds) return { ok: false as const, error: "Geen actieve koppeling met je shop." };
+
+    const { renameSpecAttribute } = await import("./product-optimizer.server");
+    const res = await renameSpecAttribute({
+      ...creds,
+      attributeId: data.attributeId,
+      title: data.title,
+    });
+    return res.ok
+      ? { ok: true as const }
+      : { ok: false as const, error: res.error ?? "Hernoemen mislukt." };
+  });
+
+/** Verwijdert een dubbele specificatie uit de bibliotheek. */
+export const deleteSpecification = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ shopId: z.string().uuid(), attributeId: z.string().min(1) }))
+  .handler(async ({ data, context }) => {
+    const creds = await getShopCredentials(context.supabase as never, data.shopId);
+    if (!creds) return { ok: false as const, error: "Geen actieve koppeling met je shop." };
+
+    const { deleteSpecAttribute } = await import("./product-optimizer.server");
+    const res = await deleteSpecAttribute({ ...creds, attributeId: data.attributeId });
+    return res.ok
+      ? { ok: true as const }
+      : { ok: false as const, error: res.error ?? "Verwijderen mislukt." };
   });
