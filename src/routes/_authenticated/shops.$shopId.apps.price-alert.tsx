@@ -46,9 +46,8 @@ import {
 export const Route = createFileRoute(
   "/_authenticated/shops/$shopId/apps/price-alert",
 )({
-  validateSearch: (s: Record<string, unknown>) => ({
-    tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): { tab?: string } =>
+    typeof s["tab"] === "string" ? { tab: s["tab"] as string } : {},
   component: PriceAlertPage,
 });
 
@@ -105,9 +104,9 @@ function PriceAlertPage() {
     setActive,
   });
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
-  const search = Route.useSearch();
+  const tabSearch = Route.useSearch();
   const tabNav = useNavigate();
-  const tab = (search.tab ?? "overview") as "overview" | "widget" | "email" | "alerts";
+  const tab = (tabSearch.tab ?? "overview") as "overview" | "widget" | "email" | "alerts";
   const setTab = (t: "overview" | "widget" | "email" | "alerts") =>
     tabNav({ to: ".", search: { tab: t }, replace: true });
 

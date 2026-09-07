@@ -49,9 +49,8 @@ import {
 export const Route = createFileRoute(
   "/_authenticated/shops/$shopId/apps/back-in-stock",
 )({
-  validateSearch: (s: Record<string, unknown>) => ({
-    tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): { tab?: string } =>
+    typeof s["tab"] === "string" ? { tab: s["tab"] as string } : {},
   component: BackInStockPage,
 });
 
@@ -97,9 +96,9 @@ function BackInStockPage() {
   const [settings, setSettings] = useState<BackInStockSettings>(DEFAULTS);
   const [saving, setSaving] = useState(false);
   const [waitlist, setWaitlist] = useState<WaitlistRow[]>([]);
-  const search = Route.useSearch();
+  const tabSearch = Route.useSearch();
   const tabNav = useNavigate();
-  const tab = (search.tab ?? "overview") as "overview" | "widget" | "email" | "waitlist";
+  const tab = (tabSearch.tab ?? "overview") as "overview" | "widget" | "email" | "waitlist";
   const setTab = (t: "overview" | "widget" | "email" | "waitlist") =>
     tabNav({ to: ".", search: { tab: t }, replace: true });
 

@@ -30,9 +30,8 @@ import { Save, ChevronRight, LayoutGrid, X, Zap } from "lucide-react";
 import { useShellHeader } from "@/components/shell-header-context";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/apps/$appSlug")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): { tab?: string } =>
+    typeof s["tab"] === "string" ? { tab: s["tab"] as string } : {},
   component: AppSettingsPage,
 });
 
@@ -85,9 +84,9 @@ function AppSettingsPage() {
   const app = useMemo(() => getApp(appSlug), [appSlug]);
   const { setContent } = useShellHeader();
 
-  const search = Route.useSearch();
+  const tabSearch = Route.useSearch();
   const tabNav = useNavigate();
-  const tab = (search.tab ?? "algemeen") as TabId;
+  const tab = (tabSearch.tab ?? "algemeen") as TabId;
   const setTab = (t: TabId) =>
     tabNav({ to: ".", search: { tab: t }, replace: true });
   const [rowId, setRowId] = useState<string | null>(null);

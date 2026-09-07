@@ -19,9 +19,8 @@ import { Calculator, ChevronRight, LayoutGrid, Paintbrush, Ruler, Save, SquareSt
 export const Route = createFileRoute(
   "/_authenticated/shops/$shopId/apps/tile-calculator",
 )({
-  validateSearch: (s: Record<string, unknown>) => ({
-    tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): { tab?: string } =>
+    typeof s["tab"] === "string" ? { tab: s["tab"] as string } : {},
   component: FloorCalculatorPage,
 });
 
@@ -107,9 +106,9 @@ function FloorCalculatorPage() {
     active,
     setActive,
   });
-  const search = Route.useSearch();
+  const tabSearch = Route.useSearch();
   const tabNav = useNavigate();
-  const tab = (search.tab ?? "overview") as "overview" | "widget" | "preview";
+  const tab = (tabSearch.tab ?? "overview") as "overview" | "widget" | "preview";
   const setTab = (t: "overview" | "widget" | "preview") =>
     tabNav({ to: ".", search: { tab: t }, replace: true });
 

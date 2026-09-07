@@ -58,9 +58,8 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/shops/$shopId/apps/product-optimizer")({
-  validateSearch: (s: Record<string, unknown>) => ({
-    tab: typeof s["tab"] === "string" ? (s["tab"] as string) : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): { tab?: string } =>
+    typeof s["tab"] === "string" ? { tab: s["tab"] as string } : {},
   component: ProductOptimizerPage,
 });
 
@@ -167,9 +166,9 @@ function ProductOptimizerPage() {
   const [rowId, setRowId] = useState<string | null>(null);
   const [settings, setSettings] = useState<OptimizerSettings>(DEFAULTS);
   const [saving, setSaving] = useState(false);
-  const search = Route.useSearch();
+  const tabSearch = Route.useSearch();
   const tabNav = useNavigate();
-  const tab = (search.tab ?? "products") as "products" | "detail" | "specs" | "images" | "settings";
+  const tab = (tabSearch.tab ?? "products") as "products" | "detail" | "specs" | "images" | "settings";
   const setTab = (t: "products" | "detail" | "specs" | "images" | "settings") =>
     tabNav({ to: ".", search: { tab: t }, replace: true });
 
