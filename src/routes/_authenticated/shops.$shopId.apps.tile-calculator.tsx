@@ -14,7 +14,7 @@ import { DisplayModeField } from "@/components/display-mode-field";
 import { useDisableAppGuard } from "@/components/disable-app-dialog";
 import { useShellHeader } from "@/components/shell-header-context";
 import { cn } from "@/lib/utils";
-import { Calculator, ChevronRight, LayoutGrid, Paintbrush, Ruler, Save, SquareStack, Package } from "lucide-react";
+import { Calculator, ChevronRight, LayoutGrid, Paintbrush, Ruler, SquareStack, Package } from "lucide-react";
 
 export const Route = createFileRoute(
   "/_authenticated/shops/$shopId/apps/tile-calculator",
