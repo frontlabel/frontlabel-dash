@@ -45,7 +45,6 @@ import {
   LayoutGrid,
   Loader2,
   RefreshCw,
-  Save,
   Search,
   Sparkles,
   Trash2,
@@ -449,7 +448,6 @@ function ProductOptimizerPage() {
             </Label>
           </div>
           <Button onClick={save} disabled={saving} size="sm" className="py-3 h-auto">
-            <Save className="h-4 w-4" />
             {saving ? "Opslaan…" : "Opslaan"}
           </Button>
         </div>
@@ -551,7 +549,6 @@ function ProductOptimizerPage() {
             {syncing ? "Pushen…" : "Push naar shop"}
           </Button>
           <Button onClick={save} disabled={saving} className="rounded-lg py-3 h-auto">
-            <Save className="h-4 w-4" />
             {saving ? "Opslaan…" : "Opslaan"}
           </Button>
         </div>
@@ -1112,7 +1109,7 @@ function ImagesTab({
                     disabled={savingOrder}
                     className="py-3 h-auto"
                   >
-                    {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                     {savingOrder ? "Opslaan…" : "Volgorde opslaan"}
                   </Button>
                 </div>
