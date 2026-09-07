@@ -561,7 +561,7 @@ function ProductOptimizerPage() {
       <AlertDialog open={confirmSync} onOpenChange={setConfirmSync}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Voorstel naar je shop synchroniseren?</AlertDialogTitle>
+            <AlertDialogTitle>Voorstel naar je shop pushen?</AlertDialogTitle>
             <AlertDialogDescription>
               De huidige titel, SEO-titel, meta description en omschrijving van dit product in je
               webshop worden overschreven door het voorstel. Alt-teksten van bestaande afbeeldingen
@@ -574,7 +574,7 @@ function ProductOptimizerPage() {
             <AlertDialogCancel className="py-3 h-auto">Annuleren</AlertDialogCancel>
             <AlertDialogAction onClick={syncToShop} className="py-3 h-auto">
               <CloudUpload className="h-4 w-4" />
-              Synchroniseer naar shop
+              Push naar shop
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
