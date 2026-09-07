@@ -986,6 +986,9 @@ function ImagesTab({
   onGenerate,
   onDelete,
   onAddToProduct,
+  onReorderGenerated,
+  onSaveOrder,
+  savingOrder,
   hasSelection,
 }: {
   product: ProductRow | null;
@@ -1000,8 +1003,34 @@ function ImagesTab({
   onGenerate: () => void;
   onDelete: (path: string) => void;
   onAddToProduct: (path: string) => void;
+  onReorderGenerated: (from: number, to: number) => void;
+  onSaveOrder: (orderedIds: string[]) => void;
+  savingOrder: boolean;
   hasSelection: boolean;
 }) {
+  const [ordered, setOrdered] = useState(images);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const dragGenIdx = useRef<number | null>(null);
+
+  useEffect(() => {
+    setOrdered(images);
+  }, [images]);
+
+  const orderDirty = useMemo(
+    () => ordered.length === images.length && ordered.some((img, i) => img.id !== images[i]?.id),
+    [ordered, images],
+  );
+
+  function moveImage(from: number, to: number) {
+    if (from === to) return;
+    setOrdered((list) => {
+      const next = [...list];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved!);
+      return next;
+    });
+  }
+
   if (!hasSelection || !product) {
     return (
       <SectionCard className="p-8 text-center text-sm text-muted-foreground">
@@ -1030,25 +1059,65 @@ function ImagesTab({
 
       <div>
         <SectionLabel>Huidige afbeeldingen</SectionLabel>
-        <SectionCard className="p-5">
-          {images.length === 0 ? (
+        <SectionCard className="p-5 space-y-4">
+          {ordered.length === 0 ? (
             <p className="text-sm text-muted-foreground">Dit product heeft nog geen afbeeldingen.</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {images.map((img) => (
-                <div key={img.id}>
-                  <img
-                    src={img.src}
-                    alt={img.title || product.title}
-                    className="aspect-square w-full rounded-md border border-border object-contain bg-white"
-                    loading="lazy"
-                  />
-                  <p className="mt-1.5 text-xs text-muted-foreground truncate">
-                    {img.title || "Geen alt-tekst"}
-                  </p>
+            <>
+              <p className="text-xs text-muted-foreground">
+                Sleep een afbeelding om de volgorde aan te passen. De eerste afbeelding is de
+                hoofdafbeelding van het product.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {ordered.map((img, i) => (
+                  <div
+                    key={img.id}
+                    draggable
+                    onDragStart={() => setDragIdx(i)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => {
+                      if (dragIdx !== null) moveImage(dragIdx, i);
+                      setDragIdx(null);
+                    }}
+                    onDragEnd={() => setDragIdx(null)}
+                    className={cn(
+                      "rounded-md transition-opacity",
+                      dragIdx === i && "opacity-40",
+                    )}
+                  >
+                    <div className="relative group cursor-grab active:cursor-grabbing">
+                      <img
+                        src={img.src}
+                        alt={img.title || product.title}
+                        className="aspect-square w-full rounded-md border border-border object-contain bg-white pointer-events-none"
+                        loading="lazy"
+                      />
+                      <div className="absolute left-1.5 top-1.5 rounded bg-white/90 p-1 text-muted-foreground shadow-sm">
+                        <GripVertical className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="absolute right-1.5 top-1.5 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-sm">
+                        {i + 1}
+                      </div>
+                    </div>
+                    <p className="mt-1.5 text-xs text-muted-foreground truncate">
+                      {img.title || "Geen alt-tekst"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {orderDirty && (
+                <div className="flex justify-end">
+                  <Button
+                    onClick={() => onSaveOrder(ordered.map((i2) => i2.id))}
+                    disabled={savingOrder}
+                    className="py-3 h-auto"
+                  >
+                    {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {savingOrder ? "Opslaan…" : "Volgorde opslaan"}
+                  </Button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </SectionCard>
       </div>
@@ -1093,55 +1162,81 @@ function ImagesTab({
           </Button>
 
           {generated.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {generated.map((img, i) => {
-                const rowBusy = busyPath === img.path;
-                return (
-                  <div key={img.path || img.url}>
-                    <img
-                      src={img.url}
-                      alt={`Gegenereerde afbeelding ${i + 1} van ${product.title}`}
-                      className="aspect-square w-full rounded-md border border-border object-cover bg-white"
-                      loading="lazy"
-                    />
-                    <div className="mt-2 space-y-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full py-2 h-auto"
-                        disabled={rowBusy || !img.path}
-                        onClick={() => onAddToProduct(img.path)}
-                      >
-                        {rowBusy ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <CloudUpload className="h-4 w-4" />
-                        )}
-                        Toevoegen aan product
-                      </Button>
-                      <div className="flex items-center justify-between">
-                        <a
-                          href={img.url}
-                          download
-                          className="text-xs text-primary hover:underline"
-                        >
-                          Downloaden
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => onDelete(img.path)}
+            <>
+              <p className="text-xs text-muted-foreground">
+                Sleep om de volgorde te bepalen; in deze volgorde worden ze bij "Push naar shop"
+                toegevoegd.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {generated.map((img, i) => {
+                  const rowBusy = busyPath === img.path;
+                  return (
+                    <div
+                      key={img.path || img.url}
+                      draggable={!rowBusy}
+                      onDragStart={() => {
+                        dragGenIdx.current = i;
+                      }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => {
+                        if (dragGenIdx.current !== null) onReorderGenerated(dragGenIdx.current, i);
+                        dragGenIdx.current = null;
+                      }}
+                      onDragEnd={() => {
+                        dragGenIdx.current = null;
+                      }}
+                      className="cursor-grab active:cursor-grabbing"
+                    >
+                      <div className="relative">
+                        <img
+                          src={img.url}
+                          alt={`Gegenereerde afbeelding ${i + 1} van ${product.title}`}
+                          className="aspect-square w-full rounded-md border border-border object-cover bg-white pointer-events-none"
+                          loading="lazy"
+                        />
+                        <div className="absolute right-1.5 top-1.5 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-sm">
+                          {i + 1}
+                        </div>
+                      </div>
+                      <div className="mt-2 space-y-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full py-2 h-auto"
                           disabled={rowBusy || !img.path}
-                          className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
+                          onClick={() => onAddToProduct(img.path)}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Verwijderen
-                        </button>
+                          {rowBusy ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <CloudUpload className="h-4 w-4" />
+                          )}
+                          Toevoegen aan product
+                        </Button>
+                        <div className="flex items-center justify-between">
+                          <a
+                            href={img.url}
+                            download
+                            className="text-xs text-primary hover:underline"
+                          >
+                            Downloaden
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => onDelete(img.path)}
+                            disabled={rowBusy || !img.path}
+                            className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Verwijderen
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </SectionCard>
       </div>
