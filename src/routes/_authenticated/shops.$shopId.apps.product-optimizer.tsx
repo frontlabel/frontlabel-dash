@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { SectionCard, SectionLabel } from "@/components/section-card";
-import { StickySaveBar } from "@/components/sticky-save-bar";
+
 import { useDisableAppGuard } from "@/components/disable-app-dialog";
 import { useShellHeader } from "@/components/shell-header-context";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,7 @@ import {
   generateProductImage,
   deleteGeneratedImage,
   pushGeneratedImageToShop,
+  reorderShopImages,
   syncProductToShop,
 } from "@/lib/product-optimizer.functions";
 import {
@@ -39,6 +40,7 @@ import {
   ChevronRight,
   CloudUpload,
   Copy,
+  GripVertical,
   Image as ImageIcon,
   LayoutGrid,
   Loader2,
@@ -160,6 +162,8 @@ function ProductOptimizerPage() {
   const [imageBusyPath, setImageBusyPath] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [confirmSync, setConfirmSync] = useState(false);
+  const [pushDirty, setPushDirty] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
 
   const { requestToggle, dialog: disableDialog } = useDisableAppGuard({
     appName: "Product optimizer",
@@ -174,6 +178,7 @@ function ProductOptimizerPage() {
   const runImage = useServerFn(generateProductImage);
   const runDeleteImage = useServerFn(deleteGeneratedImage);
   const runPushImage = useServerFn(pushGeneratedImageToShop);
+  const runReorder = useServerFn(reorderShopImages);
   const runSync = useServerFn(syncProductToShop);
 
   function update<K extends keyof OptimizerSettings>(k: K, v: OptimizerSettings[K]) {
@@ -240,6 +245,7 @@ function ProductOptimizerPage() {
       setSelectedId(productId);
       setTab("detail");
       setSuggestions(null);
+      setPushDirty(false);
       setDetail({ product: null, images: [], generated: [] });
       try {
         const res = await fetchDetail({ data: { shopId, productId } });
@@ -280,6 +286,7 @@ function ProductOptimizerPage() {
     });
     if (res.ok) {
       setSuggestions(normalizeSuggestions(res.suggestions));
+      setPushDirty(true);
       toast.success("Voorstel klaar");
     } else {
       toast.error(res.error);
@@ -297,6 +304,7 @@ function ProductOptimizerPage() {
       });
       if (res.ok && res.url) {
         setDetail((d) => ({ ...d, generated: [...d.generated, { url: res.url, path: res.path }] }));
+        setPushDirty(true);
         toast.success("Afbeelding gemaakt", { id: toastId });
       } else {
         toast.error(res.ok ? "De afbeelding kon niet opgehaald worden." : res.error, { id: toastId });
@@ -351,6 +359,40 @@ function ProductOptimizerPage() {
     }
   }
 
+  function reorderGenerated(from: number, to: number) {
+    if (from === to) return;
+    setDetail((d) => {
+      const next = [...d.generated];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved!);
+      return { ...d, generated: next };
+    });
+    setPushDirty(true);
+  }
+
+  async function saveImageOrder(orderedIds: string[]) {
+    if (!selectedId) return;
+    setSavingOrder(true);
+    try {
+      const res = await runReorder({ data: { shopId, imageIds: orderedIds } });
+      if (res.ok) {
+        toast.success("Volgorde opgeslagen in je shop");
+        setDetail((d) => ({
+          ...d,
+          images: [...d.images].sort(
+            (a, b) => orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id),
+          ),
+        }));
+      } else {
+        toast.error(res.error ?? "De volgorde kon niet worden opgeslagen.");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Er ging iets mis.");
+    } finally {
+      setSavingOrder(false);
+    }
+  }
+
   async function syncToShop() {
     if (!selectedId || !suggestions) return;
     setConfirmSync(false);
@@ -379,6 +421,7 @@ function ProductOptimizerPage() {
           : "Gesynchroniseerd naar je shop",
       );
       if (res.imageError) toast.error(res.imageError);
+      setPushDirty(false);
       await openProduct(selectedId);
     } else {
       toast.error(res.error);
@@ -471,8 +514,6 @@ function ProductOptimizerPage() {
             onGenerate={generate}
             hasSelection={!!selectedId}
             specsAsTable={settings.specsAsTable}
-            syncing={syncing}
-            onSync={() => setConfirmSync(true)}
           />
         )}
         {tab === "images" && (
@@ -489,19 +530,38 @@ function ProductOptimizerPage() {
             onGenerate={makeImage}
             onDelete={deleteImage}
             onAddToProduct={addImageToProduct}
+            onReorderGenerated={reorderGenerated}
+            onSaveOrder={saveImageOrder}
+            savingOrder={savingOrder}
             hasSelection={!!selectedId}
           />
         )}
         {tab === "settings" && <SettingsTab settings={settings} update={update} />}
       </div>
 
-      <StickySaveBar onSave={save} saving={saving} />
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/90 px-6 py-3 backdrop-blur lg:left-72">
+        <div className="mx-auto flex max-w-6xl justify-end gap-2">
+          <Button
+            onClick={() => setConfirmSync(true)}
+            disabled={!pushDirty || !suggestions || !selectedId || syncing || generating}
+            variant="outline"
+            className="rounded-lg py-3 h-auto"
+          >
+            {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
+            {syncing ? "Pushen…" : "Push naar shop"}
+          </Button>
+          <Button onClick={save} disabled={saving} className="rounded-lg py-3 h-auto">
+            <Save className="h-4 w-4" />
+            {saving ? "Opslaan…" : "Opslaan"}
+          </Button>
+        </div>
+      </div>
       {disableDialog}
 
       <AlertDialog open={confirmSync} onOpenChange={setConfirmSync}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Voorstel naar je shop synchroniseren?</AlertDialogTitle>
+            <AlertDialogTitle>Voorstel naar je shop pushen?</AlertDialogTitle>
             <AlertDialogDescription>
               De huidige titel, SEO-titel, meta description en omschrijving van dit product in je
               webshop worden overschreven door het voorstel. Alt-teksten van bestaande afbeeldingen
@@ -514,7 +574,7 @@ function ProductOptimizerPage() {
             <AlertDialogCancel className="py-3 h-auto">Annuleren</AlertDialogCancel>
             <AlertDialogAction onClick={syncToShop} className="py-3 h-auto">
               <CloudUpload className="h-4 w-4" />
-              Synchroniseer naar shop
+              Push naar shop
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -729,8 +789,6 @@ function DetailTab({
   onGenerate,
   hasSelection,
   specsAsTable,
-  syncing,
-  onSync,
 }: {
   product: ProductRow | null;
   images: { id: string; src: string; title: string }[];
@@ -739,8 +797,6 @@ function DetailTab({
   onGenerate: () => void;
   hasSelection: boolean;
   specsAsTable: boolean;
-  syncing: boolean;
-  onSync: () => void;
 }) {
   if (!hasSelection) {
     return (
@@ -772,16 +828,10 @@ function DetailTab({
         </div>
         <ScoreBar score={product.score} />
         <div className="flex flex-wrap gap-2">
-          <Button onClick={onGenerate} disabled={generating || syncing} variant={suggestions ? "outline" : "default"} className="py-3 h-auto">
+          <Button onClick={onGenerate} disabled={generating} variant={suggestions ? "outline" : "default"} className="py-3 h-auto">
             {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             {suggestions ? "Genereer opnieuw" : "Genereer voorstel"}
           </Button>
-          {suggestions && (
-            <Button onClick={onSync} disabled={syncing || generating} className="py-3 h-auto">
-              {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
-              {syncing ? "Synchroniseren…" : "Synchroniseer naar shop"}
-            </Button>
-          )}
         </div>
       </SectionCard>
 
@@ -936,6 +986,9 @@ function ImagesTab({
   onGenerate,
   onDelete,
   onAddToProduct,
+  onReorderGenerated,
+  onSaveOrder,
+  savingOrder,
   hasSelection,
 }: {
   product: ProductRow | null;
@@ -950,8 +1003,34 @@ function ImagesTab({
   onGenerate: () => void;
   onDelete: (path: string) => void;
   onAddToProduct: (path: string) => void;
+  onReorderGenerated: (from: number, to: number) => void;
+  onSaveOrder: (orderedIds: string[]) => void;
+  savingOrder: boolean;
   hasSelection: boolean;
 }) {
+  const [ordered, setOrdered] = useState(images);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const dragGenIdx = useRef<number | null>(null);
+
+  useEffect(() => {
+    setOrdered(images);
+  }, [images]);
+
+  const orderDirty = useMemo(
+    () => ordered.length === images.length && ordered.some((img, i) => img.id !== images[i]?.id),
+    [ordered, images],
+  );
+
+  function moveImage(from: number, to: number) {
+    if (from === to) return;
+    setOrdered((list) => {
+      const next = [...list];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved!);
+      return next;
+    });
+  }
+
   if (!hasSelection || !product) {
     return (
       <SectionCard className="p-8 text-center text-sm text-muted-foreground">
@@ -980,25 +1059,65 @@ function ImagesTab({
 
       <div>
         <SectionLabel>Huidige afbeeldingen</SectionLabel>
-        <SectionCard className="p-5">
-          {images.length === 0 ? (
+        <SectionCard className="p-5 space-y-4">
+          {ordered.length === 0 ? (
             <p className="text-sm text-muted-foreground">Dit product heeft nog geen afbeeldingen.</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {images.map((img) => (
-                <div key={img.id}>
-                  <img
-                    src={img.src}
-                    alt={img.title || product.title}
-                    className="aspect-square w-full rounded-md border border-border object-contain bg-white"
-                    loading="lazy"
-                  />
-                  <p className="mt-1.5 text-xs text-muted-foreground truncate">
-                    {img.title || "Geen alt-tekst"}
-                  </p>
+            <>
+              <p className="text-xs text-muted-foreground">
+                Sleep een afbeelding om de volgorde aan te passen. De eerste afbeelding is de
+                hoofdafbeelding van het product.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {ordered.map((img, i) => (
+                  <div
+                    key={img.id}
+                    draggable
+                    onDragStart={() => setDragIdx(i)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => {
+                      if (dragIdx !== null) moveImage(dragIdx, i);
+                      setDragIdx(null);
+                    }}
+                    onDragEnd={() => setDragIdx(null)}
+                    className={cn(
+                      "rounded-md transition-opacity",
+                      dragIdx === i && "opacity-40",
+                    )}
+                  >
+                    <div className="relative group cursor-grab active:cursor-grabbing">
+                      <img
+                        src={img.src}
+                        alt={img.title || product.title}
+                        className="aspect-square w-full rounded-md border border-border object-contain bg-white pointer-events-none"
+                        loading="lazy"
+                      />
+                      <div className="absolute left-1.5 top-1.5 rounded bg-white/90 p-1 text-muted-foreground shadow-sm">
+                        <GripVertical className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="absolute right-1.5 top-1.5 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-sm">
+                        {i + 1}
+                      </div>
+                    </div>
+                    <p className="mt-1.5 text-xs text-muted-foreground truncate">
+                      {img.title || "Geen alt-tekst"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {orderDirty && (
+                <div className="flex justify-end">
+                  <Button
+                    onClick={() => onSaveOrder(ordered.map((i2) => i2.id))}
+                    disabled={savingOrder}
+                    className="py-3 h-auto"
+                  >
+                    {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {savingOrder ? "Opslaan…" : "Volgorde opslaan"}
+                  </Button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </SectionCard>
       </div>
@@ -1043,55 +1162,81 @@ function ImagesTab({
           </Button>
 
           {generated.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {generated.map((img, i) => {
-                const rowBusy = busyPath === img.path;
-                return (
-                  <div key={img.path || img.url}>
-                    <img
-                      src={img.url}
-                      alt={`Gegenereerde afbeelding ${i + 1} van ${product.title}`}
-                      className="aspect-square w-full rounded-md border border-border object-cover bg-white"
-                      loading="lazy"
-                    />
-                    <div className="mt-2 space-y-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="w-full py-2 h-auto"
-                        disabled={rowBusy || !img.path}
-                        onClick={() => onAddToProduct(img.path)}
-                      >
-                        {rowBusy ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <CloudUpload className="h-4 w-4" />
-                        )}
-                        Toevoegen aan product
-                      </Button>
-                      <div className="flex items-center justify-between">
-                        <a
-                          href={img.url}
-                          download
-                          className="text-xs text-primary hover:underline"
-                        >
-                          Downloaden
-                        </a>
-                        <button
-                          type="button"
-                          onClick={() => onDelete(img.path)}
+            <>
+              <p className="text-xs text-muted-foreground">
+                Sleep om de volgorde te bepalen; in deze volgorde worden ze bij "Push naar shop"
+                toegevoegd.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {generated.map((img, i) => {
+                  const rowBusy = busyPath === img.path;
+                  return (
+                    <div
+                      key={img.path || img.url}
+                      draggable={!rowBusy}
+                      onDragStart={() => {
+                        dragGenIdx.current = i;
+                      }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => {
+                        if (dragGenIdx.current !== null) onReorderGenerated(dragGenIdx.current, i);
+                        dragGenIdx.current = null;
+                      }}
+                      onDragEnd={() => {
+                        dragGenIdx.current = null;
+                      }}
+                      className="cursor-grab active:cursor-grabbing"
+                    >
+                      <div className="relative">
+                        <img
+                          src={img.url}
+                          alt={`Gegenereerde afbeelding ${i + 1} van ${product.title}`}
+                          className="aspect-square w-full rounded-md border border-border object-cover bg-white pointer-events-none"
+                          loading="lazy"
+                        />
+                        <div className="absolute right-1.5 top-1.5 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-sm">
+                          {i + 1}
+                        </div>
+                      </div>
+                      <div className="mt-2 space-y-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full py-2 h-auto"
                           disabled={rowBusy || !img.path}
-                          className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
+                          onClick={() => onAddToProduct(img.path)}
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Verwijderen
-                        </button>
+                          {rowBusy ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <CloudUpload className="h-4 w-4" />
+                          )}
+                          Toevoegen aan product
+                        </Button>
+                        <div className="flex items-center justify-between">
+                          <a
+                            href={img.url}
+                            download
+                            className="text-xs text-primary hover:underline"
+                          >
+                            Downloaden
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => onDelete(img.path)}
+                            disabled={rowBusy || !img.path}
+                            className="inline-flex items-center gap-1 text-xs text-destructive hover:underline disabled:opacity-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Verwijderen
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </SectionCard>
       </div>
