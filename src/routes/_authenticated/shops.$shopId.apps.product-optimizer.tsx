@@ -1214,23 +1214,24 @@ function ImagesTab({
       <div>
         <SectionLabel>Huidige afbeeldingen</SectionLabel>
         <SectionCard className="p-5 space-y-4">
-          {ordered.length === 0 ? (
+          {images.length === 0 ? (
             <p className="text-sm text-muted-foreground">Dit product heeft nog geen afbeeldingen.</p>
           ) : (
             <>
               <p className="text-xs text-muted-foreground">
                 Sleep een afbeelding om de volgorde aan te passen. De eerste afbeelding is de
-                hoofdafbeelding van het product.
+                hoofdafbeelding van het product. Wijzigingen worden meegestuurd bij “Push naar
+                shop”.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {ordered.map((img, i) => (
+                {images.map((img, i) => (
                   <div
                     key={img.id}
                     draggable
                     onDragStart={() => setDragIdx(i)}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={() => {
-                      if (dragIdx !== null) moveImage(dragIdx, i);
+                      if (dragIdx !== null) onMoveImage(dragIdx, i);
                       setDragIdx(null);
                     }}
                     onDragEnd={() => setDragIdx(null)}
@@ -1252,6 +1253,21 @@ function ImagesTab({
                       <div className="absolute right-1.5 top-1.5 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-sm">
                         {i + 1}
                       </div>
+                      {img.stagedPath && (
+                        <>
+                          <div className="absolute left-1.5 bottom-1.5 rounded bg-indigo-600 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                            Nieuw
+                          </div>
+                          <button
+                            type="button"
+                            title="Terugzetten naar gegenereerde afbeeldingen"
+                            onClick={() => onUnstage(img.stagedPath!)}
+                            className="absolute -right-1.5 -top-1.5 rounded-full bg-white p-1 text-gray-500 shadow-md hover:text-red-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </>
+                      )}
                     </div>
                     <p className="mt-1.5 text-xs text-muted-foreground truncate">
                       {img.title || "Geen alt-tekst"}
@@ -1259,18 +1275,6 @@ function ImagesTab({
                   </div>
                 ))}
               </div>
-              {orderDirty && (
-                <div className="flex justify-end">
-                  <Button
-                    onClick={() => onSaveOrder(ordered.map((i2) => i2.id))}
-                    disabled={savingOrder}
-                    className="py-3 h-auto"
-                  >
-                    {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    {savingOrder ? "Opslaan…" : "Volgorde opslaan"}
-                  </Button>
-                </div>
-              )}
             </>
           )}
         </SectionCard>
