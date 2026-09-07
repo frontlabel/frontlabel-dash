@@ -162,6 +162,8 @@ function ProductOptimizerPage() {
   const [imageBusyPath, setImageBusyPath] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [confirmSync, setConfirmSync] = useState(false);
+  const [pushDirty, setPushDirty] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
 
   const { requestToggle, dialog: disableDialog } = useDisableAppGuard({
     appName: "Product optimizer",
@@ -176,6 +178,7 @@ function ProductOptimizerPage() {
   const runImage = useServerFn(generateProductImage);
   const runDeleteImage = useServerFn(deleteGeneratedImage);
   const runPushImage = useServerFn(pushGeneratedImageToShop);
+  const runReorder = useServerFn(reorderShopImages);
   const runSync = useServerFn(syncProductToShop);
 
   function update<K extends keyof OptimizerSettings>(k: K, v: OptimizerSettings[K]) {
@@ -242,6 +245,7 @@ function ProductOptimizerPage() {
       setSelectedId(productId);
       setTab("detail");
       setSuggestions(null);
+      setPushDirty(false);
       setDetail({ product: null, images: [], generated: [] });
       try {
         const res = await fetchDetail({ data: { shopId, productId } });
