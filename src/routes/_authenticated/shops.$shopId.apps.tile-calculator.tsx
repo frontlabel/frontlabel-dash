@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link , useNavigate} from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,8 @@ import { Calculator, ChevronRight, LayoutGrid, Paintbrush, Ruler, Save, SquareSt
 export const Route = createFileRoute(
   "/_authenticated/shops/$shopId/apps/tile-calculator",
 )({
+  validateSearch: (s: Record<string, unknown>): { tab?: string } =>
+    typeof s["tab"] === "string" ? { tab: s["tab"] as string } : {},
   component: FloorCalculatorPage,
 });
 
@@ -104,7 +106,11 @@ function FloorCalculatorPage() {
     active,
     setActive,
   });
-  const [tab, setTab] = useState<"overview" | "widget" | "preview">("overview");
+  const tabSearch = Route.useSearch();
+  const tabNav = useNavigate();
+  const tab = (tabSearch.tab ?? "overview") as "overview" | "widget" | "preview";
+  const setTab = (t: "overview" | "widget" | "preview") =>
+    tabNav({ to: ".", search: { tab: t }, replace: true });
 
   function update<K extends keyof FloorCalculatorSettings>(k: K, v: FloorCalculatorSettings[K]) {
     setSettings((s) => ({ ...s, [k]: v }));
