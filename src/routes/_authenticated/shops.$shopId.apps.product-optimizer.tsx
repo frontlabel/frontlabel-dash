@@ -22,8 +22,6 @@ import {
   generateProductSuggestions,
   generateProductImage,
   deleteGeneratedImage,
-  pushGeneratedImageToShop,
-  reorderShopImages,
   syncProductToShop,
   getSpecLibrary,
   getProductSpecs,
@@ -53,6 +51,7 @@ import {
   Sparkles,
   Trash2,
   Wand2,
+  X,
   ListChecks,
   Pencil,
 } from "lucide-react";
@@ -178,7 +177,7 @@ function ProductOptimizerPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detail, setDetail] = useState<{
     product: ProductRow | null;
-    images: { id: string; src: string; title: string }[];
+    images: { id: string; src: string; title: string; stagedPath?: string }[];
     generated: { url: string; path: string }[];
   }>({ product: null, images: [], generated: [] });
   const [suggestions, setSuggestions] = useState<Suggestions | null>(null);
@@ -190,7 +189,7 @@ function ProductOptimizerPage() {
   const [syncing, setSyncing] = useState(false);
   const [confirmSync, setConfirmSync] = useState(false);
   const [pushDirty, setPushDirty] = useState(false);
-  const [savingOrder, setSavingOrder] = useState(false);
+  const [imagesDirty, setImagesDirty] = useState(false);
   const [library, setLibrary] = useState<SpecAttr[]>([]);
   const [libraryLoading, setLibraryLoading] = useState(false);
   const [libraryError, setLibraryError] = useState("");
@@ -209,8 +208,6 @@ function ProductOptimizerPage() {
   const runSuggestions = useServerFn(generateProductSuggestions);
   const runImage = useServerFn(generateProductImage);
   const runDeleteImage = useServerFn(deleteGeneratedImage);
-  const runPushImage = useServerFn(pushGeneratedImageToShop);
-  const runReorder = useServerFn(reorderShopImages);
   const runSync = useServerFn(syncProductToShop);
   const runLibrary = useServerFn(getSpecLibrary);
   const runProductSpecs = useServerFn(getProductSpecs);
@@ -300,6 +297,7 @@ function ProductOptimizerPage() {
       setTab("detail");
       setSuggestions(null);
       setPushDirty(false);
+      setImagesDirty(false);
       setDetail({ product: null, images: [], generated: [] });
       try {
         const res = await fetchDetail({ data: { shopId, productId } });
@@ -368,7 +366,6 @@ function ProductOptimizerPage() {
       });
       if (res.ok && res.url) {
         setDetail((d) => ({ ...d, generated: [...d.generated, { url: res.url, path: res.path }] }));
-        setPushDirty(true);
         toast.success("Afbeelding gemaakt", { id: toastId });
       } else {
         toast.error(res.ok ? "De afbeelding kon niet opgehaald worden." : res.error, { id: toastId });
@@ -398,29 +395,55 @@ function ProductOptimizerPage() {
     }
   }
 
-  async function addImageToProduct(path: string) {
+  /** Zet een gegenereerde afbeelding lokaal in de volgorde; upload gebeurt bij "Push naar shop". */
+  function addImageToProduct(path: string) {
     if (!selectedId || !path) return;
-    setImageBusyPath(path);
-    const toastId = toast.loading("Afbeelding wordt toegevoegd aan het product…");
-    try {
-      const res = await runPushImage({
-        data: {
-          shopId,
-          productId: selectedId,
-          path,
-          title: suggestions?.title || detail.product?.title || "",
-        },
-      });
-      if (res.ok) {
-        toast.success("Toegevoegd aan de productafbeeldingen", { id: toastId });
-      } else {
-        toast.error(res.error, { id: toastId });
-      }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Er ging iets mis.", { id: toastId });
-    } finally {
-      setImageBusyPath(null);
-    }
+    setDetail((d) => {
+      const gen = d.generated.find((g) => g.path === path);
+      if (!gen) return d;
+      return {
+        ...d,
+        generated: d.generated.filter((g) => g.path !== path),
+        images: [
+          ...d.images,
+          {
+            id: `staged:${path}`,
+            src: gen.url,
+            title: suggestions?.title || d.product?.title || "",
+            stagedPath: path,
+          },
+        ],
+      };
+    });
+    setPushDirty(true);
+    setImagesDirty(true);
+    toast.success("Toegevoegd aan de afbeeldingen — klik op “Push naar shop” om hem naar je shop te sturen.");
+  }
+
+  /** Haalt een gestagete afbeelding terug naar de gegenereerde lijst. */
+  function unstageImage(path: string) {
+    setDetail((d) => {
+      const img = d.images.find((i) => i.stagedPath === path);
+      if (!img) return d;
+      return {
+        ...d,
+        images: d.images.filter((i) => i.stagedPath !== path),
+        generated: [...d.generated, { url: img.src, path }],
+      };
+    });
+  }
+
+  /** Wijzigt lokaal de volgorde van de productafbeeldingen; push gebeurt bij "Push naar shop". */
+  function moveShopImage(from: number, to: number) {
+    if (from === to) return;
+    setDetail((d) => {
+      const next = [...d.images];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved!);
+      return { ...d, images: next };
+    });
+    setPushDirty(true);
+    setImagesDirty(true);
   }
 
   function reorderGenerated(from: number, to: number) {
@@ -431,30 +454,6 @@ function ProductOptimizerPage() {
       next.splice(to, 0, moved!);
       return { ...d, generated: next };
     });
-    setPushDirty(true);
-  }
-
-  async function saveImageOrder(orderedIds: string[]) {
-    if (!selectedId) return;
-    setSavingOrder(true);
-    try {
-      const res = await runReorder({ data: { shopId, imageIds: orderedIds } });
-      if (res.ok) {
-        toast.success("Volgorde opgeslagen in je shop");
-        setDetail((d) => ({
-          ...d,
-          images: [...d.images].sort(
-            (a, b) => orderedIds.indexOf(a.id) - orderedIds.indexOf(b.id),
-          ),
-        }));
-      } else {
-        toast.error(res.error ?? "De volgorde kon niet worden opgeslagen.");
-      }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Er ging iets mis.");
-    } finally {
-      setSavingOrder(false);
-    }
   }
 
   async function syncToShop() {
@@ -472,7 +471,9 @@ function ProductOptimizerPage() {
           description: suggestions.description,
         },
         altTexts: suggestions.altTexts,
-        includeImages: true,
+        imageOrder: imagesDirty
+          ? detail.images.map((i) => (i.stagedPath ? `staged:${i.stagedPath}` : i.id))
+          : [],
         specs: suggestions.specs
           .filter((sp) => sp.label && sp.value)
           .map((sp) => ({
@@ -488,6 +489,7 @@ function ProductOptimizerPage() {
       const parts: string[] = [];
       if (res.altUpdated > 0) parts.push(`${res.altUpdated} alt-teksten`);
       if (res.imagesUploaded > 0) parts.push(`${res.imagesUploaded} nieuwe afbeeldingen`);
+      if (res.orderUpdated > 0) parts.push("afbeeldingsvolgorde");
       if (res.specsUpdated > 0) parts.push(`${res.specsUpdated} specificaties`);
       if (res.specsSkipped.length > 0) {
         toast.warning(
@@ -501,6 +503,7 @@ function ProductOptimizerPage() {
       );
       if (res.imageError) toast.error(res.imageError);
       setPushDirty(false);
+      setImagesDirty(false);
       await openProduct(selectedId);
     } else {
       toast.error(res.error);
@@ -637,9 +640,9 @@ function ProductOptimizerPage() {
             onGenerate={makeImage}
             onDelete={deleteImage}
             onAddToProduct={addImageToProduct}
+            onUnstage={unstageImage}
+            onMoveImage={moveShopImage}
             onReorderGenerated={reorderGenerated}
-            onSaveOrder={saveImageOrder}
-            savingOrder={savingOrder}
             hasSelection={!!selectedId}
           />
         )}
@@ -671,8 +674,8 @@ function ProductOptimizerPage() {
             <AlertDialogDescription>
               De huidige titel, SEO-titel, meta description en omschrijving van dit product in je
               webshop worden overschreven door het voorstel. Alt-teksten van bestaande afbeeldingen
-              worden bijgewerkt en de gegenereerde afbeeldingen worden als extra productfoto's
-              toegevoegd. Dit kun je niet ongedaan maken.
+              worden bijgewerkt, nieuw toegevoegde afbeeldingen worden geüpload en de aangepaste
+              volgorde van de afbeeldingen wordt toegepast. Dit kun je niet ongedaan maken.
 
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1159,13 +1162,13 @@ function ImagesTab({
   onGenerate,
   onDelete,
   onAddToProduct,
+  onUnstage,
+  onMoveImage,
   onReorderGenerated,
-  onSaveOrder,
-  savingOrder,
   hasSelection,
 }: {
   product: ProductRow | null;
-  images: { id: string; src: string; title: string }[];
+  images: { id: string; src: string; title: string; stagedPath?: string }[];
   generated: { url: string; path: string }[];
   style: "studio" | "sfeer" | "lifestyle";
   setStyle: (v: "studio" | "sfeer" | "lifestyle") => void;
@@ -1176,33 +1179,13 @@ function ImagesTab({
   onGenerate: () => void;
   onDelete: (path: string) => void;
   onAddToProduct: (path: string) => void;
+  onUnstage: (path: string) => void;
+  onMoveImage: (from: number, to: number) => void;
   onReorderGenerated: (from: number, to: number) => void;
-  onSaveOrder: (orderedIds: string[]) => void;
-  savingOrder: boolean;
   hasSelection: boolean;
 }) {
-  const [ordered, setOrdered] = useState(images);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const dragGenIdx = useRef<number | null>(null);
-
-  useEffect(() => {
-    setOrdered(images);
-  }, [images]);
-
-  const orderDirty = useMemo(
-    () => ordered.length === images.length && ordered.some((img, i) => img.id !== images[i]?.id),
-    [ordered, images],
-  );
-
-  function moveImage(from: number, to: number) {
-    if (from === to) return;
-    setOrdered((list) => {
-      const next = [...list];
-      const [moved] = next.splice(from, 1);
-      next.splice(to, 0, moved!);
-      return next;
-    });
-  }
 
   if (!hasSelection || !product) {
     return (
@@ -1233,23 +1216,24 @@ function ImagesTab({
       <div>
         <SectionLabel>Huidige afbeeldingen</SectionLabel>
         <SectionCard className="p-5 space-y-4">
-          {ordered.length === 0 ? (
+          {images.length === 0 ? (
             <p className="text-sm text-muted-foreground">Dit product heeft nog geen afbeeldingen.</p>
           ) : (
             <>
               <p className="text-xs text-muted-foreground">
                 Sleep een afbeelding om de volgorde aan te passen. De eerste afbeelding is de
-                hoofdafbeelding van het product.
+                hoofdafbeelding van het product. Wijzigingen worden meegestuurd bij “Push naar
+                shop”.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {ordered.map((img, i) => (
+                {images.map((img, i) => (
                   <div
                     key={img.id}
                     draggable
                     onDragStart={() => setDragIdx(i)}
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={() => {
-                      if (dragIdx !== null) moveImage(dragIdx, i);
+                      if (dragIdx !== null) onMoveImage(dragIdx, i);
                       setDragIdx(null);
                     }}
                     onDragEnd={() => setDragIdx(null)}
@@ -1271,6 +1255,21 @@ function ImagesTab({
                       <div className="absolute right-1.5 top-1.5 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground shadow-sm">
                         {i + 1}
                       </div>
+                      {img.stagedPath && (
+                        <>
+                          <div className="absolute left-1.5 bottom-1.5 rounded bg-indigo-600 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                            Nieuw
+                          </div>
+                          <button
+                            type="button"
+                            title="Terugzetten naar gegenereerde afbeeldingen"
+                            onClick={() => onUnstage(img.stagedPath!)}
+                            className="absolute -right-1.5 -top-1.5 rounded-full bg-white p-1 text-gray-500 shadow-md hover:text-red-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </>
+                      )}
                     </div>
                     <p className="mt-1.5 text-xs text-muted-foreground truncate">
                       {img.title || "Geen alt-tekst"}
@@ -1278,18 +1277,6 @@ function ImagesTab({
                   </div>
                 ))}
               </div>
-              {orderDirty && (
-                <div className="flex justify-end">
-                  <Button
-                    onClick={() => onSaveOrder(ordered.map((i2) => i2.id))}
-                    disabled={savingOrder}
-                    className="py-3 h-auto"
-                  >
-                    {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                    {savingOrder ? "Opslaan…" : "Volgorde opslaan"}
-                  </Button>
-                </div>
-              )}
             </>
           )}
         </SectionCard>

@@ -355,7 +355,7 @@ export async function uploadProductImages(opts: {
   language?: string;
   productId: string;
   images: { filename: string; base64: string; title?: string }[];
-}): Promise<{ uploaded: number; error?: string }> {
+}): Promise<{ uploaded: number; ids: string[]; error?: string }> {
   const headers = {
     Authorization: auth(opts.apiKey, opts.apiSecret),
     Accept: "application/json",
@@ -363,6 +363,7 @@ export async function uploadProductImages(opts: {
   };
   const id = encodeURIComponent(opts.productId);
   let uploaded = 0;
+  const ids: string[] = [];
   let error: string | undefined;
 
   for (const img of opts.images) {
@@ -380,6 +381,12 @@ export async function uploadProductImages(opts: {
       });
       if (res.ok) {
         uploaded++;
+        try {
+          const body = (await res.json()) as { productImage?: { id?: number | string } };
+          if (body.productImage?.id != null) ids.push(String(body.productImage.id));
+        } catch {
+          /* id onbekend — volgorde voor deze afbeelding wordt overgeslagen */
+        }
       } else {
         const body = await res.text();
         console.error(`[product-optimizer] image upload failed ${res.status}: ${body}`);
@@ -394,7 +401,7 @@ export async function uploadProductImages(opts: {
     }
   }
 
-  return { uploaded, ...(error ? { error } : {}) };
+  return { uploaded, ids, ...(error ? { error } : {}) };
 }
 
 /** Slaat de volgorde van productafbeeldingen op in Lightspeed (sortOrder per afbeelding). */
