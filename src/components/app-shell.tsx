@@ -9,13 +9,41 @@ import {
   Menu,
   User,
   ShieldCheck,
+  ChevronsUpDown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { APP_VERSION_LABEL } from "@/lib/app-version";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ShellHeaderProvider, useShellHeaderContent } from "@/components/shell-header-context";
 import { useIsAdmin } from "@/hooks/use-is-admin";
+
+const AVATAR_COLORS = [
+  "#e11d48",
+  "#db2777",
+  "#9333ea",
+  "#4f46e5",
+  "#2563eb",
+  "#0891b2",
+  "#059669",
+  "#65a30d",
+  "#d97706",
+  "#ea580c",
+];
+
+function colorForId(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length]!;
+}
+
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
