@@ -917,6 +917,7 @@ function DetailTab({
   onGenerate,
   hasSelection,
   specsAsTable,
+  onEdit,
 }: {
   product: ProductRow | null;
   images: { id: string; src: string; title: string }[];
