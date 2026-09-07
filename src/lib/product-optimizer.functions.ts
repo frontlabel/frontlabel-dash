@@ -308,38 +308,77 @@ export const syncProductToShop = createServerFn({ method: "POST" })
       }
     }
 
-    // Gegenereerde afbeeldingen meesturen naar de shop.
+    // Afbeeldingen: alleen expliciet "gestagete" gegenereerde afbeeldingen uploaden,
+    // daarna de gewenste eindvolgorde in de shop toepassen.
     let imagesUploaded = 0;
+    let orderUpdated = 0;
     let imageError: string | undefined;
-    const { data: saved } = await context.supabase
-      .from("product_optimizations")
-      .select("image_urls")
-      .eq("shop_id", data.shopId)
-      .eq("product_ref", data.productId)
-      .maybeSingle();
-    const paths = ((saved?.image_urls as string[] | null) ?? []).filter(Boolean);
+    const imageOrder = data.imageOrder;
 
-    if (data.includeImages && paths.length > 0) {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const files: { filename: string; base64: string; title?: string }[] = [];
-      for (const path of paths) {
-        const dl = await supabaseAdmin.storage.from("product-images").download(path);
-        if (dl.error || !dl.data) continue;
-        const buf = Buffer.from(await dl.data.arrayBuffer());
-        files.push({
-          filename: path.split("/").pop() || `${Date.now()}.png`,
-          base64: buf.toString("base64"),
-          ...(data.fields.title ? { title: data.fields.title } : {}),
-        });
+    if (imageOrder.length > 0) {
+      const { reorderProductImages } = await import("./product-optimizer.server");
+      const stagedPaths = imageOrder
+        .filter((e) => e.startsWith("staged:"))
+        .map((e) => e.slice("staged:".length));
+
+      const { data: saved } = await context.supabase
+        .from("product_optimizations")
+        .select("image_urls")
+        .eq("shop_id", data.shopId)
+        .eq("product_ref", data.productId)
+        .maybeSingle();
+      const knownPaths = ((saved?.image_urls as string[] | null) ?? []).filter(Boolean);
+
+      const newIdByPath = new Map<string, string>();
+      if (stagedPaths.length > 0) {
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+        const files: { path: string; filename: string; base64: string; title?: string }[] = [];
+        for (const path of stagedPaths) {
+          if (!knownPaths.includes(path)) continue;
+          const dl = await supabaseAdmin.storage.from("product-images").download(path);
+          if (dl.error || !dl.data) continue;
+          const buf = Buffer.from(await dl.data.arrayBuffer());
+          files.push({
+            path,
+            filename: path.split("/").pop() || `${Date.now()}.png`,
+            base64: buf.toString("base64"),
+            ...(data.fields.title ? { title: data.fields.title } : {}),
+          });
+        }
+        if (files.length > 0) {
+          const up = await uploadProductImages({
+            ...creds,
+            productId: data.productId,
+            images: files,
+          });
+          imagesUploaded = up.uploaded;
+          imageError = up.error;
+          files.forEach((f, i) => {
+            const newId = up.ids[i];
+            if (newId) newIdByPath.set(f.path, newId);
+          });
+
+          // Geuploade staged afbeeldingen opruimen uit opslag en metadata.
+          const uploadedPaths = files.map((f) => f.path).filter((p) => newIdByPath.has(p));
+          if (uploadedPaths.length > 0) {
+            await supabaseAdmin.storage.from("product-images").remove(uploadedPaths);
+            await context.supabase
+              .from("product_optimizations")
+              .update({ image_urls: knownPaths.filter((p) => !uploadedPaths.includes(p)) })
+              .eq("shop_id", data.shopId)
+              .eq("product_ref", data.productId);
+          }
+        }
       }
-      if (files.length > 0) {
-        const up = await uploadProductImages({
-          ...creds,
-          productId: data.productId,
-          images: files,
-        });
-        imagesUploaded = up.uploaded;
-        imageError = up.error;
+
+      // Eindvolgorde toepassen (staged placeholders vervangen door nieuwe ids).
+      const finalIds = imageOrder
+        .map((e) => (e.startsWith("staged:") ? newIdByPath.get(e.slice(7)) : e))
+        .filter((e): e is string => !!e);
+      if (finalIds.length > 0) {
+        const re = await reorderProductImages({ ...creds, imageIds: finalIds });
+        orderUpdated = re.updated;
+        if (!re.ok && !imageError) imageError = re.error;
       }
     }
 
