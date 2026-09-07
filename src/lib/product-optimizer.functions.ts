@@ -89,6 +89,23 @@ export const getOptimizableProduct = createServerFn({ method: "POST" })
     };
   });
 
+/** Slaat de volgorde van de productafbeeldingen op in de shop. */
+export const reorderShopImages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    z.object({
+      shopId: z.string().uuid(),
+      imageIds: z.array(z.string().min(1)).min(1).max(100),
+    }),
+  )
+  .handler(async ({ data, context }) => {
+    const creds = await getShopCredentials(context.supabase as never, data.shopId);
+    if (!creds) return { ok: false as const, error: "Geen actieve koppeling met je shop." };
+
+    const { reorderProductImages } = await import("./product-optimizer.server");
+    return reorderProductImages({ ...creds, imageIds: data.imageIds });
+  });
+
 /** Verwijdert een gegenereerde afbeelding uit de opslag en bij het product. */
 export const deleteGeneratedImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
